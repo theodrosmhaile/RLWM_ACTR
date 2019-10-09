@@ -15,18 +15,38 @@
 (sgp :alpha 0.8
      :egs 0.5
      ) 
-;; Goal buffer 
+
+;; Chunk types 
+(chunk-type goal fproc> no) ;; fproc= feedback processed
+    
+(chunk-type stimulus
+            picture)
+    
     
 ;; Chunks
+    ;; Goal chunk (?) 
     
+    ;; Stimulus chunks
+    
+;; **add chunks for all images? **
 (add-dm stimulus
-        picture) ;; add chunks for all images? 
+        picture cup
+        ) 
+
+(add-dm stimulus
+        picture bowl
+        ) 
+(add-dm stimulus
+        picture glass
+        ) 
     
-;; Productions: 1 for each image : 2 conditions (ns 6 & ns 3) * 
-;;- visual, encode stimulus, check visual to see if its free,  make response (c, v or b)based on Q value, updates goal?. If never encountered, select arbitrarily
+;;Productions: 1 for each image : 2 conditions (ns 6 & ns 3) * 
+;;- visual, encode stimulus, check visual to see if its free,  make response (c, v or b)based on Q value, updates goal?. 
+;;  If never   encountered, select arbitrarily
+
 (p cup-k
    =visual>
-       picture cup 
+       =picture cup 
    ?visual>
        state free
    ==> 
@@ -37,13 +57,12 @@
      execution free
    
    +manual>
-   "help!"
        key c
    +goal>
        fproc no    
    )
- ;; Productions:  
-(p)
+ ;; Productions: processing feedback  
+(p feedback )
     
     
     
