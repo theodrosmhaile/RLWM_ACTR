@@ -18,23 +18,30 @@
 
 ;; Chunk types 
 (chunk-type goal 
-            fproc no) ;; fproc= feedback processed
+            fproc) ;; fproc= feedback processed
     
 (chunk-type stimulus
             picture)
     
 (chunk-type feedback
-            feedback yes)
+            feedback)
     
 ;; Chunks
+    
     ;; Goal  
     
     ;; Stimulus chunks
     
 ;; **add chunks for all images? **
-;;(add-dm stimulus
- ;;       picture cup
-  ;;      ) 
+(add-dm (cup-stimulus
+        isa stimulus
+       picture cup)
+        ) 
+    
+(add-dm (make-response
+        isa goal
+        fproc yes)
+        )
 
 ;;(add-dm stimulus
  ;;       picture bowl
@@ -43,46 +50,90 @@
  ;;       picture plate
   ;;      ) 
     
-;;Productions: 1 for each image : 2 conditions (ns 6 & ns 3) 
+;;Productions: 1 for each image : 2 conditions (ns 6 & ns 3) * 3 response keys
 ;;- visual, encode stimulus, check visual to see if its free,  make response (j, k or l)based on Q value, updates goal?. 
 ;;  If never   encountered, select arbitrarily
 
  ;;object 1: cup
-(p cup
+(p cup-j
    =visual>
-       =picture cup 
+       picture cup 
    ?visual>
        state free
-   ==> 
+    =goal>
+   fproc yes
    
    ?manual>
    preparation free
      processor free
      execution free
-   
+   ==> 
    +manual>
-       key j
+       cmd punch
+       hand right
+       finger index 
    +goal>
        fproc no    
    )
-    
-    
- ;;  object 2: bowl 
-(p bowl
+
+(p cup-k
    =visual>
-       =picture bowl 
+       picture cup 
    ?visual>
        state free
-   ==> 
-   
+ =goal>
+   fproc yes
    ?manual>
    preparation free
      processor free
      execution free
-   
+   ==> 
    +manual>
-       key j
-   +goal>
+       cmd punch
+       hand right
+       finger middle 
+   *goal>
+       fproc no    
+   )
+
+(p cup-l
+   =visual>
+       picture cup 
+   ?visual>
+       state free
+  =goal>
+   fproc =x
+   ?manual>
+   preparation free
+     processor free
+     execution free
+   ==> 
+   +manual>
+   cmd punch
+       hand right
+       finger ring 
+   *goal>
+       fproc no    
+   )
+    
+ ;;  object 2: bowl 
+(p bowl-j
+   =visual>
+       picture bowl 
+   ?visual>
+       state free
+   =goal>
+   fproc =x
+   ?manual>
+   preparation free
+     processor free
+     execution free
+   ==>
+   +manual>
+   cmd punch
+       hand right
+       finger index 
+   *goal>
        fproc no    
    )
     
@@ -97,10 +148,13 @@
        fproc no
    ==>
    *goal>
-       fpoc yes
+       fproc yes
    )
     
-    
+(goal-focus
+ make-response)
+ 
+(set-buffer-chunk 'visual 'cup-stimulus)    
     
     
     )
