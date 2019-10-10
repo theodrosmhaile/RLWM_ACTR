@@ -17,7 +17,8 @@
      ) 
 
 ;; Chunk types 
-(chunk-type goal fproc no) ;; fproc= feedback processed
+(chunk-type goal 
+            fproc no) ;; fproc= feedback processed
     
 (chunk-type stimulus
             picture)
@@ -31,18 +32,18 @@
     ;; Stimulus chunks
     
 ;; **add chunks for all images? **
-(add-dm stimulus
-        picture cup
-        ) 
+;;(add-dm stimulus
+ ;;       picture cup
+  ;;      ) 
 
-(add-dm stimulus
-        picture bowl
-        ) 
-(add-dm stimulus
-        picture plate
-        ) 
+;;(add-dm stimulus
+ ;;       picture bowl
+;;        ) 
+;;(add-dm stimulus
+ ;;       picture plate
+  ;;      ) 
     
-;;Productions: 1 for each image : 2 conditions (ns 6 & ns 3) * 
+;;Productions: 1 for each image : 2 conditions (ns 6 & ns 3) 
 ;;- visual, encode stimulus, check visual to see if its free,  make response (j, k or l)based on Q value, updates goal?. 
 ;;  If never   encountered, select arbitrarily
 
@@ -67,7 +68,7 @@
     
     
  ;;  object 2: bowl 
-    (p bowl
+(p bowl
    =visual>
        =picture bowl 
    ?visual>
@@ -87,16 +88,16 @@
     
  ;; Productions: processing feedback  
 
-    (p parse-feedback
+(p parse-feedback
    =visual>
        feedback yes
-   ?visual
+   ?visual>
        state free
-   =goal
-       fproc n
+   =goal>
+       fproc no
    ==>
    *goal>
-       frpoc yes
+       fpoc yes
    )
     
     
