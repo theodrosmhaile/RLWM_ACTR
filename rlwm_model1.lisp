@@ -12,7 +12,7 @@
 (define-model rlwm_model1
 
 ;; parameters - learning rate and temperature (expected gain s: amount of noise added to *utility*/selection)
-(sgp :alpha 0.8
+(sgp :alpha 0.2
      :egs 0.5
      ) 
 ;;--------------------------------------------------------  
@@ -640,7 +640,7 @@
 (goal-focus
  make-response)
  
-(set-buffer-chunk 'visual 'cup-stimulus)    
+;;(set-buffer-chunk 'visual 'cup-stimulus)    
     
     
     )
