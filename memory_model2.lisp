@@ -17,13 +17,13 @@
     
     ;; Chunk types 
 (chunk-type goal 
-            fproc yes) ;; fproc= feedback processed
+            fproc) ;; fproc= feedback processed
     
 (chunk-type stimulus
-            picture  )
+            picture)
     
 (chunk-type feedback
-            feedback yes)
+            feedback)
 
 ;; chunks
    (add-dm (make-response
@@ -31,40 +31,54 @@
        fproc yes)
        )
 ;; productions
-   ;; Check memory
+   ;; Check memory: picture p is a variable?
 
-(p memory
+(p check-memory
     =visual>
-   picture cup 
+      picture p 
+    ?visual>
+      state free
+    =goal>
+       fproc yes
+    
     ==>
    ?retrieval>
-   state free
+      state free
    
    +retrieval> 
-   picture = cup
-   Outcome yes
+      picture = p
+      outcome yes
    
    +imaginal>
-   picture 
+      picture = p
 )
     
 ;; Depending on outcome: yes or no
 
-   ;;Outcome is no: make random response (3 possible)
+   ;;outcome is no: make random response (3 possible)
 (p response-monkey-j
-   =retrieval
-   state error
-   ==>
-   +manual>
+     =retrieval>
+      state error
+
+    ?manual>
+     preparation free
+     processor free
+     execution free
+     ==>
+    +manual>
        cmd punch
        hand right
        finger index
    )
     
 (p response-monkey-k
-   =retrieval
-   state error
-   ==>
+     =retrieval>
+      state error
+    ?manual>
+     preparation free
+     processor free
+     execution free
+    ==>
    +manual>
        cmd punch
        hand right
@@ -72,26 +86,32 @@
    )
 
 (p response-monkey-l
-   =retrieval
-   state error
+   =retrieval>
+      state error
+      
+    ?manual>
+     preparation free
+     processor free
+     execution free
    ==>
-   +manual>
-   cmd punch
-       hand right
-       finger ring 
+    +manual>
+      cmd punch
+      hand right
+      finger ring 
    )
     
     
-   ;;Outcome is yes: make response based on memory
-(p yes
-    =retrieval 
-    Outcome yes 
-    Key =k
-    +imaginals 
-    picture =cup
-   ?manual
+   ;;outcome is yes: make response based on memory
+(p feedback-yes
+    =retrieval> 
+       outcome yes 
+      key = k
+    +imaginal>
+      picture =cup
+   ?manual>
    ==>
-   +manual
+   +manual>
+
 )
 
     
@@ -105,7 +125,7 @@
     ==> 
     +imaginal>
    
-    Outcome = F
+    outcome = F
 )
 
 (goal-focus
