@@ -11,9 +11,14 @@
 
 (define-model rlwm_model1
 
-;; parameters - learning rate and temperature (expected gain s: amount of noise added to *utility*/selection)
+;; parameters - learning rate and temperature (expected gain s: amount of noise added to *utility*/selection), enable randomness (er)
+    ;; ul: utility learning, *bll for the memory model*
+    
 (sgp :alpha 0.2
-     :egs 0.5
+     :egs 0.1
+     :er t
+     :ul t
+     :esc t
      ) 
 ;;--------------------------------------------------------  
 ;;----------------Chunk types----------------------------- 
@@ -78,7 +83,7 @@
        cmd punch
        hand right
        finger index 
-   +goal>
+   *goal>
        fproc no    
    )
 
@@ -140,7 +145,7 @@
        cmd punch
        hand right
        finger index 
-   +goal>
+   *goal>
        fproc no    
    )
 
@@ -204,7 +209,7 @@
        cmd punch
        hand right
        finger index 
-   +goal>
+   *goal>
        fproc no    
    )
 
@@ -265,7 +270,7 @@
        cmd punch
        hand right
        finger index 
-   +goal>
+   *goal>
        fproc no    
    )
 
@@ -327,7 +332,7 @@
        cmd punch
        hand right
        finger index 
-   +goal>
+   *goal>
        fproc no    
    )
 
@@ -388,7 +393,7 @@
        cmd punch
        hand right
        finger index 
-   +goal>
+   *goal>
        fproc no    
    )
 
@@ -450,7 +455,7 @@
        cmd punch
        hand right
        finger index 
-   +goal>
+   *goal>
        fproc no    
    )
 
@@ -513,7 +518,7 @@
        cmd punch
        hand right
        finger index 
-   +goal>
+   *goal>
        fproc no    
    )
 
@@ -576,7 +581,7 @@
        cmd punch
        hand right
        finger index 
-   +goal>
+   *goal>
        fproc no    
    )
 
@@ -625,7 +630,7 @@
 ;; Productions: processing feedback
 ;;--------------------------------------------------------    
     
-(p parse-feedback
+(p parse-feedback-yes
    =visual>
        feedback yes
    ?visual>
@@ -637,9 +642,23 @@
        fproc yes
    )
     
+ (p parse-feedback-no
+   =visual>
+       feedback no
+   ?visual>
+       state free
+   =goal>
+       fproc no
+   ==>
+   *goal>
+       fproc yes
+   )
+      
 (goal-focus
  make-response)
  
+ (spp parse-feedback-yes :reward +1)
+ (spp parse-feedback-no :reward -1)
 ;;(set-buffer-chunk 'visual 'cup-stimulus)    
     
     
