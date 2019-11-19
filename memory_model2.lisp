@@ -12,6 +12,7 @@
 (sgp :bll 0.5
      :ans 0.5
      :rt  0.5
+     :er t
      )
     
     ;; Chunk types 
@@ -23,18 +24,24 @@
     
 (chunk-type feedback
             feedback yes)
-    
+
+;; chunks
+   (add-dm (make-response
+       isa goal
+       fproc yes)
+       )
 ;; productions
    ;; Check memory
 
 (p memory
-    visual picture cup 
+    =visual>
+   picture cup 
     ==>
    ?retrieval>
    state free
    
    +retrieval> 
-   picture =cup
+   picture = cup
    Outcome yes
    
    +imaginal>
@@ -49,7 +56,9 @@
    state error
    ==>
    +manual>
-   key j
+       cmd punch
+       hand right
+       finger index
    )
     
 (p response-monkey-k
@@ -57,7 +66,9 @@
    state error
    ==>
    +manual>
-   key k
+       cmd punch
+       hand right
+       finger middle
    )
 
 (p response-monkey-l
@@ -65,12 +76,14 @@
    state error
    ==>
    +manual>
-   key l
+   cmd punch
+       hand right
+       finger ring 
    )
     
     
    ;;Outcome is yes: make response based on memory
-(p yes!
+(p yes
     =retrieval 
     Outcome yes 
     Key =k
@@ -84,8 +97,8 @@
     
 ;;Encode response after feedback
     
-(p encode feedback
-    =visuals>
+(p encode-feedback
+    =visual>
     feedback yes OR no
     ?Imaginal
     outcome nil
@@ -95,6 +108,9 @@
     Outcome = F
 )
 
+(goal-focus
+ make-response)
+ 
 
 
     
