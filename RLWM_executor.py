@@ -3,9 +3,6 @@
 
 # ### Python interface
 
-
-
-
 import random as rnd
 import numpy as np
 import os
@@ -13,11 +10,6 @@ import sys
 import string
 import actr
 import pandas as pd
-
-
-        
-
-
 
 
 
@@ -136,13 +128,8 @@ print('mean accuracy: ', np.mean(accuracy))
 
 
 
-
-
 print(current_response)
-accuracy
-
-
-
+print(accuracy)
 
 
 print(stims)
