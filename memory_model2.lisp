@@ -3,7 +3,10 @@
 ;;------------------------------------
 ;;
 
-;; This model relies only on storage and retrieval of memory of past experience with stimuli and associated response. It relies on three parameters: memory decay, activation noise and retrieval threshold at which a memory will be...activated/retrieved. 
+;; This model relies only on storage and retrieval of memory of past experience with stimuli and associated response. 
+;; It relies on three parameters: memory decay, activation noise and retrieval threshold at which a memory will be...activated/retrieved. 
+;; Important features: Stiumulus, associate-key and feedback 
+
 
 (clear-all)
 
@@ -108,7 +111,9 @@
    )
     
     
-   ;;outcome is yes: make response based on memory
+   ;;outcome is yes: make response based on memory 
+  ;; How do I select, conditionally, the right key to press if we have only one production?
+
 (p outcome-yes
     =retrieval> 
        outcome yes 
@@ -126,9 +131,8 @@
 
    ==>
    +manual>
-      cmd punch
-      hand right
-      finger ring
+      cmd press-key
+      key =associate-key?????
 
   *goal>
        fproc no   
@@ -154,7 +158,7 @@
  
 
 
-    (set-buffer-chunk 'visual 'cup-stimulus)    
+    ;;(set-buffer-chunk 'visual 'cup-stimulus)    
     
     )
 
