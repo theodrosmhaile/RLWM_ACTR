@@ -11,7 +11,7 @@ import string
 import actr
 import pandas as pd
 import csv
-
+import seaborn as sns 
 
 
 sub_ID = 'A2E1'
@@ -145,6 +145,8 @@ plate_presented = np.where(stims_array == 'plate')
 
 acc_by_presentation = np.mean([acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0)
 print(acc_by_presentation)
+
+
 #save file to csv
 #if 0:
     #reshape stimuli into stimulus x presentation. Note nRows will either be 3 or 6 depending on number of stimuli
