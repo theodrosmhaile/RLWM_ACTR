@@ -10,10 +10,11 @@ import sys
 import string
 import actr
 import pandas as pd
+import csv
 
 
 
-
+sub_ID = 'A2E1'
 #Stimuli to be used and exp parameters
 stims_3 = ['cup','bowl','plate']
 stims_6 = ['hat','gloves','shoes', 'shirt', 'jacket', 'jeans']
@@ -42,7 +43,7 @@ stims, cor_resps = zip(*stims_temp)
 
 
 #Load model
-model = actr.load_act_r_model('/home/master-tedward/RLWM_ACTR/rlwm_model1.lisp')
+model = actr.load_act_r_model('/home/master-tedward/RLWM_ACTR/RL_model1.lisp')
 
 
 #variables needed
@@ -127,24 +128,28 @@ model_loop()
 print('mean accuracy: ', np.mean(accuracy))
 
 
-
-print(current_response)
-print(accuracy)
-
-
-print(stims)
-cor_resps
-
-
 # ### Response analysis
-# 
+#
+#print(current_response)
+#print(accuracy)
 
+#print(stims)
+#print(cor_resps)
 
+stims_array = np.asarray(stims)
+acc_array = np.asarray(accuracy)
 
+cup_presented   = np.where(stims_array == 'cup') 
+bowl_presented  = np.where(stims_array == 'bowl') 
+plate_presented = np.where(stims_array == 'plate') 
 
-np.reshape(stims, (3,12), order='F').tolist()
-
-
+acc_by_presentation = np.mean([acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0)
+print(acc_by_presentation)
+#save file to csv
+#if 0:
+    #reshape stimuli into stimulus x presentation. Note nRows will either be 3 or 6 depending on number of stimuli
+   # stims_df = pd.DataFrame(np.reshape(stims, (3,12), order='F').tolist())     
+    
 
 
 
