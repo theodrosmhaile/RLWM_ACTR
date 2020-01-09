@@ -4,7 +4,7 @@
 ;;
 
 ;; This model relies only on storage and retrieval of memory of past experience with stimuli and associated response. 
-;; It relies on three parameters: memory decay, activation noise and retrieval threshold at which a memory will be...activated/retrieved. 
+;; It relies on three parameters: memory decay(BLL), activation noise(ANS) and retrieval threshold(RT) at which a memory will be...activated/retrieved. 
 ;; Important features: Stiumulus, associate-key and feedback 
 
 
@@ -17,8 +17,10 @@
      :rt  0.5
      :er t
      )
-    
-    ;; Chunk types 
+;;---------------------------------------    
+;; Chunk types
+;;--------------------------------------- 
+
 (chunk-type goal 
             fproc) ;; fproc= feedback processed
     
@@ -30,13 +32,18 @@
 (chunk-type feedback
             feedback)
 
-;; chunks
+;;---------------------------------------
+;; Chunks
+;;---------------------------------------
+
    (add-dm (make-response
        isa goal
        fproc yes)
        )
 
+;;----------------------------------------
 ;; productions
+;;----------------------------------------
    ;; Check memory: picture cur_pic, current picture presented is a variable. 
    ;; This is a general purpose production that just takes in whatever presented stimulus
    ;; and checks against declarative memory in the retrieval buffer
@@ -51,24 +58,30 @@
     =goal>
        fproc yes
     
-  ==>
-   ?retrieval>
+    ?retrieval>
       state free
-   
+      buffer empty
+  ==>
+       
    +retrieval> 
       picture =cur_pic
-      outcome no
+      outcome yes
    
    +imaginal>
       picture =cur_pic
+   =visual>
 )
-    
+;;-------------------------------------    
 ;; Depending on outcome: yes or no
 
    ;;outcome is no: make random response (3 possible)
+;;-------------------------------------
+
 (p response-monkey-j
-     =retrieval>
-      outcome no
+     ?retrieval>
+      state error
+     =visual>
+     - picture nil
 
     ?manual>
      preparation free
@@ -79,11 +92,16 @@
        cmd punch
        hand right
        finger index
+   
+     =visual>
    )
     
 (p response-monkey-k
-     =retrieval>
+     ?retrieval>
       state error
+     =visual>
+     - picture nil
+
     ?manual>
      preparation free
      processor free
@@ -93,11 +111,14 @@
        cmd punch
        hand right
        finger middle
+   =visual>
    )
 
 (p response-monkey-l
-   =retrieval>
+   ?retrieval>
       state error
+   =visual>
+   - picture nil
       
     ?manual>
      preparation free
@@ -107,21 +128,24 @@
     +manual>
       cmd punch
       hand right
-      finger ring 
+      finger ring
+    =visual> 
    )
     
-    
+;;-------------------------------------    
    ;;outcome is yes: make response based on memory 
   ;; How do I select, conditionally, the right key to press if we have only one production?
+;;-------------------------------------
 
 (p outcome-yes
     =retrieval> 
        outcome yes 
        associate-key =k
 
-    +imaginal>
-      picture =cur_pic
-    =goal>
+    ;;+imaginal>
+     ;; picture =cur_pic
+    
+     =goal>
       fproc yes
 
    ?manual>
@@ -132,7 +156,7 @@
    ==>
    +manual>
       cmd press-key
-      key =associate-key?????
+      key =k
 
   *goal>
        fproc no   
@@ -144,12 +168,13 @@
 (p encode-feedback
     =visual>
     feedback =f
+   
     
-    ?imaginal>
-    outcome nil
-    
+    =imaginal>
+     outcome nil	
+	
     ==> 
-    +imaginal>
+   *imaginal>
     outcome =f
 )
 
@@ -158,7 +183,7 @@
  
 
 
-    ;;(set-buffer-chunk 'visual 'cup-stimulus)    
+;;(set-buffer-chunk 'visual 'cup-stimulus)    
     
     )
 

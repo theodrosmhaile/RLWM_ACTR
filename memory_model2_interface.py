@@ -3,7 +3,7 @@
 
 # ### Python interface for Model 2
 
-# In[1]:
+
 
 
 import random as rnd
@@ -35,15 +35,16 @@ stims_temp = list( zip(np.repeat(stims_3, 12).tolist(),
 
 rnd.shuffle(stims_temp)
 
-#stims, cor_resps = zip(*stims_temp)
-##########debug########
-stims=['cup']
+stims, cor_resps = zip(*stims_temp)
 
-# In[3]:
+##########debug########
+#stims=['cup']
+
+
 
 
 #Load model
-model = actr.load_act_r_model('/home/master-tedward/RLWM_ACTR/memory_model2.lisp')
+model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/memory_model2.lisp')
 
 
 #variables needed

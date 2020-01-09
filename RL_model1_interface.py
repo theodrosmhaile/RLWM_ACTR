@@ -44,7 +44,7 @@ stims, cor_resps = zip(*stims_temp)
 
 
 #Load model
-model = actr.load_act_r_model('/home/master-tedward/RLWM_ACTR/RL_model1.lisp')
+model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/RL_model1.lisp')
 
 
 #variables needed
