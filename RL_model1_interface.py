@@ -12,6 +12,7 @@ import actr
 import pandas as pd
 import csv
 import seaborn as sns 
+from matplotlib import pyplot
 
 
 sub_ID = 'A2E1'
@@ -145,7 +146,9 @@ plate_presented = np.where(stims_array == 'plate')
 
 acc_by_presentation = np.mean([acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0)
 print(acc_by_presentation)
-
+#plot 
+pyplot.figure(dpi=300)
+sns.lineplot(np.arange(12) + 1, acc_by_presentation, markers=True)
 
 #save file to csv
 #if 0:
