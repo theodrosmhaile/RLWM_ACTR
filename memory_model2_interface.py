@@ -44,7 +44,9 @@ stims, cor_resps = zip(*stims_temp)
 
 
 #Load model
-model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/memory_model2.lisp')
+curr_dir = os.path.dirname(os.path.realpath(__file__))
+actr.load_act_r_model(os.path.join(curr_dir, "memory_model2.lisp"))
+#model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/memory_model2.lisp')
 
 
 #variables needed
