@@ -14,19 +14,21 @@
 
 (sgp :bll 0.5
      :ans 0.5
-     :rt  0.5
-     :er t
+     ;; :rt  0.5  ;; Not needed
+     :er  t
      )
 ;;---------------------------------------    
 ;; Chunk types
 ;;--------------------------------------- 
 
-(chunk-type goal 
-            fproc) ;; fproc= feedback processed
+(chunk-type goal
+            responded ;; Whether a response was chosen or not
+            fproc)    ;; fproc= feedback processed
     
 (chunk-type stimulus
             picture
-            associate-key
+            associated-key
+            outcome 
             )
     
 (chunk-type feedback
@@ -36,10 +38,12 @@
 ;; Chunks
 ;;---------------------------------------
 
-   (add-dm (make-response
-       isa goal
-       fproc yes)
-       )
+(add-dm (yes isa chunk)
+        (no  isa chunk)
+        (make-response isa       goal
+                       responded no
+                       fproc     yes)
+        )
 
 ;;----------------------------------------
 ;; productions
@@ -49,18 +53,22 @@
    ;; and checks against declarative memory in the retrieval buffer
 
 (p check-memory
-    =visual>
-      picture =cur_pic 
+   =visual>
+     picture =cur_pic 
 
-    ?visual>
-      state free
+   ?visual>
+     state free
 
-    =goal>
-       fproc yes
+   ?imaginal>
+     state free
+     buffer empty
+     
+   =goal>
+     fproc yes
     
-    ?retrieval>
-      state free
-      buffer empty
+   ?retrieval>
+     state free
+   - buffer full
   ==>
        
    +retrieval> 
@@ -69,6 +77,7 @@
    
    +imaginal>
       picture =cur_pic
+
    =visual>
 )
 ;;-------------------------------------    
@@ -78,112 +87,195 @@
 ;;-------------------------------------
 
 (p response-monkey-j
-     ?retrieval>
-      state error
-     =visual>
-     - picture nil
+  ?retrieval>
+    state error
 
-    ?manual>
-     preparation free
-     processor free
-     execution free
-     ==>
-    +manual>
-       cmd punch
-       hand right
-       finger index
-   
-     =visual>
-   )
+  ?imaginal>
+    state free
+
+  =imaginal>
+    associated-key nil
+
+  =goal>
+    fproc yes
+  
+  =visual>
+  - picture nil
+
+  ?manual>
+    preparation free
+    processor free
+    execution free
+==>
+  +manual>
+    cmd punch
+    hand right
+    finger index
+
+  =imaginal>
+    associated-key j
+  
+  *goal>
+    fproc no
+
+  =visual>
+  )
     
 (p response-monkey-k
-     ?retrieval>
-      state error
-     =visual>
-     - picture nil
+  ?retrieval>
+    state error
 
-    ?manual>
-     preparation free
-     processor free
-     execution free
-    ==>
-   +manual>
-       cmd punch
-       hand right
-       finger middle
-   =visual>
-   )
+  =goal>
+    fproc yes
+
+  =visual>
+  - picture nil
+
+  ?imaginal>
+    state free
+
+  =imaginal>
+    associated-key nil
+
+  ?manual>
+    preparation free
+    processor free
+    execution free
+==>
+  +manual>
+    cmd punch
+    hand right
+    finger middle
+
+  =imaginal>
+    associated-key k
+
+  *goal>
+    fproc no
+  
+  =visual>
+  )
+
 
 (p response-monkey-l
-   ?retrieval>
-      state error
-   =visual>
-   - picture nil
-      
-    ?manual>
-     preparation free
-     processor free
-     execution free
-   ==>
-    +manual>
-      cmd punch
-      hand right
-      finger ring
-    =visual> 
-   )
-    
+  ?retrieval>
+    state error
+
+  =visual>
+  - picture nil
+
+  ?imaginal>
+    state free
+
+  =goal>
+    fproc yes
+
+  =imaginal>
+    associated-key nil
+
+  ?manual>
+    preparation free
+    processor free
+    execution free
+
+==>
+  +manual>
+    cmd punch
+    hand right
+    finger ring
+
+  =imaginal>
+    associated-key l
+
+  *goal>
+    fproc no
+
+  =visual>
+  )
+   
 ;;-------------------------------------    
-   ;;outcome is yes: make response based on memory 
-  ;; How do I select, conditionally, the right key to press if we have only one production?
+;;outcome is yes: make response based on memory 
+;; How do I select, conditionally, the right key to press if we have only one production?
 ;;-------------------------------------
 
 (p outcome-yes
-    =retrieval> 
-       outcome yes 
-       associate-key =k
+  =retrieval> 
+    outcome yes 
+    associated-key =k
 
-    ;;+imaginal>
-     ;; picture =cur_pic
-    
-     =goal>
-      fproc yes
+  =goal>
+    fproc yes
 
-   ?manual>
-     preparation free
-     processor free
-     execution free
+  ?imaginal>
+    state free
 
-   ==>
-   +manual>
-      cmd press-key
-      key =k
+  =imaginal>
+    associated-key nil
+  
+  ?manual>
+    preparation free
+    processor free
+    execution free
 
+==>
+
+  +manual>
+    cmd press-key
+    key =k
+
+  *imaginal>
+    associated-key =k
+  
   *goal>
-       fproc no   
+    fproc no   
 )
 
     
 ;;Encode response after feedback
     
 (p encode-feedback
-    =visual>
+   "Encodes the visual response"
+  =visual>
     feedback =f
    
-    
-    =imaginal>
-     outcome nil	
+  ?imaginal>
+    state free
+
+  =goal>
+    fproc no
+  
+  =imaginal>
+    outcome nil	
 	
-    ==> 
-   *imaginal>
+==> 
+  *imaginal>
     outcome =f
+
+  *goal>
+    fproc yes  
+
+  =visual>
+  )
+
+
+(p commit-to-memory
+   "Creates an episodic traces of the previous decision"
+  =visual>
+    feedback =f
+    
+  =imaginal>
+  - outcome nil	
+	
+==>
+  -imaginal>
 )
 
-(goal-focus
- make-response)
+
+(goal-focus make-response)
  
 
 
 ;;(set-buffer-chunk 'visual 'cup-stimulus)    
     
-    )
+)
 

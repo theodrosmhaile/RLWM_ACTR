@@ -70,6 +70,8 @@ def present_stim():
     
     print('Presented: ', stims[i])
     print('correct response: ', cor_resps[i])   
+
+    
 def get_response(model, key):
     global current_response
     global i
@@ -79,6 +81,7 @@ def get_response(model, key):
     current_response[i] = key
    
     return current_response
+
 
 def present_feedback():
     global i
@@ -118,7 +121,7 @@ def model_loop():
     
     #waits for a key press?
     actr.monitor_command("output-key", 'get_response')
-    actr.run(45)
+    actr.run(100)
    
 
 model_loop()
