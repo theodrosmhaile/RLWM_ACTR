@@ -22,7 +22,7 @@ from matplotlib import pyplot
 stims_3 = ['cup','bowl','plate']
 stims_6 = ['hat','gloves','shoes', 'shirt', 'jacket', 'jeans']
 nPresentations = 12
-nTrials = nPresentations * 3 #for sets size three experiment/block
+nTrials = nPresentations * 3 #3 #for sets size three experiment/block
 
 #associated responses (these are arbitrary)
 stims_3_resps = ['j', 'k', 'l'];
@@ -127,27 +127,53 @@ def model_loop():
     
     #waits for a key press?
     actr.monitor_command("output-key", 'get_response')
-    actr.run(100)
+    actr.run(200)
+    actr.reset()
    
 
-model_loop()
-      
-print('mean accuracy: ', np.mean(accuracy))
+#
+nsimulations = np.arange(2) #set the number of simulations "subjects"
+for x in nsimulations:
+    model_loop()
+
+if False :
+    print('mean accuracy: ', np.mean(accuracy))
 
 
-stims_array = np.asarray(stims)
-acc_array = np.asarray(accuracy)
+    stims_array = np.asarray(stims)
+    acc_array = np.asarray(accuracy)
 
-cup_presented   = np.where(stims_array == 'cup') 
-bowl_presented  = np.where(stims_array == 'bowl') 
-plate_presented = np.where(stims_array == 'plate') 
+    cup_presented   = np.where(stims_array == 'cup') 
+    bowl_presented  = np.where(stims_array == 'bowl') 
+    plate_presented = np.where(stims_array == 'plate') 
 
-acc_by_presentation = np.mean([acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0)
-print(acc_by_presentation)
-#plot 
-pyplot.figure(dpi=300)
-sns.regplot(np.arange(12)+1, acc_by_presentation, order=2)
-pyplot.show()
+    acc_by_presentation = np.mean([acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0)
+    print(acc_by_presentation)
+    #plot 
+    pyplot.figure(dpi=300)
+    sns.regplot(np.arange(12)+1, acc_by_presentation, order=2)
+    pyplot.show()
 
+# 6 items plot (will be fixed later)
+if False : 
+    hat_presented = np.where(stims_array == 'hat') 
+    gloves_presented = np.where(stims_array == 'gloves') 
+    shoes_presented = np.where(stims_array == 'shoes') 
+    shirt_presented = np.where(stims_array == 'shirt') 
+    jacket_presented = np.where(stims_array == 'jacket') 
+    jeans_presented = np.where(stims_array == 'jeans') 
+
+    acc_by_presentation = np.mean([acc_array[hat_presented], 
+        acc_array[gloves_presented], 
+        acc_array[shoes_presented],
+        acc_array[shirt_presented],
+        acc_array[jacket_presented],
+        acc_array[jeans_presented]
+        ], 0)
+    print(acc_by_presentation)
+    #plot 
+    pyplot.figure(dpi=300)
+    sns.regplot(np.arange(12)+1, acc_by_presentation, order=2, ci=None)
+    pyplot.show()
 
 

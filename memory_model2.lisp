@@ -12,7 +12,7 @@
 
 (define-model rlwm_memory_model2
 
-(sgp :bll 0.8
+(sgp :bll 0.5
      :ans 0.5
      ;; :rt  0.5  ;; Not needed
      :er  t
