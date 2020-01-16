@@ -44,7 +44,9 @@ stims, cor_resps = zip(*stims_temp)
 
 
 #Load model
-model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/RL_model1.lisp')
+curr_dir = os.path.dirname(os.path.realpath(__file__))
+actr.load_act_r_model(os.path.join(curr_dir, "memory_model2.lisp"))
+#model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/RL_model1.lisp')
 
 
 #variables needed
@@ -148,8 +150,8 @@ acc_by_presentation = np.mean([acc_array[cup_presented], acc_array[plate_present
 print(acc_by_presentation)
 #plot 
 pyplot.figure(dpi=300)
-sns.lineplot(np.arange(12) + 1, acc_by_presentation, markers=True)
-
+sns.regplot(np.arange(12)+1, acc_by_presentation, order=2)
+pyplot.show()
 #save file to csv
 #if 0:
     #reshape stimuli into stimulus x presentation. Note nRows will either be 3 or 6 depending on number of stimuli

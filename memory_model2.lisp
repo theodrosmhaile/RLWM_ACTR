@@ -12,7 +12,7 @@
 
 (define-model rlwm_memory_model2
 
-(sgp :bll 0.5
+(sgp :bll 0.8
      :ans 0.5
      ;; :rt  0.5  ;; Not needed
      :er  t
@@ -81,9 +81,9 @@
    =visual>
 )
 ;;-------------------------------------    
-;; Depending on outcome: yes or no
+;; Depending on outcome: yes or no (retrieval error)
 
-   ;;outcome is no: make random response (3 possible)
+   ;;outcome is no (retrieval error): make random response (3 possible)
 ;;-------------------------------------
 
 (p response-monkey-j

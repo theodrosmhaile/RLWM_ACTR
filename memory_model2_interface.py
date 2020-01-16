@@ -13,6 +13,8 @@ import sys
 import string
 import actr
 import pandas as pd
+import seaborn as sns 
+from matplotlib import pyplot
 
 
 
@@ -47,6 +49,10 @@ stims, cor_resps = zip(*stims_temp)
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 actr.load_act_r_model(os.path.join(curr_dir, "memory_model2.lisp"))
 #model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/memory_model2.lisp')
+
+#set parameters, if needed....
+#actr.set_parameter_value(":ans",0.9) 
+#actr.set_parameter_value(":bll",0.9) 
 
 
 #variables needed
@@ -129,7 +135,19 @@ model_loop()
 print('mean accuracy: ', np.mean(accuracy))
 
 
+stims_array = np.asarray(stims)
+acc_array = np.asarray(accuracy)
 
+cup_presented   = np.where(stims_array == 'cup') 
+bowl_presented  = np.where(stims_array == 'bowl') 
+plate_presented = np.where(stims_array == 'plate') 
+
+acc_by_presentation = np.mean([acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0)
+print(acc_by_presentation)
+#plot 
+pyplot.figure(dpi=300)
+sns.regplot(np.arange(12)+1, acc_by_presentation, order=2)
+pyplot.show()
 
 
 
