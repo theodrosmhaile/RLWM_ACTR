@@ -1,20 +1,20 @@
 ;;------------------------------------
-;; Model 2
+;; Model 3
 ;;------------------------------------
 ;;
 
-;; This model relies only on storage and retrieval of memory of past experience with stimuli and associated response. 
+;; This model relies only on storage and retrieval of memory of past experience with stimuli and associated response. However, a variablility on 
 ;; It relies on three parameters: memory decay(BLL), activation noise(ANS) and retrieval threshold(RT) at which a memory will be...activated/retrieved. 
 ;; Important features: Stiumulus, associate-key and feedback 
 
 
 (clear-all)
 
-(define-model memory_model2
+(define-model wm_model3
 
 (sgp :bll 0.5
      :ans 0.5
-     ;; :rt  0.5  ;; Not needed
+     :mas 0.5
      :er  t
      )
 ;;---------------------------------------    
