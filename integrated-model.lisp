@@ -1,3 +1,40 @@
+;;; ============================================================== ;;;
+;;; INTEGRATED DECLARATIVE/PROCEDURAL MODEL FOR THE COLLINS TASK
+;;; ============================================================== ;;;
+;;; The model can perform the task in two possible ways:
+;;;
+;;;    1. Declarative strategy: The model first attempts to retrieve a
+;;;       memory of a previously successful response with the given
+;;;       stimulus.
+;;;
+;;;       1.1  If a memory is found, the response is used .
+;;;
+;;;       1.2  If no memory is found, the model responds randomly.
+;;;
+;;;    2. Procedural strategy: The model uses RL to sort out the best
+;;;       S-R options. All the S-R combinations are available at the
+;;;       beginning.
+;;;
+;;; At every trial, the model proceeds through the following steps:
+;;;
+;;;    1. Meta-arbitration: The model chooses whether to proceed
+;;;       procedurally or declaratively.
+;;;
+;;;    2. Strategy execution. This is either declarative or
+;;;       procedural.
+;;;
+;;;    3. Feedback processing. This is divided into two sub-phases:
+;;;
+;;;       3.1 Feedback parsing, in which the binary feedback is used
+;;;           to propagate ack reward signals (for RL)
+;;;
+;;;       3.2 Feedback encoding, in which the
+;;;           stimulus-response-outcome information is stored in DM.
+;;;
+;;; ============================================================== ;;;
+
+
+
 (clear-all)
 
 (define-model collins-model-integrated
@@ -42,8 +79,9 @@
         (bowl) (plate) (jacket)
         )
 
-;;; META
-     
+;;; ============================================================== ;;;
+;;; META-ARBITRATION
+;;; ============================================================== ;;;
 
 (p choose-declarative
    =visual>
@@ -80,7 +118,7 @@
 )
 
 ;;; ============================================================== ;;;
-;;; RL PART
+;;; RL PROCEDURAL STRATEGY
 ;;; ============================================================== ;;;
 
 ;;-------------object 1: cup-----------------------
@@ -751,7 +789,7 @@
 
 
 ;;; ============================================================== ;;;
-;;; THE DM PART
+;;; DECLARATIVE (LTM + WM) STRATEGY
 ;;; ============================================================== ;;;
 
 (p check-memory
@@ -782,11 +820,11 @@
       picture =cur_pic
 
    =visual>
-)
+   )
+
 ;;-------------------------------------    
 ;; Depending on outcome: yes or no (retrieval error)
-
-   ;;outcome is no (retrieval error): make random response (3 possible)
+;;outcome is no (retrieval error): make random response (3 possible)
 ;;-------------------------------------
 
 (p response-monkey-j
@@ -1020,7 +1058,7 @@
 
 
 ;;;--------------------------------------------------------    
-;;; Productions: processing feedback
+;;; INITIALIZATION
 ;;;--------------------------------------------------------    
       
  
@@ -1028,10 +1066,8 @@
 (spp parse-feedback-no :reward -1)
 
 
-(goal-focus make-response)
+)  ;; END OF MODEL
 
-
-)
 
 (defun quick-test ()
   (reload)
