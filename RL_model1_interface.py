@@ -23,7 +23,7 @@ nPresentations = 12
 nTrials = nPresentations * 3 #for sets size three experiment/block
 
 #associated responses (these are arbitrary)
-stims_3_resps = ['j', 'k', 'l'];
+stims_3_resps = ['j', 'j', 'l'];
 stims_6_resps = ['k','k', 'j', 'j', 'l', 'l'];
 
 #generate stimult to present to model **Edit as needed **
