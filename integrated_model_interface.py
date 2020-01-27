@@ -22,7 +22,7 @@ from matplotlib import pyplot
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "memory_model2.lisp"))
+actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp"))
 #model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/memory_model2.lisp')
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
@@ -108,79 +108,85 @@ def model_loop():
     
 
 
-## execute model
+## execute model and simulate data
+#parameter ranges for simulation
+bll_param   = [0.3,0.5, 0.7]#np.arange(0.3, 0.71,0.01)   # decay rate of declarative memory
+alpha_param = np.arange(0.17, 0.35, 0.01) # learning rate of the RL utility selection
+#egs_param   = #amount of noise added to the RL utility selection
+#imaginal_param = #simulates working memory as attentional focus 
 
 nsimulations = np.arange(1) #set the number of simulations "subjects"
-for x in nsimulations:
-    actr.reset()
-    #Stimuli to be used and exp parameters
-    stims_3 = ['cup','bowl','plate']
-    stims_6 = ['hat','gloves','shoes', 'shirt', 'jacket', 'jeans']
-    test_stims = ["bowl", "shirt", "jeans", "plate", "cup", "jacket"] #Each stimulus was presented 4 times during test
-    nPresentations = 12 #learning phase, items were presented 12-14 times during learning
-    nTestPresentations = 4
-    nTrials = (nPresentations * 9) + (nTestPresentations * np.size(test_stims))  #3 #for sets size three experiment/block
 
-    #associated responses (matches Collins' patterns of response-stim associations)
-    stims_3_resps = ['j', 'j', 'l']
-    stims_6_resps = ['k','k', 'j', 'j', 'l', 'l']
-    test_resps    = ["j", "j", "l", "l", "j", "l"]
 
-    #generate stimult to present to model **Edit as needed **
+for bll in bll_param:
 
-    #this shuffles both lists, stimuli and associated correct responses, in the same order
+    for nsim in nsimulations:
+        actr.reset()
 
-    # 3 set block
-    stims_temp3 = list( zip(np.repeat(stims_3, 12).tolist(),
-             np.repeat(stims_3_resps,12).tolist()
+        #set parameters
+        #actr.set_parameter_value(":ans",0.9) 
+        actr.set_parameter_value(":bll",bll) 
+
+
+
+        #Stimuli to be used and exp parameters
+        stims_3 = ['cup','bowl','plate']
+        stims_6 = ['hat','gloves','shoes', 'shirt', 'jacket', 'jeans']
+        test_stims = ["bowl", "shirt", "jeans", "plate", "cup", "jacket"] #Each stimulus was presented 4 times during test
+        nPresentations = 12 #learning phase, items were presented 12-14 times during learning
+        nTestPresentations = 4
+        nTrials = (nPresentations * 9) + (nTestPresentations * np.size(test_stims))  #3 #for sets size three experiment/block
+
+        #associated responses (matches Collins' patterns of response-stim associations)
+        stims_3_resps = ['j', 'j', 'l']
+        stims_6_resps = ['k','k', 'j', 'j', 'l', 'l']
+        test_resps    = ["j", "j", "l", "l", "j", "l"]
+
+        #generate stimult to present to model **Edit as needed **
+
+        #this shuffles both lists, stimuli and associated correct responses, in the same order
+
+        # 3 set block
+        stims_temp3 = list( zip(np.repeat(stims_3, 12).tolist(),
+                 np.repeat(stims_3_resps,12).tolist()
+                ))
+
+        rnd.shuffle(stims_temp3)
+
+        stims3, cor_resps3 = zip(*stims_temp3)
+        
+        # 6 set block
+        stims_temp6 = list( zip(np.repeat(stims_6, 12).tolist(),
+            np.repeat(stims_6_resps, 12).tolist()
             ))
+        rnd.shuffle(stims_temp6)
+        stims6, cor_resps6 = (zip(*stims_temp6))
 
-    rnd.shuffle(stims_temp3)
+       
+       # test phase 
+        test_temp = list(zip(np.repeat(test_stims, 4).tolist(),
+    	np.repeat(test_resps, 4).tolist()
+      	  ))
 
-    stims3, cor_resps3 = zip(*stims_temp3)
-    
-    # 6 set block
-    stims_temp6 = list( zip(np.repeat(stims_6, 12).tolist(),
-        np.repeat(stims_6_resps, 12).tolist()
-        ))
-    rnd.shuffle(stims_temp6)
-    stims6, cor_resps6 = (zip(*stims_temp6))
-
-   
-   # test phase 
-    test_temp = list(zip(np.repeat(test_stims, 4).tolist(),
-	np.repeat(test_resps, 4).tolist()
-  	  ))
-
-    rnd.shuffle(test_temp)
-    teststims, cor_testresps = (zip(*test_temp))
-     
-    # concat all stimuli and responses together to present
-    
-    stims = stims3 + stims6 + teststims
-    cor_resps = cor_resps3 + cor_resps6 + cor_testresps
-  
-    #variables needed
-    chunks = None
-    current_response  = np.repeat('x', nTrials * 2).tolist() #multiply by 2 for number of blocks
-    accuracy = np.repeat(0, nTrials).tolist()
-    lastLearnTrial = np.size(stims3 + stims6) -1
-    
-    i = 0
-    win = None
-    model_loop()
-    
-
-
-   
-
-    #set parameters, if needed....
-    #actr.set_parameter_value(":ans",0.9) 
-    #actr.set_parameter_value(":bll",0.9) 
-
+        rnd.shuffle(test_temp)
+        teststims, cor_testresps = (zip(*test_temp))
+         
+        # concat all stimuli and responses together to present
+        
+        stims = stims3 + stims6 + teststims
+        cor_resps = cor_resps3 + cor_resps6 + cor_testresps
+      
+        #variables needed
+        chunks = None
+        current_response  = np.repeat('x', nTrials * 2).tolist() #multiply by 2 for number of blocks
+        accuracy = np.repeat(0, nTrials).tolist()
+        lastLearnTrial = np.size(stims3 + stims6) -1
+        
+        i = 0
+        win = None
+        model_loop()
 
 ## data analysis and plotting
-
 
     if True :
         print('mean accuracy: ', np.mean(accuracy))
@@ -199,6 +205,7 @@ for x in nsimulations:
        # print(acc_by_presentation3)
         #plot 
         pyplot.figure(dpi=120)
+        pyplot.title("bll ",)
         sns.regplot(np.arange(12)+1, acc_by_presentation3, order=2, label="set_3")
         #pyplot.show()
 

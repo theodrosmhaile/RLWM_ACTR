@@ -41,6 +41,8 @@
 
 (sgp :alpha 0.2
      :egs 0.1
+   ;;:imaginal-activation
+   ;;:bll
      :er t
      :ul t
      :esc t
@@ -1065,7 +1067,7 @@
 (spp parse-feedback-yes :reward +1)
 (spp parse-feedback-no :reward -1)
 
-
+(goal-focus make-response) ;;maybe?
 )  ;; END OF MODEL
 
 
