@@ -107,14 +107,14 @@ def model_loop():
 ## execute model and simulate data
 
 #parameter ranges for simulation
-bll_param   = [0.3]#0.5, 0.7]#np.arange(0.3, 0.71,0.01)   # decay rate of declarative memory
-alpha_param = [0.17]#np.arange(0.17, 0.35, 0.01) # learning rate of the RL utility selection
-egs_param   = [0.2]#np.arange(0.2, 0.9, 0.1) # amount of noise added to the RL utility selection
-imag_param = [1]#np.arange(0,6.5,0.5) #simulates working memory as attentional focus 
-ans_param   = [0.2]#np.arange(0.2, 0.9, 0.1) #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
+bll_param   = [0.3,0.5, 0.7]#np.arange(0.3, 0.71,0.01)   # decay rate of declarative memory
+alpha_param = np.arange(0.17, 0.35, 0.01) # learning rate of the RL utility selection
+egs_param   = np.arange(0.2, 0.9, 0.1) # amount of noise added to the RL utility selection
+imag_param = np.arange(0,6.5,0.5) #simulates working memory as attentional focus 
+ans_param   = np.arange(0.2, 0.9, 0.1) #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
 
 
-nsimulations = np.arange(3) #set the number of simulations "subjects"
+nsimulations = np.arange(1) #set the number of simulations "subjects"
 for ans in ans_param:
     actr.set_parameter_value(":ans", ans)
 
@@ -197,7 +197,7 @@ for ans in ans_param:
 
                 ## data analysis and plotting
 
-                    if True :
+                    if False :
                         print('mean accuracy: ', np.mean(accuracy))
 
 
@@ -213,13 +213,13 @@ for ans in ans_param:
                        # print("mean accuracy set 3: " , np.mean(acc_by_presentation3))
                        # print(acc_by_presentation3)
                         #plot 
-                        #pyplot.figure(dpi=120)
-                        #pyplot.title("bll ",)
-                        #sns.regplot(np.arange(12)+1, acc_by_presentation3, order=2, label="set_3")
+                        pyplot.figure(dpi=120)
+                        pyplot.title("bll ",)
+                        sns.regplot(np.arange(12)+1, acc_by_presentation3, order=2, label="set_3")
                         #pyplot.show()
 
                     # 6 items plot (will be fixed later)
-                    if True : 
+                    if False : 
                         hat_presented    = np.where(stims_array == 'hat') 
                         gloves_presented = np.where(stims_array == 'gloves') 
                         shoes_presented  = np.where(stims_array == 'shoes') 
@@ -238,11 +238,11 @@ for ans in ans_param:
                        
                         #plot 
                        # pyplot.figure(dpi=300)
-                       #sns.regplot(np.arange(12)+1, acc_by_presentation6, order=2,label="set_6")
-                        #pyplot.show()
+                        sns.regplot(np.arange(12)+1, acc_by_presentation6, order=2,label="set_6")
+                        pyplot.show()
                         
                         # plot test accuracy
-                    if True:
+                    if False:
                         test_array = np.asarray(stims[lastLearnTrial+1 : np.size(stims)]) 
                         test_acc_array   = np.asarray(accuracy[lastLearnTrial+1 : np.size(stims)]) 
 
@@ -265,8 +265,8 @@ for ans in ans_param:
                             test_acc_array[jacket_presented],
                             test_acc_array[jeans_presented]], 0))
 
-                        #pyplot.figure(dpi=120)
-                        #sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
+                        pyplot.figure(dpi=120)
+                        sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
 
 
                     if False:
@@ -277,5 +277,4 @@ for ans in ans_param:
                         acc3.transpose().to_csv(f3, mode='a', header = False)
                         f3.close()
                         f6.close()
-                        
 
