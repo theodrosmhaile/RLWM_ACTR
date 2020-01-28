@@ -107,14 +107,18 @@ def model_loop():
 ## execute model and simulate data
 
 #parameter ranges for simulation
-bll_param   = [0.3]#0.5, 0.7]#np.arange(0.3, 0.71,0.01)   # decay rate of declarative memory
-alpha_param = [0.17]#np.arange(0.17, 0.35, 0.01) # learning rate of the RL utility selection
-egs_param   = [0.2]#np.arange(0.2, 0.9, 0.1) # amount of noise added to the RL utility selection
-imag_param = [1]#np.arange(0,6.5,0.5) #simulates working memory as attentional focus 
-ans_param   = [0.2]#np.arange(0.2, 0.9, 0.1) #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
+bll_param   = np.arange(0.3, 0.71,0.01)   # decay rate of declarative memory 
+alpha_param = np.arange(0.17, 0.35, 0.01) # learning rate of the RL utility selection
+egs_param   = np.arange(0.2, 0.9, 0.1) # amount of noise added to the RL utility selection
+imag_param  = np.arange(0,6.5,0.5) #simulates working memory as attentional focus 
+ans_param   = np.arange(0.2, 0.9, 0.1) #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
 
 
-nsimulations = np.arange(3) #set the number of simulations "subjects"
+nsimulations = np.arange(10) #set the number of simulations "subjects"
+
+sim_data3 = [] #saves mean curves and parameters
+sim_data6 = []
+sim_data = []
 for ans in ans_param:
     actr.set_parameter_value(":ans", ans)
 
@@ -128,6 +132,9 @@ for ans in ans_param:
                 actr.set_parameter_value(":alpha", alpha) 
                 
                 for bll in bll_param:
+                    actr.set_parameter_value(":bll", bll) 
+                    temp3 = [] #initialize variables to concat all outputs from simulations
+                    temp6 = []
 
                     for nsim in nsimulations:
                         actr.reset()
@@ -197,85 +204,91 @@ for ans in ans_param:
 
                 ## data analysis and plotting
 
-                    if True :
-                        print('mean accuracy: ', np.mean(accuracy))
+                        if True :
+                            print('mean accuracy: ', np.mean(accuracy))
 
 
-                        stims_array = np.asarray(stims[0:lastLearnTrial + 1]) 
-                        acc_array   = np.asarray(accuracy[0:lastLearnTrial + 1]) 
+                            stims_array = np.asarray(stims[0:lastLearnTrial + 1]) 
+                            acc_array   = np.asarray(accuracy[0:lastLearnTrial + 1]) 
 
-                        cup_presented   = np.where(stims_array == 'cup') 
-                        bowl_presented  = np.where(stims_array == 'bowl') 
-                        plate_presented = np.where(stims_array == 'plate') 
+                            cup_presented   = np.where(stims_array == 'cup') 
+                            bowl_presented  = np.where(stims_array == 'bowl') 
+                            plate_presented = np.where(stims_array == 'plate') 
 
-                        acc_by_presentation3 = np.mean([acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0)
-                        acc3 = pd.DataFrame(acc_by_presentation3)
-                       # print("mean accuracy set 3: " , np.mean(acc_by_presentation3))
-                       # print(acc_by_presentation3)
-                        #plot 
-                        #pyplot.figure(dpi=120)
-                        #pyplot.title("bll ",)
-                        #sns.regplot(np.arange(12)+1, acc_by_presentation3, order=2, label="set_3")
-                        #pyplot.show()
+                            acc3 = np.mean([acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0)
+                          #  acc3 = pd.DataFrame(acc_by_presentation3)
+                           # print("mean accuracy set 3: " , np.mean(acc_by_presentation3))
+                           # print(acc_by_presentation3)
+                            #plot 
+                            #pyplot.figure(dpi=120)
+                            #pyplot.title("bll ",)
+                            #sns.regplot(np.arange(12)+1, acc_by_presentation3, order=2, label="set_3")
+                            #pyplot.show()
 
-                    # 6 items plot (will be fixed later)
-                    if True : 
-                        hat_presented    = np.where(stims_array == 'hat') 
-                        gloves_presented = np.where(stims_array == 'gloves') 
-                        shoes_presented  = np.where(stims_array == 'shoes') 
-                        shirt_presented  = np.where(stims_array == 'shirt') 
-                        jacket_presented = np.where(stims_array == 'jacket') 
-                        jeans_presented  = np.where(stims_array == 'jeans') 
+                        # 6 items plot (will be fixed later)
+                        if True : 
+                            hat_presented    = np.where(stims_array == 'hat') 
+                            gloves_presented = np.where(stims_array == 'gloves') 
+                            shoes_presented  = np.where(stims_array == 'shoes') 
+                            shirt_presented  = np.where(stims_array == 'shirt') 
+                            jacket_presented = np.where(stims_array == 'jacket') 
+                            jeans_presented  = np.where(stims_array == 'jeans') 
 
-                        acc_by_presentation6 = np.mean([acc_array[hat_presented], 
-                            acc_array[gloves_presented], 
-                            acc_array[shoes_presented],
-                            acc_array[shirt_presented],
-                            acc_array[jacket_presented],
-                            acc_array[jeans_presented]], 0)
-                        acc6=pd.DataFrame(acc_by_presentation6)
-                        print("mean accuracy set6: ", np.mean(acc_by_presentation6))
-                       
-                        #plot 
-                       # pyplot.figure(dpi=300)
-                       #sns.regplot(np.arange(12)+1, acc_by_presentation6, order=2,label="set_6")
-                        #pyplot.show()
-                        
-                        # plot test accuracy
-                    if True:
-                        test_array = np.asarray(stims[lastLearnTrial+1 : np.size(stims)]) 
-                        test_acc_array   = np.asarray(accuracy[lastLearnTrial+1 : np.size(stims)]) 
-
-
-                        cup_presented   = np.where(test_array == 'cup') 
-                        bowl_presented  = np.where(test_array == 'bowl') 
-                        plate_presented = np.where(test_array == 'plate') 
-
-                        hat_presented    = np.where(test_array == 'hat') 
-                        gloves_presented = np.where(test_array == 'gloves') 
-                        shoes_presented  = np.where(test_array == 'shoes') 
-                        shirt_presented  = np.where(test_array == 'shirt') 
-                        jacket_presented = np.where(test_array == 'jacket') 
-                        jeans_presented  = np.where(test_array == 'jeans') 
-
-                        test_3 = pd.DataFrame(np.mean([test_acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0))
-
-                        test_6 = pd.DataFrame(np.mean([ 
-                            test_acc_array[shirt_presented],
-                            test_acc_array[jacket_presented],
-                            test_acc_array[jeans_presented]], 0))
-
-                        #pyplot.figure(dpi=120)
-                        #sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
+                            acc6 = np.mean([acc_array[hat_presented], 
+                                acc_array[gloves_presented], 
+                                acc_array[shoes_presented],
+                                acc_array[shirt_presented],
+                                acc_array[jacket_presented],
+                                acc_array[jeans_presented]], 0)
+                            #acc6=pd.DataFrame(acc_by_presentation6)
+                            #print("mean accuracy set6: ", np.mean(acc6))
+                           
+                            #plot 
+                           # pyplot.figure(dpi=300)
+                           #sns.regplot(np.arange(12)+1, acc_by_presentation6, order=2,label="set_6")
+                            #pyplot.show()
+                            temp3.append(acc3)
+                            temp6.append(acc6)
+                           
+                            # plot test accuracy
+                        if True:
+                            test_array = np.asarray(stims[lastLearnTrial+1 : np.size(stims)]) 
+                            test_acc_array   = np.asarray(accuracy[lastLearnTrial+1 : np.size(stims)]) 
 
 
-                    if False:
-                        #save data to files
-                        f3 = open("set3.csv", 'a')
-                        f6 = open("set6.csv", 'a')
-                        acc6.transpose().to_csv(f6, mode='a', header = False)
-                        acc3.transpose().to_csv(f3, mode='a', header = False)
-                        f3.close()
-                        f6.close()
-                        
+                            cup_presented   = np.where(test_array == 'cup') 
+                            bowl_presented  = np.where(test_array == 'bowl') 
+                            plate_presented = np.where(test_array == 'plate') 
+
+                            hat_presented    = np.where(test_array == 'hat') 
+                            gloves_presented = np.where(test_array == 'gloves') 
+                            shoes_presented  = np.where(test_array == 'shoes') 
+                            shirt_presented  = np.where(test_array == 'shirt') 
+                            jacket_presented = np.where(test_array == 'jacket') 
+                            jeans_presented  = np.where(test_array == 'jeans') 
+
+                            test_3 = pd.DataFrame(np.mean([test_acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0))
+
+                            test_6 = pd.DataFrame(np.mean([ 
+                                test_acc_array[shirt_presented],
+                                test_acc_array[jacket_presented],
+                                test_acc_array[jeans_presented]], 0))
+
+                            #pyplot.figure(dpi=120)
+                            #sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
+
+
+                        if False:
+                            #save data to files
+                            f3 = open("set3.csv", 'a')
+                            f6 = open("set6.csv", 'a')
+                            acc6.transpose().to_csv(f6, mode='a', header = False)
+                            acc3.transpose().to_csv(f3, mode='a', header = False)
+                            f3.close()
+                            f6.close()
+                    
+#                   save averaged resluts from simulations along with parameters
+                  
+                    sim_data.append([np.mean(temp3,0),np.mean(temp6,0), ans, imag, egs, alpha, bll])
+
 

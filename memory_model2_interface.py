@@ -109,8 +109,10 @@ def model_loop():
 
 
 ## execute model
+temp3 = [] #initialize variables to concat all outputs from simulations
+temp6 = []
 
-nsimulations = np.arange(1) #set the number of simulations "subjects"
+nsimulations = np.arange(10) #set the number of simulations "subjects"
 for x in nsimulations:
     actr.reset()
     #Stimuli to be used and exp parameters
@@ -198,8 +200,8 @@ for x in nsimulations:
        # print("mean accuracy set 3: " , np.mean(acc_by_presentation3))
        # print(acc_by_presentation3)
         #plot 
-        pyplot.figure(dpi=120)
-        sns.regplot(np.arange(12)+1, acc_by_presentation3, order=2, label="set_3")
+        #pyplot.figure(dpi=120)
+        #sns.regplot(np.arange(12)+1, acc_by_presentation3, order=2, label="set_3")
         #pyplot.show()
 
     # 6 items plot (will be fixed later)
@@ -222,9 +224,10 @@ for x in nsimulations:
        
         #plot 
        # pyplot.figure(dpi=300)
-        sns.regplot(np.arange(12)+1, acc_by_presentation6, order=2,label="set_6")
-        pyplot.show()
-        
+        #sns.regplot(np.arange(12)+1, acc_by_presentation6, order=2,label="set_6")
+        #pyplot.show()
+        temp3.append(acc_by_presentation3)
+        temp6.append(acc_by_presentation6)
         # plot test accuracy
     if True:
         test_array = np.asarray(stims[lastLearnTrial+1 : np.size(stims)]) 
@@ -249,8 +252,8 @@ for x in nsimulations:
             test_acc_array[jacket_presented],
             test_acc_array[jeans_presented]], 0))
 
-        pyplot.figure(dpi=120)
-        sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
+        #pyplot.figure(dpi=120)
+        #sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
         
 
 
