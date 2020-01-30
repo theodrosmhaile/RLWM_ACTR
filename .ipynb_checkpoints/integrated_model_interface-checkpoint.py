@@ -137,6 +137,7 @@ for ans in ans_param:
                     temp6 = []
 
                     for nsim in nsimulations:
+                        #Restart actr for each simulation and set the parameters
                         actr.reset()
                         actr.set_parameter_value(":bll", bll)
                         actr.set_parameter_value(":alpha", alpha)
@@ -266,7 +267,7 @@ for ans in ans_param:
                             jacket_presented = np.where(test_array == 'jacket') 
                             jeans_presented  = np.where(test_array == 'jeans') 
 
-                            test_3 = pd.DataFrame(np.mean([test_acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0))
+                            test_3 = pd.DataFrame(np.mean([test_acc_array[cup_presented], test_acc_array[plate_presented], test_acc_array[bowl_presented]],0))
 
                             test_6 = pd.DataFrame(np.mean([ 
                                 test_acc_array[shirt_presented],
@@ -288,6 +289,10 @@ for ans in ans_param:
 
     #                   save averaged resluts from simulations along with parameters
 
-                    sim_data.append([i, np.mean(temp3,0),np.mean(temp6,0), ans, imag, egs, alpha, bll])
+                    sim_data.append([i, np.mean(temp3,0),np.mean(temp6,0), test_3, test_6, ans, imag, egs, alpha, bll])
+
+        simData = pd.DataFrame(sim_data)
+        (sum((simData[0:][0]) < 132)) / simData.shape[0]
+        
 
 

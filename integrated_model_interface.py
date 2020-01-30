@@ -291,4 +291,8 @@ for ans in ans_param:
 
                     sim_data.append([i, np.mean(temp3,0),np.mean(temp6,0), test_3, test_6, ans, imag, egs, alpha, bll])
 
+       # simData = pd.DataFrame(sim_data)
+       #(sum((simData[0:][0]) < 132)) / simData.shape[0]
+        
+
 
