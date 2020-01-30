@@ -47,7 +47,9 @@
      :er t
      :ul t
      :esc t
-     :v nil
+     :v model_trace
+     :trace-detail all
+     :trace-history t
      ) 
 
 ;;; --------------------------------------------------------  
@@ -69,12 +71,13 @@
             feedback)
 
 
-(add-dm (make-response isa goal
-                       fproc yes)
+(add-dm 
+  (make-response isa goal
+                      fproc yes)
         (test-stim isa stimulus
-                   picture cup)
+                  picture cup)
         (test-feedback isa feedback
-                       feedback yes)
+                      feedback yes)
         (yes) (no)
         (declarative) (procedural)
         (j) (k) (l) 
@@ -120,6 +123,30 @@
    *goal>
      strategy procedural
 )
+
+
+;;; ============================================================== ;;;
+;;; TEST PHASE PROCESS FEEDBACK
+;;; ============================================================== ;;;
+
+(p parse-test-feedback
+   =visual>
+     feedback x
+
+   ?visual>
+     state free
+
+   =goal>
+   - strategy nil
+     fproc no
+==>
+   =visual>
+
+   *goal>
+     fproc yes
+)
+
+
 
 ;;; ============================================================== ;;;
 ;;; RL PROCEDURAL STRATEGY
@@ -1028,7 +1055,7 @@
     state free
 
   =goal>
-    ;;strategy declarative  
+    strategy declarative  
     fproc    yes
   
   =imaginal>
@@ -1048,7 +1075,7 @@
     feedback =f
 
   =goal>
-    ;;strategy declarative  
+    strategy declarative  
     fproc    yes
     
   =imaginal>

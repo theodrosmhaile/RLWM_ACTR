@@ -22,7 +22,7 @@ from matplotlib import pyplot
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "memory_model2.lisp"))
+actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp"))
 #model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/memory_model2.lisp')
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
@@ -112,7 +112,7 @@ def model_loop():
 temp3 = [] #initialize variables to concat all outputs from simulations
 temp6 = []
 
-nsimulations = np.arange(10) #set the number of simulations "subjects"
+nsimulations = np.arange(1) #set the number of simulations "subjects"
 for x in nsimulations:
     actr.reset()
     #Stimuli to be used and exp parameters
