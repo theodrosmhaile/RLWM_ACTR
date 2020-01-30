@@ -41,9 +41,15 @@
 
 (sgp :alpha 0.2
      :egs 0.1
+   ;;:imaginal-activation
+     :bll 0.5
+     :ans 0.1
      :er t
      :ul t
      :esc t
+     :v model_trace
+     :trace-detail all
+     :trace-history t
      ) 
 
 ;;; --------------------------------------------------------  
@@ -65,19 +71,20 @@
             feedback)
 
 
-(add-dm (make-response isa goal
-                       fproc yes)
-        (test-stim isa stimulus
-                   picture cup)
-        (test-feedback isa feedback
-                       feedback yes)
-        (yes) (no)
-        (declarative) (procedural)
-        (j) (k) (l) 
-        (jeans) (cup) (hat)
-        (shirt) (gloves) (shoes)
-        (bowl) (plate) (jacket)
-        )
+;;(add-dm 
+  ;;(make-response isa goal
+    ;;                  fproc yes)
+      ;;  (test-stim isa stimulus
+        ;;          picture cup)
+       ;; (test-feedback isa feedback
+         ;;             feedback yes)
+        ;;(yes) (no)
+        ;;(declarative) (procedural)
+        ;;(j) (k) (l) 
+        ;;(jeans) (cup) (hat)
+        ;;(shirt) (gloves) (shoes)
+        ;;(bowl) (plate) (jacket)
+        ;;s)
 
 ;;; ============================================================== ;;;
 ;;; META-ARBITRATION
@@ -116,6 +123,30 @@
    *goal>
      strategy procedural
 )
+
+
+;;; ============================================================== ;;;
+;;; TEST PHASE PROCESS FEEDBACK
+;;; ============================================================== ;;;
+
+(p parse-test-feedback
+   =visual>
+     feedback x
+
+   ?visual>
+     state free
+
+   =goal>
+   - strategy nil
+     fproc no
+==>
+   =visual>
+
+   *goal>
+     fproc yes
+)
+
+
 
 ;;; ============================================================== ;;;
 ;;; RL PROCEDURAL STRATEGY
@@ -1015,6 +1046,26 @@
      fproc yes
 )
 
+(p reset-strategy-procedural
+   "Encodes the visual response"
+  =visual>
+    feedback =f
+   
+  ?imaginal>
+    state free
+  
+
+  =goal>
+    strategy procedural
+    fproc    yes
+  
+==> 
+  *goal>
+    strategy nil
+  
+;;  =visual>
+)
+
 (p encode-feedback
    "Encodes the visual response"
   =visual>
@@ -1024,7 +1075,7 @@
     state free
 
   =goal>
-    ;;strategy declarative  
+    strategy declarative  
     fproc    yes
   
   =imaginal>
@@ -1044,14 +1095,16 @@
     feedback =f
 
   =goal>
-    ;;strategy declarative  
+    strategy declarative  
     fproc    yes
     
   =imaginal>
   - outcome nil	
 	
 ==>
-  =visual>  
+  *goal>
+    strategy nil
+  -visual>  
   -imaginal>
 )
 
@@ -1065,8 +1118,11 @@
 (spp parse-feedback-yes :reward +1)
 (spp parse-feedback-no :reward -1)
 
+;(spp choose-procedural :u -10000)
 
+;;(goal-focus make-response) ;;maybe?
 )  ;; END OF MODEL
+
 
 
 (defun quick-test ()

@@ -71,20 +71,20 @@
             feedback)
 
 
-(add-dm 
-  (make-response isa goal
-                      fproc yes)
-        (test-stim isa stimulus
-                  picture cup)
-        (test-feedback isa feedback
-                      feedback yes)
-        (yes) (no)
-        (declarative) (procedural)
-        (j) (k) (l) 
-        (jeans) (cup) (hat)
-        (shirt) (gloves) (shoes)
-        (bowl) (plate) (jacket)
-        )
+;;(add-dm 
+  ;;(make-response isa goal
+    ;;                  fproc yes)
+      ;;  (test-stim isa stimulus
+        ;;          picture cup)
+       ;; (test-feedback isa feedback
+         ;;             feedback yes)
+        ;;(yes) (no)
+        ;;(declarative) (procedural)
+        ;;(j) (k) (l) 
+        ;;(jeans) (cup) (hat)
+        ;;(shirt) (gloves) (shoes)
+        ;;(bowl) (plate) (jacket)
+        ;;s)
 
 ;;; ============================================================== ;;;
 ;;; META-ARBITRATION
@@ -1120,7 +1120,7 @@
 
 ;(spp choose-procedural :u -10000)
 
-(goal-focus make-response) ;;maybe?
+;;(goal-focus make-response) ;;maybe?
 )  ;; END OF MODEL
 
 
