@@ -97,6 +97,10 @@ def model_loop():
     actr.add_command('present_feedback', present_feedback, 'presents feedback')
     actr.add_command('get_response', get_response, 'gets response')
     
+    #initial goal dm
+    actr.define_chunks(['make-response','isa', 'goal', 'fproc','yes'])  
+    actr.goal_focus('make-response')    
+
     #open window for interaction
     win = actr.open_exp_window("test", visible = False)
     actr.install_device(win)
@@ -217,7 +221,7 @@ for x in nsimulations:
             acc_array[gloves_presented], 
             acc_array[shoes_presented],
             acc_array[shirt_presented],
-            acc_array[jacket_presented],
+            acc_array[jacket_presented],1
             acc_array[jeans_presented]], 0)
         acc6=pd.DataFrame(acc_by_presentation6)
         print("mean accuracy set6: ", np.mean(acc_by_presentation6))
@@ -245,7 +249,7 @@ for x in nsimulations:
         jacket_presented = np.where(test_array == 'jacket') 
         jeans_presented  = np.where(test_array == 'jeans') 
 
-        test_3 = pd.DataFrame(np.mean([test_acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0))
+        test_3 = pd.DataFrame(np.mean([test_acc_array[cup_presented], test_acc_array[plate_presented], test_acc_array[bowl_presented]],0))
 
         test_6 = pd.DataFrame(np.mean([ 
             test_acc_array[shirt_presented],
@@ -253,7 +257,7 @@ for x in nsimulations:
             test_acc_array[jeans_presented]], 0))
 
         #pyplot.figure(dpi=120)
-        #sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
+        sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
         
 
 
