@@ -42,8 +42,8 @@
 (sgp :alpha 0.2
      :egs 0.1
    ;;:imaginal-activation
-   ;;:bll
-   ;;:ans
+     :bll 0.5
+     :ans 0.1
      :er t
      :ul t
      :esc t
@@ -1046,6 +1046,26 @@
      fproc yes
 )
 
+(p reset-strategy-procedural
+   "Encodes the visual response"
+  =visual>
+    feedback =f
+   
+  ?imaginal>
+    state free
+  
+
+  =goal>
+    strategy procedural
+    fproc    yes
+  
+==> 
+  *goal>
+    strategy nil
+  
+;;  =visual>
+)
+
 (p encode-feedback
    "Encodes the visual response"
   =visual>
@@ -1082,7 +1102,9 @@
   - outcome nil	
 	
 ==>
-  =visual>  
+  *goal>
+    strategy nil
+  -visual>  
   -imaginal>
 )
 
@@ -1096,8 +1118,11 @@
 (spp parse-feedback-yes :reward +1)
 (spp parse-feedback-no :reward -1)
 
+;(spp choose-procedural :u -10000)
+
 (goal-focus make-response) ;;maybe?
 )  ;; END OF MODEL
+
 
 
 (defun quick-test ()

@@ -104,7 +104,7 @@ def model_loop():
     
     #waits for a key press?
     actr.monitor_command("output-key", 'get_response')
-    actr.run(2000)
+    actr.run(200)
     
 
 
