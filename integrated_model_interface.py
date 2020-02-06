@@ -180,9 +180,16 @@ sim_data  = []
 def run_simulation(bll, alpha, egs, imag, ans, nSims):
     global i
 
+<<<<<<< HEAD
     
    
     
+=======
+       # simData = pd.DataFrame(sim_data)
+       #(sum((simData[0:][0]) < 132)) / simData.shape[0]
+        
+
+>>>>>>> d1428592d26065f2ca8da40bdeacf1024e5f42b5
 
     temp3 = [] 
     temp6 = []
