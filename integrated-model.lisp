@@ -47,9 +47,7 @@
      :er t
      :ul t
      :esc t
-     :v model_trace
-     :trace-detail all
-     :trace-history t
+     :v nil
      ) 
 
 ;;; --------------------------------------------------------  

@@ -15,10 +15,10 @@ import seaborn as sns
 from matplotlib import pyplot
 
 
-
+show_output =False
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp"))
+actr.load_act_r_model(os.path.join(curr_dir, "RL_model1.lisp"))
 #model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/memory_model2.lisp')
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
@@ -27,12 +27,14 @@ def present_stim():
     global chunks
     global stims
     global i
+    global show_output
    
     chunks = actr.define_chunks(['isa', 'stimulus', 'picture', stims[i]])
     actr.set_buffer_chunk('visual', chunks[0])
     
-    print('Presented: ', stims[i])
-    print('correct response: ', cor_resps[i])   
+    if(show_output):
+        print('Presented: ', stims[i])
+        print('correct response: ', cor_resps[i])   
 
     
 def get_response(model, key):
@@ -60,7 +62,9 @@ def present_feedback():
             actr.set_buffer_chunk('visual', chunks[0])
             
         actr.schedule_event_relative(1, 'present_stim')
-        print("Feedback given: X, test phase" )
+
+        if (show_output):
+            print("Feedback given: X, test phase" )
   
     else:
     # This runs for learning phase. This portion presents feedback
@@ -73,10 +77,12 @@ def present_feedback():
     # present feedback    
         chunks = actr.define_chunks(['isa', 'feedback', 'feedback',feedback])
         actr.set_buffer_chunk('visual', chunks[0])
-        print("Feedback given: ", feedback )
+
+        if (show_output):
+            print("Feedback given: ", feedback )
         
         if i == lastLearnTrial:
-            print("BREAK HERE")
+            #rint("BREAK HERE")
             actr.schedule_event_relative(600, 'present_stim')
         else:
             actr.schedule_event_relative(1, 'present_stim')
@@ -175,6 +181,7 @@ ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory acti
 sim_data3 = [] #saves mean curves and parameters
 sim_data6 = []
 sim_data  = []
+I_data = []
 
 
 def run_simulation(bll, alpha, egs, imag, ans, nSims):
@@ -197,11 +204,11 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
     for n in nsimulations:
         
         actr.reset()
-        actr.set_parameter_value(":bll", bll)
-        actr.set_parameter_value(":alpha", alpha)
-        actr.set_parameter_value(":egs", egs)
-        actr.set_parameter_value(":imaginal-activation", imag)
-        actr.set_parameter_value(":ans", ans)
+        #actr.set_parameter_value(":bll", bll)
+        #actr.set_parameter_value(":alpha", alpha)
+        #actr.set_parameter_value(":egs", egs)
+        #actr.set_parameter_value(":imaginal-activation", imag)
+        #actr.set_parameter_value(":ans", ans)
 
         i = 0
         win = None
@@ -289,10 +296,13 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
             acc3.transpose().to_csv(f3, mode='a', header = False)
             f3.close()
             f6.close()
+        I_data.append(i)
 
 #                   save averaged resluts from simulations along with parameters
 
     sim_data.append([i, np.mean(temp3,0),np.mean(temp6,0), test_3, test_6, ans, imag, egs, alpha, bll])
-    return sim_data
+    return sim_data, I_data
+sum(np.array(pd.DataFrame(I_data)<132))        
+
 
         
