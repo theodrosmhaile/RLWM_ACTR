@@ -47,8 +47,8 @@
      :er t
      :ul t
      :esc t
-     :v nil
-     ) 
+     :v "/home/master-tedward/RLWM_ACTR/v_output.txt"
+          ) 
 
 ;;; --------------------------------------------------------  
 ;;; ----------------Chunk types-----------------------------
@@ -1104,7 +1104,7 @@
     strategy nil
   -visual>  
   -imaginal>
-)
+) 
 
 
 
@@ -1116,7 +1116,7 @@
 (spp parse-feedback-yes :reward +1)
 (spp parse-feedback-no :reward -1)
 
-;(spp choose-procedural :u -10000)
+;;(spp choose-declarative :u -10000)
 
 ;;(goal-focus make-response) ;;maybe?
 )  ;; END OF MODEL

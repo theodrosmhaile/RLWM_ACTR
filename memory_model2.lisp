@@ -13,10 +13,10 @@
 (define-model memory_model2
 
 (sgp :bll 0.5
-     :ans 0.5
+     :ans nil
      ;; :rt  0.5  ;; Not needed
      :er  t
-     :v nil
+
      )
 ;;---------------------------------------    
 ;; Chunk types

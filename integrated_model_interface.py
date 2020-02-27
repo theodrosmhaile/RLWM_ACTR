@@ -13,12 +13,13 @@ import actr
 import pandas as pd
 import seaborn as sns 
 from matplotlib import pyplot
+import itertools
 
 
-show_output =False
+show_output =True
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "RL_model1.lisp"))
+actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp"))
 #model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/memory_model2.lisp')
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
@@ -54,12 +55,13 @@ def present_feedback():
     global accuracy
 
     if i > lastLearnTrial:
-    # this tests whether the current trial is a test phase. This portion does not present feedback but checks accuracy
+    # this tests whether the current trial is a test phase. This portion presents meaningless feedback and checks accuracy
         if current_response[i] == cor_resps[i]:
             accuracy[i] = 1
-            feedback = "x"
-            chunks = actr.define_chunks(['isa', 'feedback', 'feedback',feedback])
-            actr.set_buffer_chunk('visual', chunks[0])
+
+        feedback = "x"
+        chunks = actr.define_chunks(['isa', 'feedback', 'feedback',feedback])
+        actr.set_buffer_chunk('visual', chunks[0])
             
         actr.schedule_event_relative(1, 'present_stim')
 
@@ -177,6 +179,11 @@ egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utilit
 imag_param  = [1, 2, 3, 4, 5] #simulates working memory as attentional focus 
 ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
 
+
+#combine all params for a loop 
+params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
+param_combs = list(itertools.product(*params))
+
  #initialize variables to concat all outputs from simulations
 sim_data3 = [] #saves mean curves and parameters
 sim_data6 = []
@@ -187,28 +194,17 @@ I_data = []
 def run_simulation(bll, alpha, egs, imag, ans, nSims):
     global i
 
-
-    
-   
-    
-
-       # simData = pd.DataFrame(sim_data)
-       #(sum((simData[0:][0]) < 132)) / simData.shape[0]
-        
-
-
-
     temp3 = [] 
     temp6 = []
     nsimulations = np.arange(nSims) #set the number of simulations "subjects"
     for n in nsimulations:
         
         actr.reset()
-        #actr.set_parameter_value(":bll", bll)
-        #actr.set_parameter_value(":alpha", alpha)
-        #actr.set_parameter_value(":egs", egs)
-        #actr.set_parameter_value(":imaginal-activation", imag)
-        #actr.set_parameter_value(":ans", ans)
+        actr.set_parameter_value(":bll", bll)
+        actr.set_parameter_value(":alpha", alpha)
+        actr.set_parameter_value(":egs", egs)
+        actr.set_parameter_value(":imaginal-activation", imag)
+        actr.set_parameter_value(":ans", ans)
 
         i = 0
         win = None
@@ -302,7 +298,7 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
 
     sim_data.append([i, np.mean(temp3,0),np.mean(temp6,0), test_3, test_6, ans, imag, egs, alpha, bll])
     return sim_data, I_data
-sum(np.array(pd.DataFrame(I_data)<132))        
+#sum(np.array(pd.DataFrame(I_data)<132))        
 
 
         

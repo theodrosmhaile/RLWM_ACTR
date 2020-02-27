@@ -15,11 +15,11 @@
     ;; ul: utility learning, *bll for the memory model*
     
 (sgp :alpha 0.2
-     :egs 0.1
+     :egs 0
      :er t
      :ul t
      :esc t
-     :v nil
+
      ) 
 ;;--------------------------------------------------------  
 ;;----------------Chunk types----------------------------- 
