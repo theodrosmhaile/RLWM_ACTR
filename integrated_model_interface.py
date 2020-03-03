@@ -16,7 +16,7 @@ from matplotlib import pyplot
 import itertools
 
 
-show_output =True
+show_output =False
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp"))
@@ -185,15 +185,19 @@ params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
 param_combs = list(itertools.product(*params))
 
  #initialize variables to concat all outputs from simulations
+
 sim_data3 = [] #saves mean curves and parameters
 sim_data6 = []
 sim_data  = []
 I_data = []
 
-
 def run_simulation(bll, alpha, egs, imag, ans, nSims):
+   
     global i
-
+    global sim_data3
+    global sim_data
+    global sim_data6
+    print('vars reset')
     temp3 = [] 
     temp6 = []
     nsimulations = np.arange(nSims) #set the number of simulations "subjects"
@@ -209,76 +213,61 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         i = 0
         win = None
         model_loop()
+       ### Analyze generated data: LEARNING
+            ##set 3 analysis 
 
-        if True :
-           # print('mean accuracy: ', np.mean(accuracy))
+        stims_array = np.asarray(stims[0:lastLearnTrial + 1]) 
+        acc_array   = np.asarray(accuracy[0:lastLearnTrial + 1]) 
 
+        cup_presented   = np.where(stims_array == 'cup') 
+        bowl_presented  = np.where(stims_array == 'bowl') 
+        plate_presented = np.where(stims_array == 'plate') 
 
-            stims_array = np.asarray(stims[0:lastLearnTrial + 1]) 
-            acc_array   = np.asarray(accuracy[0:lastLearnTrial + 1]) 
+        acc3 = np.mean([acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0)
+          
+               ##set 6 analysis 
+        
+       
+        hat_presented    = np.where(stims_array == 'hat') 
+        gloves_presented = np.where(stims_array == 'gloves') 
+        shoes_presented  = np.where(stims_array == 'shoes') 
+        shirt_presented  = np.where(stims_array == 'shirt') 
+        jacket_presented = np.where(stims_array == 'jacket') 
+        jeans_presented  = np.where(stims_array == 'jeans') 
 
-            cup_presented   = np.where(stims_array == 'cup') 
-            bowl_presented  = np.where(stims_array == 'bowl') 
-            plate_presented = np.where(stims_array == 'plate') 
+        acc6 = np.mean([acc_array[hat_presented], 
+            acc_array[gloves_presented], 
+            acc_array[shoes_presented],
+            acc_array[shirt_presented],
+            acc_array[jacket_presented],
+            acc_array[jeans_presented]], 0)
+       
+        temp3.append(acc3)
+        temp6.append(acc6)
 
-            acc3 = np.mean([acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0)
-          #  acc3 = pd.DataFrame(acc_by_presentation3)
-           # print("mean accuracy set 3: " , np.mean(acc_by_presentation3))
-           # print(acc_by_presentation3)
-            #plot 
-            #pyplot.figure(dpi=120)
-            #pyplot.title("bll ",)
-            #sns.regplot(np.arange(12)+1, acc_by_presentation3, order=2, label="set_3")
-            #pyplot.show()
-
-        # 6 items plot (will be fixed later)
-        if True : 
-            hat_presented    = np.where(stims_array == 'hat') 
-            gloves_presented = np.where(stims_array == 'gloves') 
-            shoes_presented  = np.where(stims_array == 'shoes') 
-            shirt_presented  = np.where(stims_array == 'shirt') 
-            jacket_presented = np.where(stims_array == 'jacket') 
-            jeans_presented  = np.where(stims_array == 'jeans') 
-
-            acc6 = np.mean([acc_array[hat_presented], 
-                acc_array[gloves_presented], 
-                acc_array[shoes_presented],
-                acc_array[shirt_presented],
-                acc_array[jacket_presented],
-                acc_array[jeans_presented]], 0)
-            #acc6=pd.DataFrame(acc_by_presentation6)
-            #print("mean accuracy set6: ", np.mean(acc6))
-
-            #plot 
-           # pyplot.figure(dpi=300)
-           #sns.regplot(np.arange(12)+1, acc_by_presentation6, order=2,label="set_6")
-            #pyplot.show()
-            temp3.append(acc3)
-            temp6.append(acc6)
-
-            # plot test accuracy
-        if True:
-            test_array = np.asarray(stims[lastLearnTrial+1 : np.size(stims)]) 
-            test_acc_array   = np.asarray(accuracy[lastLearnTrial+1 : np.size(stims)]) 
+            ### Analyze generated data:  TESTING PHASE
+    
+        test_array = np.asarray(stims[lastLearnTrial+1 : np.size(stims)]) 
+        test_acc_array   = np.asarray(accuracy[lastLearnTrial+1 : np.size(stims)]) 
 
 
-            cup_presented   = np.where(test_array == 'cup') 
-            bowl_presented  = np.where(test_array == 'bowl') 
-            plate_presented = np.where(test_array == 'plate') 
+        cup_presented_t   = np.where(test_array == 'cup') 
+        bowl_presented_t  = np.where(test_array == 'bowl') 
+        plate_presented_t = np.where(test_array == 'plate') 
 
-            hat_presented    = np.where(test_array == 'hat') 
-            gloves_presented = np.where(test_array == 'gloves') 
-            shoes_presented  = np.where(test_array == 'shoes') 
-            shirt_presented  = np.where(test_array == 'shirt') 
-            jacket_presented = np.where(test_array == 'jacket') 
-            jeans_presented  = np.where(test_array == 'jeans') 
+        hat_presented_t    = np.where(test_array == 'hat') 
+        gloves_presented_t = np.where(test_array == 'gloves') 
+        shoes_presented_t  = np.where(test_array == 'shoes') 
+        shirt_presented_t  = np.where(test_array == 'shirt') 
+        jacket_presented_t = np.where(test_array == 'jacket') 
+        jeans_presented_t  = np.where(test_array == 'jeans') 
 
-            test_3 = pd.DataFrame(np.mean([test_acc_array[cup_presented], test_acc_array[plate_presented], test_acc_array[bowl_presented]],0))
+        test_3 = pd.DataFrame(np.mean([test_acc_array[cup_presented_t], test_acc_array[plate_presented_t], test_acc_array[bowl_presented_t]],0))
 
-            test_6 = pd.DataFrame(np.mean([ 
-                test_acc_array[shirt_presented],
-                test_acc_array[jacket_presented],
-                test_acc_array[jeans_presented]], 0))
+        test_6 = pd.DataFrame(np.mean([ 
+            test_acc_array[shirt_presented_t],
+            test_acc_array[jacket_presented_t],
+            test_acc_array[jeans_presented_t]], 0))
 
             #pyplot.figure(dpi=120)
             #sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
@@ -297,6 +286,7 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
 #                   save averaged resluts from simulations along with parameters
 
     sim_data.append([i, np.mean(temp3,0),np.mean(temp6,0), test_3, test_6, ans, imag, egs, alpha, bll])
+    #del temp3, temp6
     return sim_data, I_data
 #sum(np.array(pd.DataFrame(I_data)<132))        
 

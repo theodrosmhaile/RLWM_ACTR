@@ -47,7 +47,7 @@
      :er t
      :ul t
      :esc t
-     :v "/home/master-tedward/RLWM_ACTR/v_output.txt"
+     :v nil ;;"/home/master-tedward/RLWM_ACTR/v_output.txt"
           ) 
 
 ;;; --------------------------------------------------------  
@@ -69,20 +69,20 @@
             feedback)
 
 
-;;(add-dm 
-  ;;(make-response isa goal
-    ;;                  fproc yes)
-      ;;  (test-stim isa stimulus
-        ;;          picture cup)
-       ;; (test-feedback isa feedback
-         ;;             feedback yes)
-        ;;(yes) (no)
-        ;;(declarative) (procedural)
-        ;;(j) (k) (l) 
-        ;;(jeans) (cup) (hat)
-        ;;(shirt) (gloves) (shoes)
-        ;;(bowl) (plate) (jacket)
-        ;;s)
+(add-dm 
+  (make-response isa goal
+                      fproc yes)
+        (test-stim isa stimulus
+                  picture cup)
+        (test-feedback isa feedback
+                      feedback yes)
+        (yes) (no)
+        (declarative) (procedural)
+        (j) (k) (l) 
+        (jeans) (cup) (hat)
+        (shirt) (gloves) (shoes)
+        (bowl) (plate) (jacket)
+        )
 
 ;;; ============================================================== ;;;
 ;;; META-ARBITRATION
