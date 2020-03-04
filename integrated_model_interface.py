@@ -19,7 +19,7 @@ import itertools
 show_output =False
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp"))
+actr.load_act_r_model(os.path.join(curr_dir, "RL_model1.lisp")) #integrated-model.lisp
 #model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/memory_model2.lisp')
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
@@ -181,7 +181,9 @@ ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory acti
 
 
 #combine all params for a loop 
-params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
+#params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
+#param_combs = list(itertools.product(*params))
+params = [alpha_param, egs_param]
 param_combs = list(itertools.product(*params))
 
  #initialize variables to concat all outputs from simulations
@@ -202,13 +204,13 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
     temp6 = []
     nsimulations = np.arange(nSims) #set the number of simulations "subjects"
     for n in nsimulations:
-        
         actr.reset()
-        actr.set_parameter_value(":bll", bll)
+        actr.reload()
+       # actr.set_parameter_value(":bll", bll)
         actr.set_parameter_value(":alpha", alpha)
         actr.set_parameter_value(":egs", egs)
-        actr.set_parameter_value(":imaginal-activation", imag)
-        actr.set_parameter_value(":ans", ans)
+        #actr.set_parameter_value(":imaginal-activation", imag)
+        #actr.set_parameter_value(":ans", ans)
 
         i = 0
         win = None
@@ -268,7 +270,9 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
             test_acc_array[shirt_presented_t],
             test_acc_array[jacket_presented_t],
             test_acc_array[jeans_presented_t]], 0))
+        print(temp3)
 
+        print('accuracy ', np.mean(accuracy))
             #pyplot.figure(dpi=120)
             #sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
 
@@ -285,9 +289,9 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
 
 #                   save averaged resluts from simulations along with parameters
 
-    sim_data.append([i, np.mean(temp3,0),np.mean(temp6,0), test_3, test_6, ans, imag, egs, alpha, bll])
-    #del temp3, temp6
-    return sim_data, I_data
+    sim_data.append([np.mean(temp3,0),np.mean(temp6,0), test_3, test_6, ans, imag, egs, alpha, bll])
+    del temp3, temp6
+    return sim_data#, I_data
 #sum(np.array(pd.DataFrame(I_data)<132))        
 
 
