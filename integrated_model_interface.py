@@ -17,10 +17,10 @@ import itertools
 
 
 show_output =False
+
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "RL_model1.lisp")) #integrated-model.lisp
-#model = actr.load_act_r_model('/home/theodros/RLWM_ACTR/memory_model2.lisp')
+actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp")) #integrated-model.lisp
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
 
@@ -82,6 +82,7 @@ def present_feedback():
 
         if (show_output):
             print("Feedback given: ", feedback )
+            print(accuracy)
         
         if i == lastLearnTrial:
             #rint("BREAK HERE")
@@ -97,6 +98,11 @@ def present_feedback():
 def model_loop():
     
     global win
+    global accuracy
+    global nTrials
+    
+    accuracy = np.repeat(0, nTrials).tolist()
+
     actr.add_command('present_stim', present_stim, 'presents stimulus') 
     actr.add_command('present_feedback', present_feedback, 'presents feedback')
     actr.add_command('get_response', get_response, 'gets response')
@@ -114,6 +120,9 @@ def model_loop():
     actr.monitor_command("output-key", 'get_response')
     actr.run(2000)
     
+    #print(accuracy)
+
+    
 
 
 ## execute model and simulate data
@@ -125,6 +134,7 @@ test_stims = ["bowl", "shirt", "jeans", "plate", "cup", "jacket"] #Each stimulus
 nPresentations = 12 #learning phase, items were presented 12-14 times during learning
 nTestPresentations = 4
 nTrials = (nPresentations * 9) + (nTestPresentations * np.size(test_stims))  #3 #for sets size three experiment/block
+accuracy =  accuracy = np.repeat(0, nTrials).tolist()
 
 #associated responses (matches Collins' patterns of response-stim associations)
 stims_3_resps = ['j', 'j', 'l']
@@ -168,7 +178,6 @@ cor_resps = cor_resps3 + cor_resps6 + cor_testresps
 #variables needed
 chunks = None
 current_response  = np.repeat('x', nTrials * 2).tolist() #multiply by 2 for number of blocks
-accuracy = np.repeat(0, nTrials).tolist()
 lastLearnTrial = np.size(stims3 + stims6) -1
 
 
@@ -179,12 +188,14 @@ egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utilit
 imag_param  = [1, 2, 3, 4, 5] #simulates working memory as attentional focus 
 ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
 
+#Integrated model params
 
 #combine all params for a loop 
-#params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
-#param_combs = list(itertools.product(*params))
-params = [alpha_param, egs_param]
+params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
 param_combs = list(itertools.product(*params))
+#RL model params
+#params = [alpha_param, egs_param]
+#param_combs = list(itertools.product(*params))
 
  #initialize variables to concat all outputs from simulations
 
@@ -199,18 +210,21 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
     global sim_data3
     global sim_data
     global sim_data6
+    global accuracy
     print('vars reset')
     temp3 = [] 
     temp6 = []
+    #accuracy = np.repeat(0, nTrials).tolist()
     nsimulations = np.arange(nSims) #set the number of simulations "subjects"
     for n in nsimulations:
+    
         actr.reset()
-        actr.reload()
-       # actr.set_parameter_value(":bll", bll)
+
+        actr.set_parameter_value(":bll", bll)
         actr.set_parameter_value(":alpha", alpha)
         actr.set_parameter_value(":egs", egs)
-        #actr.set_parameter_value(":imaginal-activation", imag)
-        #actr.set_parameter_value(":ans", ans)
+        actr.set_parameter_value(":imaginal-activation", imag)
+        actr.set_parameter_value(":ans", ans)
 
         i = 0
         win = None
@@ -287,11 +301,14 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
             f6.close()
         I_data.append(i)
 
+       
+
 #                   save averaged resluts from simulations along with parameters
 
     sim_data.append([np.mean(temp3,0),np.mean(temp6,0), test_3, test_6, ans, imag, egs, alpha, bll])
     del temp3, temp6
     return sim_data#, I_data
+
 #sum(np.array(pd.DataFrame(I_data)<132))        
 
 
