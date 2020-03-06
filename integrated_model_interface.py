@@ -284,9 +284,9 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
             test_acc_array[shirt_presented_t],
             test_acc_array[jacket_presented_t],
             test_acc_array[jeans_presented_t]], 0))
-        print(temp3)
+       # print(temp3)
 
-        print('accuracy ', np.mean(accuracy))
+       # print('accuracy ', np.mean(accuracy))
             #pyplot.figure(dpi=120)
             #sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
 

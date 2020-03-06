@@ -144,6 +144,7 @@
 
    *goal>
      fproc yes
+     strategy nil
 )
 
 
@@ -1062,8 +1063,9 @@
 ==> 
   *goal>
     strategy nil
+
   
-;;  =visual>
+  =visual>
 )
 
 (p encode-feedback

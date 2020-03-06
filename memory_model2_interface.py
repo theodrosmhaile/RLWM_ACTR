@@ -113,10 +113,10 @@ def model_loop():
 
 
 ## execute model
-temp3 = [] #initialize variables to concat all outputs from simulations
-temp6 = []
-
-nsimulations = np.arange(1) #set the number of simulations "subjects"
+temp3   = [] #initialize variables to concat all outputs from simulations
+temp6   = []
+simData = []
+nsimulations = np.arange(3) #set the number of simulations "subjects"
 for x in nsimulations:
     actr.reset()
     #Stimuli to be used and exp parameters
@@ -178,6 +178,9 @@ for x in nsimulations:
     
 
 
+simData.append(i)
+
+
    
 
     #set parameters, if needed....
@@ -188,7 +191,7 @@ for x in nsimulations:
 ## data analysis and plotting
 
 
-    if True :
+     if False :
         print('mean accuracy: ', np.mean(accuracy))
 
 
@@ -209,7 +212,7 @@ for x in nsimulations:
         #pyplot.show()
 
     # 6 items plot (will be fixed later)
-    if True : 
+    if False : 
         hat_presented    = np.where(stims_array == 'hat') 
         gloves_presented = np.where(stims_array == 'gloves') 
         shoes_presented  = np.where(stims_array == 'shoes') 
@@ -233,7 +236,7 @@ for x in nsimulations:
         temp3.append(acc_by_presentation3)
         temp6.append(acc_by_presentation6)
         # plot test accuracy
-    if True:
+    if False:
         test_array = np.asarray(stims[lastLearnTrial+1 : np.size(stims)]) 
         test_acc_array   = np.asarray(accuracy[lastLearnTrial+1 : np.size(stims)]) 
 

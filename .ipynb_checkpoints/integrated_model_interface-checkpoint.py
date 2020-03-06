@@ -111,11 +111,11 @@ def model_loop():
 ## execute model and simulate data
 
 #parameter ranges for simulation
-bll_param   = [0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory 
-alpha_param = [0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection
-egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
-imag_param  = [1, 2, 3, 4, 5] #simulates working memory as attentional focus 
-ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
+bll_param   = [0.3]#, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory 
+alpha_param = [0.05]#, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection
+egs_param   = [0.1]#, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
+imag_param  = [1]#, 2, 3, 4, 5] #simulates working memory as attentional focus 
+ans_param   = [0.1]#, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
 
 
 nsimulations = np.arange(1) #set the number of simulations "subjects"
@@ -291,8 +291,8 @@ for ans in ans_param:
 
                     sim_data.append([i, np.mean(temp3,0),np.mean(temp6,0), test_3, test_6, ans, imag, egs, alpha, bll])
 
-        simData = pd.DataFrame(sim_data)
-        (sum((simData[0:][0]) < 132)) / simData.shape[0]
+       # simData = pd.DataFrame(sim_data)
+       #(sum((simData[0:][0]) < 132)) / simData.shape[0]
         
 
 
