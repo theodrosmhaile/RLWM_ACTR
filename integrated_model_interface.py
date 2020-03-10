@@ -16,7 +16,7 @@ from matplotlib import pyplot
 import itertools
 
 
-show_output =False
+show_output = False
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -29,13 +29,16 @@ def present_stim():
     global stims
     global i
     global show_output
+
+    if i < nTrials:
+
    
-    chunks = actr.define_chunks(['isa', 'stimulus', 'picture', stims[i]])
-    actr.set_buffer_chunk('visual', chunks[0])
-    
-    if(show_output):
-        print('Presented: ', stims[i])
-        print('correct response: ', cor_resps[i])   
+        chunks = actr.define_chunks(['isa', 'stimulus', 'picture', stims[i]])
+        actr.set_buffer_chunk('visual', chunks[0])
+        
+        if(show_output):
+            print('Presented: ', stims[i])
+            print('correct response: ', cor_resps[i])   
 
     
 def get_response(model, key):
@@ -67,6 +70,8 @@ def present_feedback():
 
         if (show_output):
             print("Feedback given: X, test phase" )
+            print(accuracy)
+
   
     else:
     # This runs for learning phase. This portion presents feedback
@@ -91,6 +96,7 @@ def present_feedback():
             actr.schedule_event_relative(1, 'present_stim')
 #increase index for next stimulus
     i = i + 1
+    
    
 
 # This function builds ACT-R representations of the python functions
@@ -109,6 +115,18 @@ def model_loop():
     
     #initial goal dm
     actr.define_chunks(['make-response','isa', 'goal', 'fproc','yes'])  
+  #  actr.add_dm(['test-feedback', 'isa', 'feedback', 'feedback', 'yes'])
+    
+  #  actr.add_dm('yes'); actr.add_dm('no') 
+    
+   # actr.add_dm('declarative'); actr.add_dm('procedural')
+    
+   # actr.add_dm('j'); actr.add_dm('k'); actr.add_dm('l')
+
+    #actr.add_dm('jeans'); actr.add_dm('cup'); actr.add_dm('hat'); 
+    #actr.add_dm('shirt'); actr.add_dm('plate'); actr.add_dm('gloves')
+    #actr.add_dm('shoes'); actr.add_dm('bowl'); actr.add_dm('jacket')
+
     actr.goal_focus('make-response')    
     
     #open window for interaction
@@ -193,11 +211,12 @@ ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory acti
 #combine all params for a loop 
 params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
 param_combs = list(itertools.product(*params))
+
 #RL model params
 #params = [alpha_param, egs_param]
 #param_combs = list(itertools.product(*params))
 
- #initialize variables to concat all outputs from simulations
+ ###########initialize variables to concat all outputs from simulations
 
 sim_data3 = [] #saves mean curves and parameters
 sim_data6 = []
@@ -219,6 +238,7 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
     for n in nsimulations:
     
         actr.reset()
+        actr.hide_output()
 
         actr.set_parameter_value(":bll", bll)
         actr.set_parameter_value(":alpha", alpha)
@@ -229,6 +249,8 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         i = 0
         win = None
         model_loop()
+
+
        ### Analyze generated data: LEARNING
             ##set 3 analysis 
 
@@ -278,19 +300,18 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         jacket_presented_t = np.where(test_array == 'jacket') 
         jeans_presented_t  = np.where(test_array == 'jeans') 
 
-        test_3 = pd.DataFrame(np.mean([test_acc_array[cup_presented_t], test_acc_array[plate_presented_t], test_acc_array[bowl_presented_t]],0))
+        test_3 = np.mean([test_acc_array[cup_presented_t], test_acc_array[plate_presented_t], test_acc_array[bowl_presented_t]],0)
 
-        test_6 = pd.DataFrame(np.mean([ 
+        test_6 = np.mean([ 
             test_acc_array[shirt_presented_t],
             test_acc_array[jacket_presented_t],
-            test_acc_array[jeans_presented_t]], 0))
+            test_acc_array[jeans_presented_t]], 0)
        # print(temp3)
 
        # print('accuracy ', np.mean(accuracy))
             #pyplot.figure(dpi=120)
             #sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
-
-
+        
         if False:
             #save data to files
             f3 = open("set3.csv", 'a')
@@ -305,10 +326,10 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
 
 #                   save averaged resluts from simulations along with parameters
 
-    sim_data.append([np.mean(temp3,0),np.mean(temp6,0), test_3, test_6, ans, imag, egs, alpha, bll])
+    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
     del temp3, temp6
-    return sim_data#, I_data
-
+    
+   # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        
 
 
