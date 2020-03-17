@@ -20,7 +20,7 @@ show_output = False
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp")) #integrated-model.lisp
+actr.load_act_r_model(os.path.join(curr_dir, "RL_model1.lisp")) #integrated-model.lisp
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
 
@@ -109,9 +109,7 @@ def model_loop():
     
     accuracy = np.repeat(0, nTrials).tolist()
 
-    actr.add_command('present_stim', present_stim, 'presents stimulus') 
-    actr.add_command('present_feedback', present_feedback, 'presents feedback')
-    actr.add_command('get_response', get_response, 'gets response')
+   
     
     #initial goal dm
     actr.define_chunks(['make-response','isa', 'goal', 'fproc','yes'])  
@@ -135,13 +133,15 @@ def model_loop():
     actr.schedule_event_relative(0, 'present_stim' )
     
     #waits for a key press?
-    actr.monitor_command("output-key", 'get_response')
+   
     actr.run(2000)
     
     #print(accuracy)
 
-    
-
+actr.add_command('present_stim', present_stim, 'presents stimulus') 
+actr.add_command('present_feedback', present_feedback, 'presents feedback')
+actr.add_command('get_response', get_response, 'gets response')
+actr.monitor_command("output-key", 'get_response')
 
 ## execute model and simulate data
 
@@ -209,12 +209,16 @@ ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory acti
 #Integrated model params
 
 #combine all params for a loop 
-params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
-param_combs = list(itertools.product(*params))
+#params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
+#param_combs = list(itertools.product(*params))
 
 #RL model params
 #params = [alpha_param, egs_param]
 #param_combs = list(itertools.product(*params))
+
+# LTM model params
+params = [bll_param, imag_param, ans_param]
+param_combs = list(itertools.product(*params))
 
  ###########initialize variables to concat all outputs from simulations
 
@@ -241,8 +245,8 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         actr.hide_output()
 
         actr.set_parameter_value(":bll", bll)
-        actr.set_parameter_value(":alpha", alpha)
-        actr.set_parameter_value(":egs", egs)
+        #actr.set_parameter_value(":alpha", alpha)
+        #actr.set_parameter_value(":egs", egs)
         actr.set_parameter_value(":imaginal-activation", imag)
         actr.set_parameter_value(":ans", ans)
 

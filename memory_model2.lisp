@@ -12,8 +12,8 @@
 
 (define-model memory_model2
 
-(sgp :bll 0.5
-     :ans nil
+(sgp ;;:bll 0.5
+     ;;:ans nil
      ;; :rt  0.5  ;; Not needed
      :er  t
 
@@ -39,12 +39,12 @@
 ;; Chunks
 ;;---------------------------------------
 
-(add-dm (yes isa chunk)
-        (no  isa chunk)
-        (make-response isa       goal
-                       responded no
-                       fproc     yes)
-        )
+;;(add-dm (yes isa chunk)
+ ;;       (no  isa chunk)
+   ;;     (make-response isa       goal
+     ;;                  responded no
+       ;;                fproc     yes)
+        ;)
 
 
 ;;----------------------------------------
@@ -273,7 +273,7 @@
 )
 
 
-(goal-focus make-response)
+;;(goal-focus make-response)
  
 
 

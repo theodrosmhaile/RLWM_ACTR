@@ -1,13 +1,16 @@
 
 
-import integrated_model_interface.py
 
 for i in range(3):
 	print('%%%%%%%%%%%%%%%',  i,   '%%%%%%%%%%%%%%%%%%%%')
 	run_simulation(param_combs[i][0], param_combs[i][1],param_combs[i][2], param_combs[i][3], param_combs[i][4], 2)                                                                                     
+	if i % 250 == 0 or i == 3124:	
+		sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans' ])
+		sim.to_pickle('sim_data_at' + np.str(i) + 'partial')
 
-	sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans' ])  
-	sim.to_pickle('sim_data_at' + np.str(i) + 'partial')	
+		#np.write_csv
+		#generate line of data, separate by tabs and write to open tsv file (lists would be delim by commas) 	
+# sim_all.to_json('sim_all.JSON', index=False, orient='table') 
 
 
  
