@@ -16,7 +16,7 @@
      ;;:ans nil
      ;; :rt  0.5  ;; Not needed
      :er  t
-
+     :v t
      )
 ;;---------------------------------------    
 ;; Chunk types
