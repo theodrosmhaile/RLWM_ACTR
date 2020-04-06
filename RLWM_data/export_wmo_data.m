@@ -11,7 +11,7 @@ Training_headers = {'subject','acc','RT','Code','seq','actionseq','timeseq','tri
 Path = './raw';
  SavePath = './processed';
 %SavePath = '/Volumes/GoogleDrive/My Drive/CCDL Shared/Shared/Teddy/MM_WMO'
- Thesefiles =  csvread('wmo_uCLIMB_subjects.csv');%'Subjects_uclimb_and_subjectpool.csv');
+ Thesefiles =  csvread('wmo_subjects_across_studies_031820.csv');%'Subjects_uclimb_and_subjectpool.csv');
 %258852;%
  dir([Path,'/*ID*.mat']);
     Training = [];
@@ -41,7 +41,7 @@ for n =1: length(Thesefiles)
 %            ['test_' Thesefiles(n).name(1:end-4)])        
 
 
-   % dlmwrite([Path,'/',Thesefiles(i).name(4:end-11),'_wpt.txt'],...
+   % dlmwrit18e([Path,'/',Thesefiles(i).name(4:end-11),'_wpt.txt'],...
        % Training,'delimiter',',','precision',10)
     catch
        missing_dat = [missing_dat,Thesefiles(n)] ;

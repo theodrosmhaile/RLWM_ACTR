@@ -11,7 +11,7 @@ library(jsonlite)
 
 simsRL_LTM <- fromJSON('sim_data_all_params_integrated_model_100s_031620.JSON')
 simsRL     <- fromJSON('sim_data_all_params_RL_100s_031620.JSON')
-simsLTM    <- fromJSON('sim_data_all_params_LTM_100s_031620.JSON') 
+simsLTM    <- fromJSON('03_mod_LTM_all_brokenTest.JSON')#fromJSON('03_mod_LTM_all.JSON') #fromJSON('sim_data_all_params_LTM_100s_031620.JSON') 
 
 iter.n <- c(1:12)
 
@@ -66,9 +66,9 @@ shinyServer(function(input, output) {
         
         #Force in to data frame for lm function
         
-        tempframe.3 <- data.frame("accuracy" = set3.dat,
+        tempframe.3 <- data.frame("accuracy"   = set3.dat,
                                   "iterations" = iter.n )
-        tempframe.6 <- data.frame("accuracy" =set6.dat,
+        tempframe.6 <- data.frame("accuracy"   = set6.dat,
                                   "iterations" = iter.n )
         
         # compute y.pred to plot fit
@@ -80,8 +80,8 @@ shinyServer(function(input, output) {
         plot(iter.n, set3.dat, 
              col = '#e41a1c', 
              cex = 2, lwd = 2, 
-             pch = 19, xlab ='Stimulus presentations',ylab ='Accuracy', ylim = c(0,1.2), 
-             main = "Learning curves (second deg. fit)" )
+             pch = 19, xlab ='Stimulus presentations',ylab ='Accuracy', ylim = c(0,1), 
+             main = "Learning curves" )
         points(iter.n, 
              set6.dat, 
              col = '#377eb8', 
@@ -141,10 +141,10 @@ shinyServer(function(input, output) {
            
        }
        
-        barplot(c(temp$set3_test[ind], sims$data$set6_test[ind] ), 
+        barplot(c(temp$set3_test[ind], temp$set6_test[ind] ), 
                 c(1,1),ylab = 'Accuracy', xlab = 'set size', 
-                col = c('#e41a1c', '#377eb8'), ylim = c(0,1), 
-                main = 'Accuracy during test')
+                col = c('#e41a1c', '#377eb8'), ylim = c(0, 1), 
+                main = 'Test Accuracy')
 
         
     })

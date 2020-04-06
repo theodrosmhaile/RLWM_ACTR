@@ -20,8 +20,8 @@ Import data and set variables
 ```{r}
 
 #Import data
-wmodata     <- read.csv('./processed/wmo_training_uclimb_and_subjectpool.txt') 
-wmotestdata <- read.csv('./processed/wmo_test_uclimb_and_subjectpool.txt') 
+wmodata     <- read.csv('./processed/wmo_subjects_across_studies_learn_031820.csv') 
+wmotestdata <- read.csv('./processed/wmo_subjects_across_studies_test_031820.csv') 
 
 
 Training.blocks <- c(3,6,3,3,6,3,6,6,3,3,6,3,6,3) #from data
@@ -39,7 +39,7 @@ ns6.n <- 6
 #maintain a universal list of participants
 #Subs <- unique(wmodata$subject)#this will change
 
-Subjects <- as.matrix(read.csv('Subjects_uclimb_and_subjectpool.csv',header = FALSE))
+Subjects <- as.matrix(read.csv('wmo_subjects_across_studies_031820.csv',header = FALSE))
 ```
  
 This block performs the learning/acuracy curve: acc by item`r ns6` iteration  
@@ -263,9 +263,13 @@ RLWM_data <-  data.frame("subject" = wmo.s,
                          "learnDiff"   = wmo.learn.score 
   )
 
+
 if (0) {
+  
+#----- Save learn-test data for all subjects for model testing
+  write.csv(rbind(mean.acc.3, mean.acc.6, ns3.test.mean, ns6.test.mean), 'all_subject_n83_learn_test_data.csv', row.names = FALSE, col.names = FALSE)  
 write.csv(RLWM_data, "./processed/results/wmo_uclimb_subjects_Accuracy.csv")
-  write.csv(LearningRate, "./processed/results/wmo_uclimb_subjectpool_subjects_LearningRate.csv")
+write.csv(LearningRate, "./processed/results/wmo_uclimb_subjectpool_subjects_LearningRate.csv")
 }
 ```
 

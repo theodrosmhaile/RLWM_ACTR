@@ -4,8 +4,22 @@
 ;;
 
 ;; This model relies only on storage and retrieval of memory of past experience with stimuli and associated response. 
-;; It relies on three parameters: memory decay(BLL), activation noise(ANS) and retrieval threshold(RT) at which a memory will be...activated/retrieved. 
+;; It relies on three parameters: memory decay(BLL), activation noise(ANS) and retrieval threshold(RT) 
+;; at which a memory will be...activated/retrieved. 
 ;; Important features: Stiumulus, associate-key and feedback 
+
+;;------------------------------------
+;; Change log
+;;------------------------------------
+;; 03/30/20TMH updated commit-to-memory production to match integrated-model.lisp
+;;            - Added parse-feedback-yes and parse-feedback-no productions
+;;            - Enabled subsymbolic computations
+;;            - Minor modifications to encode-feedback and commit-to-memory productions
+;;            - Added parse-feedback-test productions 
+;;
+;;------------------------------------
+
+
 
 
 (clear-all)
@@ -16,7 +30,9 @@
      ;;:ans nil
      ;; :rt  0.5  ;; Not needed
      :er  t
-     :v t
+     :v nil
+     ;;:esc t
+     ;;:mas 
      )
 ;;---------------------------------------    
 ;; Chunk types
@@ -234,7 +250,40 @@
 
     
 ;;Encode response after feedback
-    
+ 
+(p parse-feedback-yes  
+   =visual>
+     feedback yes
+
+   ?visual>
+     state free
+
+   =goal>
+    fproc no
+==>
+   =visual>
+
+   *goal>
+     fproc yes
+)
+
+
+(p parse-feedback-no
+   =visual>
+     feedback no
+
+   ?visual>
+     state free
+
+   =goal>
+      fproc no
+==>
+   =visual>
+
+   *goal>
+     fproc yes
+)
+
 (p encode-feedback
    "Encodes the visual response"
   =visual>
@@ -244,7 +293,7 @@
     state free
 
   =goal>
-    fproc no
+    fproc yes
   
   =imaginal>
     outcome nil	
@@ -253,8 +302,8 @@
   *imaginal>
     outcome =f
 
-  *goal>
-    fproc yes  
+  ;*goal>
+   ; fproc yes  
 
   =visual>
   )
@@ -264,14 +313,39 @@
    "Creates an episodic traces of the previous decision"
   =visual>
     feedback =f
+
+  =goal>
+    fproc  yes
     
   =imaginal>
-  - outcome nil	
-	
+
+  - outcome nil 
+  
 ==>
+  
+  -visual>  
   -imaginal>
+) 
+
+(p parse-test-feedback
+   =visual>
+     feedback x
+
+   ?visual>
+     state free
+
+   =goal>
+       fproc no
+==>
+   =visual>
+
+   *goal>
+     fproc yes
 )
 
+;;(p outcome-no-commit-to-memory
+
+  ;;)
 
 ;;(goal-focus make-response)
  

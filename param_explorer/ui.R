@@ -16,6 +16,9 @@ shinyUI(
     # Application title
     titlePanel("Parameter Explorer"),
     
+    h4("Select model and adjust sliders to visualize effect of parameter value on model outcome."),
+    
+    
     radioButtons(inputId = "modelselect", 
                        label= "Select Model to display", 
                        choices = c("RL only", "LTM only", "RL-LTM integrated"), 
@@ -24,7 +27,7 @@ shinyUI(
                        ),
     # Sidebar with a slider input for number of bins
     splitLayout( cellWidths = c("30%", "35%", "30%"),
-        sidebarPanel( width = 10, fluid =FALSE,
+        sidebarPanel( width = 10, fluid =TRUE,
             sliderInput("al",
                         "Learning Rate (Alpha):",
                         min = 0.05,
@@ -72,11 +75,22 @@ shinyUI(
        # mainPanel(
         plotOutput("curvPlot", width = "100%", height = "500px"), 
         plotOutput("barPlot", width = "70%", height = "500px")
-            
+         
             
         ),
+  
+   
+    h4("The plotted curves and bars are averages of 100 simulations for each combination of parameters. "), 
+     h4("The integrated model uses all the parameters."  ),
     
-    p(h2("Some information will be displayed here"))
+      h4("The RL model only uses the first two sliders: learning Rate and RL noise."), 
+      h4("The LTM model takes input from the last three sliders: Attention/WM, LTM retrieval
+      noise, and LTM decay rate."), 
+         h4("Adjusting other input parameters will not produce an effect. "),
+    br(),
+    br()
+    
+   
     )
 
 )#)

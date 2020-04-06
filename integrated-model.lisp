@@ -1061,7 +1061,7 @@
   *goal>
     strategy nil
   
-;;  =visual>
+  =visual>
 )
 
 (p encode-feedback

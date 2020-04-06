@@ -7,7 +7,7 @@
 
 
 
-function runRLWM%(subject_id)
+function runRLWM %(subject_id)
 
 subject_id = input('Participant number:');
 starttime=datetime;

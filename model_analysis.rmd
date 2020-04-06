@@ -1,0 +1,174 @@
+---
+title: "model Analysis"
+author: "Theodros H."
+date: "03/12/20220"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+
+```{r set up}
+rm(list = ls())
+library(matlab)
+library(reshape2)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+#library(DescTools)
+library(readr)
+library(data.table)
+library(jsonlite)
+library(data.table)
+```
+
+
+
+
+```{r}
+#----- import subject data
+# 
+#install.packages('data.table')
+
+sdat = fread('./RLWM_data/all_subject_n83_learn_test_data.csv', header = T) %>% t()
+# sdat contains data fro 26 participants (columns), 
+# rows 1:12 learn accuracy set 3 ; 
+# rows 13:24 learn accuracy set 6 ;
+# row 25 test set 3 accuracy ;
+# row 26 test set 6 accuracy ;
+#------ Modify subject data to 'weight' accuracy in test for 3 and 6 by repeating each 12x 
+sdat.temp <- rep(sdat[ , 25:26], 12) %>% 
+  as.matrix() %>% 
+  reshape(., 996,2) %>% 
+  reshape(., 166,12) 
+
+sdat.mod  <- cbind(sdat[, 1:24], sdat.temp[1:83,], sdat.temp[84:166, ])
+
+
+
+#----- import model data
+
+simsRL_LTM <- fromJSON('sim_data_all_params_integrated_model_100s_031620.JSON')
+
+ simsRL_LTM.set3learn <- simsRL_LTM$data$set3_learn %>%
+  unlist() %>%
+  as.matrix() %>%
+  reshape(., 12, 3125) %>%
+  t()
+
+simsRL_LTM.set6learn <- simsRL_LTM$data$set6_learn %>% 
+  unlist() %>% 
+  as.matrix() %>%
+  reshape(., 12, 3125) %>%
+  t() 
+
+simsRL_LTM.s3s6test.temp <-
+  simsRL_LTM$data$set3_test %>%
+  cbind(., simsRL_LTM$data$set6_test) %>% 
+   rep(., 12) %>%
+   as.matrix() %>%
+   reshape(., 37500, 2) %>%
+   reshape(., 6250, 12) 
+
+ RL_LTM.sim.dat <- cbind(simsRL_LTM.set3learn, simsRL_LTM.set6learn, simsRL_LTM.s3s6test.temp[1:3125, ], simsRL_LTM.s3s6test.temp[3126:6250, ] )
+
+
+
+
+simsRL     <- fromJSON('sim_data_all_params_RL_100s_031620.JSON')
+
+ simsRL.set3learn <- simsRL$data$set3_learn %>%
+  unlist() %>%
+  as.matrix() %>%
+  reshape(., 12, 25) %>%
+  t() 
+
+simsRL.set6learn <- simsRL$data$set6_learn %>% 
+  unlist() %>% 
+  as.matrix() %>%
+  reshape(., 12, 25) %>%
+  t() 
+
+ simsRL.s3s6test.temp <-
+  simsRL$data$set3_test %>%
+  cbind(., simsRL$data$set6_test) %>% 
+   rep(., 12) %>%
+   as.matrix() %>%
+   reshape(., 300, 2) %>%
+    reshape(., 50, 12) 
+ 
+
+ RL.sim.dat <- cbind(simsRL.set3learn, simsRL.set6learn, simsRL.s3s6test.temp[1:25, ], simsRL.s3s6test.temp[26:50, ] )
+
+simsLTM    <- fromJSON('03_mod_LTM_all.JSON') 
+
+ simsLTM.set3learn <- simsLTM$data$set3_learn %>%
+  unlist() %>%
+  as.matrix() %>% 
+  reshape(., 12, 125) %>% 
+  t()
+
+simsLTM.set6learn <- simsLTM$data$set6_learn %>% 
+  unlist() %>% 
+  as.matrix() %>%
+  reshape(., 12, 125) %>%
+  t()
+
+simsLTM.s3s6test.temp <-  simsLTM$data$set3_test %>%
+  cbind(., simsLTM$data$set6_test) %>% 
+   rep(., 12) %>% 
+   as.matrix() %>% 
+   reshape(., 1500, 2) %>% 
+   reshape(., 250, 12) 
+
+ LTM.sim.dat <- cbind(simsLTM.set3learn, simsLTM.set6learn,simsLTM.s3s6test.temp[1:125, ], simsLTM.s3s6test.temp[126:250, ] )
+
+# mdat.3 <- fread('set3.csv') %>% t() %>% t()
+
+
+
+#----- loop through subject data and check for fit against model data using mean squared error. 
+
+mseRL.temp     =c()
+mseLTM.temp    =c()
+mseRL_LTM.temp =c()
+
+for(s in c(1:nrow(sdat.mod))) { # for each subject
+ # model 1 
+ mseRL.temp     <- rbind(mseRL.temp, apply(RL.sim.dat, 1, function(x,y) MSE(x, sdat.mod[s, ])))
+ # model 2
+ mseLTM.temp    <- rbind(mseLTM.temp, apply(LTM.sim.dat, 1, function(x,y) MSE(x, sdat.mod[s, ] )))
+ # model 3
+ mseRL_LTM.temp <- rbind(mseRL_LTM.temp, apply(RL_LTM.sim.dat, 1, function(x,y) MSE(x, sdat.mod[s, ])))
+  
+}
+
+
+# Exrtact row indices of best fit model
+RL.fit     = as.matrix(apply(mseRL.temp, 1, min))
+LTM.fit    = as.matrix(apply(mseLTM.temp, 1, min))
+RL_LTM.fit = as.matrix(apply(mseRL_LTM.temp, 1, min))
+
+
+
+#temp <- mdat.3 %>% 
+#  data.table() %>% 
+#  .[,`:=`(V66 = V3 - mean(V3))]
+ind.temp <- c()
+
+for ( i in 1:length(RL_LTM.fit)) {
+  ind.temp <- rbind(ind.temp, which(mseRL_LTM.temp[i,] %in% RL_LTM.fit[i]))
+  
+}
+
+
+```
+
+
+```{r}
+#MAP
+
+
+```
+
+

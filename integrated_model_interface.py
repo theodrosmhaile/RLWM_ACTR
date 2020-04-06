@@ -16,11 +16,11 @@ from matplotlib import pyplot
 import itertools
 
 
-show_output = True
+show_output = False
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "RL_model1.lisp")) #integrated-model.lisp
+actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp")) #integrated-model.lisp
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
 
@@ -213,12 +213,12 @@ ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory acti
 #param_combs = list(itertools.product(*params))
 
 #RL model params
-params = [alpha_param, egs_param]
-param_combs = list(itertools.product(*params))
+#params = [alpha_param, egs_param]
+#param_combs = list(itertools.product(*params))
 
 # LTM model params
-#params = [bll_param, imag_param, ans_param]
-#param_combs = list(itertools.product(*params))
+params = [bll_param, imag_param, ans_param]
+param_combs = list(itertools.product(*params))
 
  ###########initialize variables to concat all outputs from simulations
 
@@ -240,15 +240,15 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
     #accuracy = np.repeat(0, nTrials).tolist()
     nsimulations = np.arange(nSims) #set the number of simulations "subjects"
     for n in nsimulations:
-    
+        print("sim ", n)
         actr.reset()
-        actr.hide_output()
+        #actr.hide_output()
 
-        #actr.set_parameter_value(":bll", bll)
+        actr.set_parameter_value(":bll", bll)
         actr.set_parameter_value(":alpha", alpha)
         actr.set_parameter_value(":egs", egs)
-        #actr.set_parameter_value(":imaginal-activation", imag)
-        #actr.set_parameter_value(":ans", ans)
+        actr.set_parameter_value(":imaginal-activation", imag)
+        actr.set_parameter_value(":ans", ans)
 
         i = 0
         win = None
@@ -330,10 +330,10 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
 
 #                   save averaged resluts from simulations along with parameters
 
-        sim_data.append([temp3, temp6, np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
+        #sim_data.append([temp3, temp6, np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
         #del temp3, temp6
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
-    #sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
+    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
         #del temp3, temp6   
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        
