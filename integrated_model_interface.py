@@ -20,7 +20,7 @@ show_output = True
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "RL_model1.lisp")) #integrated-model.lisp
+actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp")) #integrated-model.lisp
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
 
@@ -101,7 +101,7 @@ def present_feedback():
 
 # This function builds ACT-R representations of the python functions
 
-def model_loop():
+def model_loop(time=2000):
     
     global win
     global accuracy
@@ -134,7 +134,7 @@ def model_loop():
     
     #waits for a key press?
    
-    actr.run(2000)
+    actr.run(time)
     
     #print(accuracy)
 
@@ -227,7 +227,7 @@ sim_data6 = []
 sim_data  = []
 I_data = []
 
-def run_simulation(bll, alpha, egs, imag, ans, nSims):
+def run_simulation(bll, alpha, egs, imag, ans, nSims, time=2000):
    
     global i
     global sim_data3
@@ -247,12 +247,14 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         #actr.set_parameter_value(":bll", bll)
         actr.set_parameter_value(":alpha", alpha)
         actr.set_parameter_value(":egs", egs)
+        actr.set_parameter_value(":mas", 5)
+        actr.set_parameter_value(":visual-activation", 5)
         #actr.set_parameter_value(":imaginal-activation", imag)
         #actr.set_parameter_value(":ans", ans)
 
         i = 0
         win = None
-        model_loop()
+        model_loop(time)
 
 
        ### Analyze generated data: LEARNING

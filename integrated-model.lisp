@@ -39,14 +39,17 @@
 
 (define-model collins-model-integrated
 
-(sgp :alpha 0.2
+(sgp :esc t
+     :alpha 0.2
      :egs 0.1
    ;;:imaginal-activation
      :bll 0.5
      :ans 0.1
+     :mas 5.0
+     :visual-activation 5.0
      :er t
      :ul t
-     :esc t
+     ;;:esc t
      :v nil ;;"/home/master-tedward/RLWM_ACTR/v_output.txt"
           ) 
 
@@ -842,7 +845,7 @@
   ==>
        
    +retrieval> 
-      picture =cur_pic
+      ;;picture =cur_pic
       outcome yes
    
    +imaginal>

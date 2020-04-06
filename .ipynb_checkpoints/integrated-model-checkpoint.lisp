@@ -39,18 +39,19 @@
 
 (define-model collins-model-integrated
 
-(sgp :alpha 0.2
+(sgp :esc t
+     :alpha 0.2
      :egs 0.1
    ;;:imaginal-activation
      :bll 0.5
      :ans 0.1
+     :mas 5.0
+     :visual-activation 5.0
      :er t
      :ul t
-     :esc t
-     :v model_trace
-     :trace-detail all
-     :trace-history t
-     ) 
+     ;;:esc t
+     :v nil ;;"/home/master-tedward/RLWM_ACTR/v_output.txt"
+          ) 
 
 ;;; --------------------------------------------------------  
 ;;; ----------------Chunk types-----------------------------
@@ -71,20 +72,20 @@
             feedback)
 
 
-;;(add-dm 
+;(add-dm 
   ;;(make-response isa goal
     ;;                  fproc yes)
-      ;;  (test-stim isa stimulus
+       ;; (test-stim isa stimulus
         ;;          picture cup)
-       ;; (test-feedback isa feedback
+        ;;(test-feedback isa feedback
          ;;             feedback yes)
-        ;;(yes) (no)
-        ;;(declarative) (procedural)
-        ;;(j) (k) (l) 
-        ;;(jeans) (cup) (hat)
-        ;;(shirt) (gloves) (shoes)
-        ;;(bowl) (plate) (jacket)
-        ;;s)
+       ; (yes) (no)
+       ; (declarative) (procedural)
+       ; (j) (k) (l) 
+       ; (jeans) (cup) (hat)
+       ; (shirt) (gloves) (shoes)
+       ; (bowl) (plate) (jacket)
+       ; )
 
 ;;; ============================================================== ;;;
 ;;; META-ARBITRATION
@@ -144,7 +145,6 @@
 
    *goal>
      fproc yes
-     strategy nil
 )
 
 
@@ -845,7 +845,7 @@
   ==>
        
    +retrieval> 
-      picture =cur_pic
+      ;;picture =cur_pic
       outcome yes
    
    +imaginal>
@@ -1063,9 +1063,8 @@
 ==> 
   *goal>
     strategy nil
-
   
-  =visual>
+;;  =visual>
 )
 
 (p encode-feedback
@@ -1108,7 +1107,7 @@
     strategy nil
   -visual>  
   -imaginal>
-)
+) 
 
 
 
@@ -1120,7 +1119,7 @@
 (spp parse-feedback-yes :reward +1)
 (spp parse-feedback-no :reward -1)
 
-;(spp choose-procedural :u -10000)
+;;(spp choose-declarative :u -10000)
 
 ;;(goal-focus make-response) ;;maybe?
 )  ;; END OF MODEL
