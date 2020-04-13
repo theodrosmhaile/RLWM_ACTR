@@ -3,9 +3,10 @@
 ;;------------------------------------
 ;;
 
-;; This model relies only on storage and retrieval of memory of past experience with stimuli and associated response. 
-;; It relies on three parameters: memory decay(BLL), activation noise(ANS) and retrieval threshold(RT) 
-;; at which a memory will be...activated/retrieved. 
+;; This model relies only on storage and retrieval of memory of past experience 
+;; with stimuli and associated response. 
+;; It relies on three parameters: memory decay(BLL), activation noise(ANS) and 
+;; retrieval threshold(RT) at which a memory will be...activated/retrieved. 
 ;; Important features: Stiumulus, associate-key and feedback 
 
 ;;------------------------------------
@@ -32,7 +33,8 @@
      :er  t
      :v nil
      ;;:esc t
-     ;;:mas 
+     :mas 5.0
+     :visual-activation 5.0 
      )
 ;;---------------------------------------    
 ;; Chunk types
@@ -90,7 +92,7 @@
   ==>
        
    +retrieval> 
-      picture =cur_pic
+      ;; picture =cur_pic
       outcome yes
    
    +imaginal>

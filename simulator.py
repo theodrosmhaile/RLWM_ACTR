@@ -29,3 +29,10 @@ for i in range(3):
            # pyplot.figure(dpi=300)
            #sns.regplot(np.arange(12)+1, acc_by_presentation6, order=2,label="set_6")
             #pyplot.show()
+
+for i in range(125):
+  print('%%%%%%%%%%%%%%%',  i,   '%%%%%%%%%%%%%%%%%%%%')
+  run_simulation(param_combs[i][0], 0,0, param_combs[i][1], param_combs[i][2], 100)                                                                                   
+  #if i % 250 == 0 or i == 3124: 
+    #sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans' ])
+    #sim.to_pickle('sim_data_at' + np.str(i) + 'partial')

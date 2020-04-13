@@ -49,7 +49,7 @@
      :er t
      :ul t
      :esc t
-     :v nil ;;"/home/master-tedward/RLWM_ACTR/v_output.txt"
+     ;;:v nil ;;"/home/master-tedward/RLWM_ACTR/v_output.txt"
           ) 
 
 ;;; --------------------------------------------------------  
@@ -60,7 +60,8 @@
             fproc) ;; fproc= feedback processed
     
 (chunk-type stimulus
-            picture)
+            picture
+            do-strategy)
 
 (chunk-type instance
             picture
@@ -70,7 +71,8 @@
 (chunk-type feedback
             feedback)
 
-
+;;(chunk-type do-strategy
+  ;;            this-str)
 ;(add-dm 
   ;;(make-response isa goal
     ;;                  fproc yes)
@@ -87,42 +89,86 @@
        ; )
 
 ;;; ============================================================== ;;;
-;;; META-ARBITRATION
+;;; META-ARBITRATION (note: look fot integrated-model.lsip for an instance of this)
 ;;; ============================================================== ;;;
 
-(p choose-declarative
-   =visual>
-   - picture nil
+; (p choose-declarative
+;    =visual>
+;    - picture nil
+   
+;    ?visual>
+;      state free
+
+;    =goal>
+;      strategy nil  
+;      fproc yes
+; ==>
+;    =visual>
+     
+;    *goal>
+;      strategy declarative
+; )
+
+; (p choose-procedural
+;    =visual>
+;    - picture nil
+   
+;    ?visual>
+;      state free
+
+;    =goal>
+;      strategy nil  
+;      fproc yes
+; ==>
+;    =visual>
+     
+;    *goal>
+;      strategy procedural
+; )
+;;; ============================================================== ;;;
+;;; PARAMETER-ARBITRATION
+;;; ============================================================== ;;;
+
+(p set-strategy-procedural
+  =visual>
+   do-strategy 1
    
    ?visual>
      state free
 
    =goal>
-     strategy nil  
+     strategy nil
      fproc yes
 ==>
-   =visual>
+  
+ =visual>
      
-   *goal>
-     strategy declarative
+    *goal>
+      strategy procedural
+     ;; fproc yes
+
 )
 
-(p choose-procedural
-   =visual>
-   - picture nil
+(p set-strategy-declarative
+  =visual>
+   do-strategy 2
    
    ?visual>
      state free
 
    =goal>
-     strategy nil  
+     strategy nil
      fproc yes
 ==>
-   =visual>
+  
+ =visual>
      
-   *goal>
-     strategy procedural
+    *goal>
+      strategy declarative
+     ;; fproc yes
+
 )
+
 
 
 ;;; ============================================================== ;;;

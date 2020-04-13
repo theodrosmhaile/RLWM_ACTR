@@ -8,14 +8,14 @@ output:
 ---
 
 
-```{r set up}
+```{r set up, echo=FALSE, warning=FALSE, message=FALSE}
 rm(list = ls())
 library(matlab)
 library(reshape2)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
-#library(DescTools)
+library(MLmetrics)
 library(readr)
 library(data.table)
 library(jsonlite)
@@ -25,29 +25,31 @@ library(data.table)
 
 
 
-```{r}
+```{r import data}
 #----- import subject data
 # 
-#install.packages('data.table')
 
 sdat = fread('./RLWM_data/all_subject_n83_learn_test_data.csv', header = T) %>% t()
-# sdat contains data fro 26 participants (columns), 
+# sdat contains data fro 83 participants (columns), 
 # rows 1:12 learn accuracy set 3 ; 
 # rows 13:24 learn accuracy set 6 ;
 # row 25 test set 3 accuracy ;
 # row 26 test set 6 accuracy ;
+
 #------ Modify subject data to 'weight' accuracy in test for 3 and 6 by repeating each 12x 
 sdat.temp <- rep(sdat[ , 25:26], 12) %>% 
   as.matrix() %>% 
   reshape(., 996,2) %>% 
   reshape(., 166,12) 
 
-sdat.mod  <- cbind(sdat[, 1:24], sdat.temp[1:83,], sdat.temp[84:166, ])
+sdat.mod  <- cbind(sdat[, 1:24], 
+                   sdat.temp[1:83,], 
+                   sdat.temp[84:166, ])
 
 
 
-#----- import model data
-
+#----- import model data (has to be converted from JSON to data frames)
+#--------- Integrated model
 simsRL_LTM <- fromJSON('sim_data_all_params_integrated_model_100s_031620.JSON')
 
  simsRL_LTM.set3learn <- simsRL_LTM$data$set3_learn %>%
@@ -70,12 +72,15 @@ simsRL_LTM.s3s6test.temp <-
    reshape(., 37500, 2) %>%
    reshape(., 6250, 12) 
 
- RL_LTM.sim.dat <- cbind(simsRL_LTM.set3learn, simsRL_LTM.set6learn, simsRL_LTM.s3s6test.temp[1:3125, ], simsRL_LTM.s3s6test.temp[3126:6250, ] )
+ RL_LTM.sim.dat <- cbind(simsRL_LTM.set3learn, 
+                         simsRL_LTM.set6learn, 
+                         simsRL_LTM.s3s6test.temp[1:3125, ], 
+                         simsRL_LTM.s3s6test.temp[3126:6250, ] )
 
 
+#--------- Reinforcement Learning Model
 
-
-simsRL     <- fromJSON('sim_data_all_params_RL_100s_031620.JSON')
+simsRL <- fromJSON('sim_data_all_params_RL_100s_031620.JSON')
 
  simsRL.set3learn <- simsRL$data$set3_learn %>%
   unlist() %>%
@@ -98,8 +103,13 @@ simsRL.set6learn <- simsRL$data$set6_learn %>%
     reshape(., 50, 12) 
  
 
- RL.sim.dat <- cbind(simsRL.set3learn, simsRL.set6learn, simsRL.s3s6test.temp[1:25, ], simsRL.s3s6test.temp[26:50, ] )
+ RL.sim.dat <- cbind(simsRL.set3learn, 
+                     simsRL.set6learn, 
+                     simsRL.s3s6test.temp[1:25, ], 
+                     simsRL.s3s6test.temp[26:50, ] )
 
+#--------- Longterm Memory/WM/Declarative model 
+ 
 simsLTM    <- fromJSON('03_mod_LTM_all.JSON') 
 
  simsLTM.set3learn <- simsLTM$data$set3_learn %>%
@@ -121,12 +131,16 @@ simsLTM.s3s6test.temp <-  simsLTM$data$set3_test %>%
    reshape(., 1500, 2) %>% 
    reshape(., 250, 12) 
 
- LTM.sim.dat <- cbind(simsLTM.set3learn, simsLTM.set6learn,simsLTM.s3s6test.temp[1:125, ], simsLTM.s3s6test.temp[126:250, ] )
+ LTM.sim.dat <- cbind(simsLTM.set3learn, 
+                      simsLTM.set6learn, 
+                      simsLTM.s3s6test.temp[1:125, ], 
+                      simsLTM.s3s6test.temp[126:250, ] )
 
-# mdat.3 <- fread('set3.csv') %>% t() %>% t()
+```
 
 
 
+```{r fit model data to subject data}
 #----- loop through subject data and check for fit against model data using mean squared error. 
 
 mseRL.temp     =c()
@@ -144,7 +158,9 @@ for(s in c(1:nrow(sdat.mod))) { # for each subject
 }
 
 
-# Exrtact row indices of best fit model
+#------ Exrtact row indices to get parameter set of parameters for best fit model
+
+#------------first find the smalled mse
 RL.fit     = as.matrix(apply(mseRL.temp, 1, min))
 LTM.fit    = as.matrix(apply(mseLTM.temp, 1, min))
 RL_LTM.fit = as.matrix(apply(mseRL_LTM.temp, 1, min))
@@ -154,20 +170,116 @@ RL_LTM.fit = as.matrix(apply(mseRL_LTM.temp, 1, min))
 #temp <- mdat.3 %>% 
 #  data.table() %>% 
 #  .[,`:=`(V66 = V3 - mean(V3))]
-ind.temp <- c()
+#-------------second, find actual row number using smallest value
+ind.temp.RL <- c()
+ind.temp.RL_LTM <- c()
+ind.temp.LTM <- c()
 
-for ( i in 1:length(RL_LTM.fit)) {
-  ind.temp <- rbind(ind.temp, which(mseRL_LTM.temp[i,] %in% RL_LTM.fit[i]))
+for ( i in 1:length(RL.fit)) {
+  ind.temp.RL <- rbind(ind.temp.RL, which(mseRL.temp[i,] %in% RL.fit[i]))
   
 }
+
+for ( i in 1:length(LTM.fit)) {
+  ind.temp.LTM <- rbind(ind.temp.LTM, which(mseLTM.temp[i,] %in% LTM.fit[i]))
+  
+}
+for ( i in 1:length(RL_LTM.fit)) {
+  ind.temp.RL_LTM <- rbind(ind.temp.RL_LTM, which(mseRL_LTM.temp[i,] %in% RL_LTM.fit[i]))
+  
+}
+
+#-------------which model fits a participant most?| 1= RL; 2= LTM; 3=RL_LTM
+participants.fit <- ((cbind(RL.fit, LTM.fit, RL_LTM.fit) -1 ) * -1) %>% 
+  max.col() 
+
+participants.fit %>% 
+  hist()
 
 
 ```
 
 
-```{r}
-#MAP
+```{r plots}
+#-------These plots show the learning and test mean across all participants and data from models
 
+Subjects = nrow(sdat)
+plot.sdat <- data.frame('set3' = reshape(t(sdat[,1:12]), Subjects * 12,1),
+                        'set6' = t(sdat[,13:24]) %>% c(), 
+                        'iteration' = rep(1:12,Subjects))
+
+
+plot.sdat  %>% gather(key='study', value = 'acc', -iteration) %>% 
+  ggplot(aes(iteration, acc, group=study)) + 
+  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+ # ggtitle('Average Group performance')
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+#-------These plots show the learning and test mean for 'RL' participants and descriptives
+
+plot.sdat.RL <- data.frame('set3' = t(sdat[participants.fit==1, 1:12]) %>% c(),
+                        'set6' = t(sdat[participants.fit==1, 13:24]) %>% c(), 
+                        'iteration' = rep(1:12,sum(participants.fit==1)))
+
+plot.sdat.RL  %>% gather(key='study', value = 'acc', -iteration) %>% 
+  ggplot(aes(iteration, acc, group=study)) + 
+  geom_point(aes(color=study)) +
+  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+ # ggtitle('Average Group performance')
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
+#-------These plots show the learning and test mean for 'LTM' participants and descriptives
+
+plot.sdat.LTM <- data.frame('set3' = t(sdat[participants.fit==2, 1:12]) %>% c(),
+                        'set6' = t(sdat[participants.fit==2, 13:24]) %>% c(), 
+                        'iteration' = rep(1:12,sum(participants.fit==2)))
+
+plot.sdat.LTM  %>% gather(key='study', value = 'acc', -iteration) %>% 
+  ggplot(aes(iteration, acc, group=study)) + 
+ # geom_point(aes(color=study)) +
+  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+ # ggtitle('Average Group performance')
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
+#-------These plots show the learning and test mean for 'RL-LTM' participants and descriptives
+
+plot.sdat.RL_LTM <- data.frame('set3' = t(sdat[participants.fit==3, 1:12]) %>% c(),
+                        'set6' = t(sdat[participants.fit==3, 13:24]) %>% c(), 
+                        'iteration' = rep(1:12,sum(participants.fit==3)))
+
+plot.sdat.RL_LTM  %>% gather(key='study', value = 'acc', -iteration) %>% 
+  ggplot(aes(iteration, acc, group=study)) + 
+ # geom_point(aes(color=study)) +
+  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+ # ggtitle('Average Group performance')
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
+#------ Distribution of participants in model space.
 
 ```
 
