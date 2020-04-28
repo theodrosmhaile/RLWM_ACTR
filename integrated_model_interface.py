@@ -16,7 +16,7 @@ from matplotlib import pyplot
 import itertools
 
 
-show_output = False
+show_output = True
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -31,7 +31,7 @@ def present_stim():
     global show_output
 
     if i < nTrials:
-
+        
    
         chunks = actr.define_chunks(['isa', 'stimulus', 'picture', stims[i]])
         actr.set_buffer_chunk('visual', chunks[0])
@@ -131,7 +131,7 @@ def model_loop():
     win = actr.open_exp_window("test", visible = False)
     actr.install_device(win)
     actr.schedule_event_relative(0, 'present_stim' )
-    
+   
     #waits for a key press?
    
     actr.run(2000)
@@ -226,7 +226,7 @@ sim_data3 = [] #saves mean curves and parameters
 sim_data6 = []
 sim_data  = []
 I_data = []
-
+#i=0
 def run_simulation(bll, alpha, egs, imag, ans, nSims):
    
     global i
@@ -249,12 +249,13 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         actr.set_parameter_value(":egs", egs)
         actr.set_parameter_value(":imaginal-activation", imag)
         actr.set_parameter_value(":ans", ans)
-
+        
         i = 0
         win = None
+        print(i)
         model_loop()
 
-
+       
        ### Analyze generated data: LEARNING
             ##set 3 analysis 
 

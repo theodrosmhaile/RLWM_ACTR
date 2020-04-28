@@ -1,15 +1,17 @@
 ---
 title: "model Analysis"
 author: "Theodros H."
-date: "03/12/20220"
+date: "04/12/20220"
 output: 
   html_document:
     code_folding: hide
+editor_options: 
+  chunk_output_type: console
 ---
 
 
 ```{r set up, echo=FALSE, warning=FALSE, message=FALSE}
-rm(list = ls())
+#rm(list = ls())
 library(matlab)
 library(reshape2)
 library(ggplot2)
@@ -20,6 +22,8 @@ library(readr)
 library(data.table)
 library(jsonlite)
 library(data.table)
+library(knitr)
+library(gridExtra)
 ```
 
 
@@ -193,14 +197,68 @@ for ( i in 1:length(RL_LTM.fit)) {
 participants.fit <- ((cbind(RL.fit, LTM.fit, RL_LTM.fit) -1 ) * -1) %>% 
   max.col() 
 
-participants.fit %>% 
-  hist()
+#participants.fit %>% 
+ # hist(main='Counts of participants by model', xlab = ("1= RL; 2= LTM; 3=RL_LTM"), #lwd=4.3)
+
+data.frame('cond'= participants.fit)  %>% 
+  ggplot(aes(cond)) + 
+  geom_histogram() +
+   ggtitle('Counts of participants by model') +
+  theme_classic(base_size = 20,base_family = 'Calibri')
+```
+
+
+```{r model plots}
+plt.sim.rl <- data.frame('accuracy'= c(RL.sim.dat[,1:12] %>% t() %>% c(),RL.sim.dat[,13:24] %>% t() %>% c()), 'index'=rep(1:12,50), 'condition'=c(rep('set3', 12*25), rep('set6',12*25)))
+
+plt.sim.rl %>% 
+  ggplot(aes(factor(index), accuracy, group=condition))+
+   geom_smooth(aes(color=condition, fill=condition), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('RL: mean performance across parameter sets') +
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+plt.sim.ltm <- data.frame('accuracy'= c(LTM.sim.dat[,1:12] %>% t() %>% c(),LTM.sim.dat[,13:24] %>% t() %>% c()), 'index'=rep(1:12,250), 'condition'=c(rep('set3', 12*125), rep('set6',12*125)))
+
+plt.sim.ltm %>% 
+  ggplot(aes(factor(index), accuracy, group=condition))+
+   geom_smooth(aes(color=condition, fill=condition), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('LTM: mean performance across parameter sets') +
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+plt.sim.rl_ltm <- data.frame('accuracy'= c(RL_LTM.sim.dat[,1:12] %>% t() %>% c(),RL_LTM.sim.dat[,13:24] %>% t() %>% c()), 'index'=rep(1:12,6250), 'condition'=c(rep('set3', 12*3125), rep('set6',12*3125)))
+
+plt.sim.rl_ltm %>% 
+  ggplot(aes(factor(index), accuracy, group=condition))+
+   geom_smooth(aes(color=condition, fill=condition), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('RL_LTM: mean performance across parameter sets') +
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
 
 
 ```
 
 
-```{r plots}
+```{r summary plots, message=FALSE, fig.height=16, fig.width=16}
 #-------These plots show the learning and test mean across all participants and data from models
 
 Subjects = nrow(sdat)
@@ -209,7 +267,7 @@ plot.sdat <- data.frame('set3' = reshape(t(sdat[,1:12]), Subjects * 12,1),
                         'iteration' = rep(1:12,Subjects))
 
 
-plot.sdat  %>% gather(key='study', value = 'acc', -iteration) %>% 
+all.p<- plot.sdat  %>% gather(key='study', value = 'acc', -iteration) %>% 
   ggplot(aes(iteration, acc, group=study)) + 
   geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
   scale_colour_brewer( palette = "Set1") +
@@ -218,8 +276,9 @@ plot.sdat  %>% gather(key='study', value = 'acc', -iteration) %>%
   xlim(as.character(1:12) )+
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
- # ggtitle('Average Group performance')
+  ggtitle('Mean performance of all participants') +
   theme_classic(base_size = 20,base_family = 'Calibri')
+
 
 
 #-------These plots show the learning and test mean for 'RL' participants and descriptives
@@ -228,18 +287,28 @@ plot.sdat.RL <- data.frame('set3' = t(sdat[participants.fit==1, 1:12]) %>% c(),
                         'set6' = t(sdat[participants.fit==1, 13:24]) %>% c(), 
                         'iteration' = rep(1:12,sum(participants.fit==1)))
 
-plot.sdat.RL  %>% gather(key='study', value = 'acc', -iteration) %>% 
+RL.p <- plot.sdat.RL  %>% gather(key='study', value = 'acc', -iteration) %>% 
   ggplot(aes(iteration, acc, group=study)) + 
-  geom_point(aes(color=study)) +
-  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
+ # geom_point(aes(color=study)) +
+  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2, se=FALSE) +
   scale_colour_brewer( palette = "Set1") +
   ylab('Accuracy') + 
   xlab('Number of stimulus presentations') +
   xlim(as.character(1:12) )+
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
- # ggtitle('Average Group performance')
-  theme_classic(base_size = 20,base_family = 'Calibri')
+  ggtitle('Mean performance of RL participants') +
+  theme_classic(base_size = 20,base_family = 'Calibri') +
+  theme(legend.position='none')
+
+ind.temp.RL[participants.fit==1] %>% 
+ hist(main='distribution of models')
+
+simsRL$data[ind.temp.RL[participants.fit==1],c('alpha','egs')] %>% 
+  kable()
+
+
+
 
 #-------These plots show the learning and test mean for 'LTM' participants and descriptives
 
@@ -247,7 +316,7 @@ plot.sdat.LTM <- data.frame('set3' = t(sdat[participants.fit==2, 1:12]) %>% c(),
                         'set6' = t(sdat[participants.fit==2, 13:24]) %>% c(), 
                         'iteration' = rep(1:12,sum(participants.fit==2)))
 
-plot.sdat.LTM  %>% gather(key='study', value = 'acc', -iteration) %>% 
+LTM.p <- plot.sdat.LTM  %>% gather(key='study', value = 'acc', -iteration) %>% 
   ggplot(aes(iteration, acc, group=study)) + 
  # geom_point(aes(color=study)) +
   geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
@@ -257,8 +326,26 @@ plot.sdat.LTM  %>% gather(key='study', value = 'acc', -iteration) %>%
   xlim(as.character(1:12) )+
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
- # ggtitle('Average Group performance')
+ ggtitle('Mean performance of LTM participants') +
+  theme_classic(base_size = 20,base_family = 'Calibri')+
+  theme(legend.position='none')
+
+ind.temp.LTM[participants.fit==2] %>% 
+  hist(main='distribution of models')
+
+
+data.frame('model_ID'= ind.temp.LTM[participants.fit==2])  %>% 
+  ggplot(aes(model_ID)) + 
+  geom_histogram(bins=125) +
+  geom_density()+
+   #ggtitle('Counts of participants by model') +
   theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+
+simsLTM$data[ind.temp.LTM[participants.fit==2],c('bll','imag','ans')] %>% 
+  kable()
+
 
 #-------These plots show the learning and test mean for 'RL-LTM' participants and descriptives
 
@@ -266,7 +353,7 @@ plot.sdat.RL_LTM <- data.frame('set3' = t(sdat[participants.fit==3, 1:12]) %>% c
                         'set6' = t(sdat[participants.fit==3, 13:24]) %>% c(), 
                         'iteration' = rep(1:12,sum(participants.fit==3)))
 
-plot.sdat.RL_LTM  %>% gather(key='study', value = 'acc', -iteration) %>% 
+RL_LTM.p <- plot.sdat.RL_LTM  %>% gather(key='study', value = 'acc', -iteration) %>% 
   ggplot(aes(iteration, acc, group=study)) + 
  # geom_point(aes(color=study)) +
   geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
@@ -276,11 +363,62 @@ plot.sdat.RL_LTM  %>% gather(key='study', value = 'acc', -iteration) %>%
   xlim(as.character(1:12) )+
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
- # ggtitle('Average Group performance')
-  theme_classic(base_size = 20,base_family = 'Calibri')
+  ggtitle('Mean performance of RL-LTM participants') +
+  theme_classic(base_size = 20,base_family = 'Calibri')+
+  theme(legend.position='none')
+ind.temp.RL_LTM[participants.fit==3] %>% 
+ hist(main='distribution of models')
+
+
+grid.arrange(all.p, RL.p, LTM.p, RL_LTM.p, nrow = 2, ncol = 2,padding = unit(0.5, "line"))
 
 #------ Distribution of participants in model space.
 
 ```
+
+```{r}
+simsRL_LTM$data[ind.temp.RL_LTM[participants.fit==3],c('alpha','egs','bll','imag','ans')]   %>% 
+  scale() %>% as.data.frame() %>% 
+  gather(key='parameter', value = 'value') %>% 
+  etlt(id.cars = c(), measur)
+  ggplot(aes(value)) +
+  geom_bar(aes(fill=parameter))
+
+  #geom_histogram(aes(fill=parameter), show.legend = FALSE, bins = 5) +
+  #geom_density(show.legend = FALSE) + 
+  facet_grid(aes(color=parameter), facets = 'parameter')+
+   theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+simsLTM$data[ind.temp.LTM[participants.fit==2],c('bll','imag','ans')]   %>% 
+  scale(center=FALSE) %>% as.data.frame() %>% 
+  gather(key='parameter', value = 'value') %>% zz
+
+
+  hlp %>% 
+   melt(id.vars = c('sub')) %>% 
+  ggplot(aes(value)) +
+  #geom_histogram(aes(fill=variable), show.legend = FALSE, bins = 5 ) +
+    geom_col(aes(as.factor(variable), value, fill = variable)) +
+             #geom_density(show.legen#zzd = FALSE) + 
+    facet_wrap(.~sub)+
+  #facet_grid( .~sub)+
+   theme_classic(base_size = 20,base_family = 'Calibri') +
+    the
+
+```
+
+```{r}
+testlen<-runif(10,0,10)
+ testpos<-seq(0,18*pi/10,length=5)
+ testlab<-c('alpha','egs','bll','ans')
+ oldpar<-radial.plot(testlen,testpos,main="Test Radial Lines",line.col="red",
+  lwd=3,rad.col="lightblue", rp.type="p")
+# testlen<-c(sin(seq(0,1.98*pi,length=100))+2+rnorm(100)/10)
+ #testpos<-seq(0,1.98*pi,length=100)
+ #adial.plot(testlen,testpos,rp.type="p",main="Test Polygon",line.col="blue",
+  #labels=LETTERS[1:8])
+```
+
 
 

@@ -185,9 +185,10 @@ Test.Data <- data.frame('set3' = reshape(mean.acc.3, length(Subjects) * 12,1),
                         'iteration' = rep(1:12,length(Subjects)))
 
 
-Test.Data  %>% gather(key='study', value = 'acc', -iteration) %>% 
+Test.Data  %>% gather(key='study', value = 'acc', -iteration) %>% view()
+
   ggplot(aes((iteration), acc, group=study)) + 
-  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,4)', size=2) +
+  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
   scale_colour_brewer( palette = "Set1") +
   ylab('Accuracy') + 
   xlab('Number of stimulus presentations') +
@@ -215,7 +216,7 @@ for (s in Subjects) {
 
   i = i + 1
 }
-TestData=data.frame(ns3.test.mean,ns6.test.mean)
+TestData = data.frame(ns3.test.mean,ns6.test.mean)
 
 #plot
 TestData %>% gather(key='set_size', value = 'Accuracy') %>% 

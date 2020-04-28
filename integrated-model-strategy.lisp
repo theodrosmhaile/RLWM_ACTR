@@ -145,7 +145,7 @@
      
     *goal>
       strategy procedural
-     ;; fproc yes
+     
 
 )
 
@@ -165,7 +165,7 @@
      
     *goal>
       strategy declarative
-     ;; fproc yes
+    
 
 )
 
