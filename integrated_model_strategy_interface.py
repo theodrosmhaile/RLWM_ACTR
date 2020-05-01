@@ -59,17 +59,18 @@ def present_stim():
     global stims
     global i
     global show_output
+    global current_strategy
 
     if i < nTrials:
        
        #### For this model, a strategy parameter is used. 
-        current_strategy = [2]
+        print(current_strategy)
         
-        #strategy_chunk = actr.define_chunks(['isa', 'do-strategy', 'this-str', current_strategy[0]])
-       # actr.set_buffer_chunk('visual', strategy_chunk[0])
-
-        #### Present stim next
-        chunks = actr.define_chunks(['isa', 'stimulus', 'picture', stims[i],'do-strategy', current_strategy[0]] )
+    
+        chunks = actr.define_chunks(['isa', 'stimulus', 
+            'picture', stims[i],
+            'do-strategy', np.str(current_strategy[i])]  )
+        
         actr.set_buffer_chunk('visual', chunks[0])
         if(show_output):
             print('Presented: ', stims[i])
@@ -242,6 +243,32 @@ chunks = None
 current_response  = np.repeat('x', nTrials * 2).tolist() #multiply by 2 for number of blocks
 lastLearnTrial = np.size(stims3 + stims6) -1
 
+
+
+## ==============================================================
+## set up strategy distributions
+## ==============================================================
+
+RL20 = np.random.permutation(
+    np.concatenate(
+    [np.repeat(1,132*0.20) , 
+    np.repeat(2, 132 * 0.8)]))
+
+RL40 = np.random.permutation(
+    np.concatenate(
+    [np.repeat(1,132*0.4) , 
+    np.repeat(2, 132 * 0.6)]))
+
+RL60 = np.random.permutation(
+    np.concatenate(
+    [np.repeat(1,132*0.6) , 
+    np.repeat(2, 132 * 0.4)]))
+
+RL80 = np.random.permutation(
+    np.concatenate(
+    [np.repeat(1,132*0.8) , 
+    np.repeat(2, 132 * 0.20)]))
+
 ## ==============================================================
 ## set up model parameters
 ## ==============================================================
@@ -253,20 +280,20 @@ alpha_param = [0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility sel
 egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
 imag_param  = [1, 2, 3, 4, 5] #simulates working memory as attentional focus 
 ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
-
+strtg_param   = ['RL20', 'RL40', 'RL60', 'RL80'] # this is the strategy parameter - proportion of decl/proced to use.
 #Integrated model params
 
 #combine all params for a loop 
-#params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
-#param_combs = list(itertools.product(*params))
+params = [bll_param, alpha_param, egs_param, imag_param, ans_param, strtg_param]
+param_combs = list(itertools.product(*params))
 
 #RL model params
 #params = [alpha_param, egs_param]
 #param_combs = list(itertools.product(*params))
 
 # LTM model params
-params = [bll_param, imag_param, ans_param]
-param_combs = list(itertools.product(*params))
+#params = [bll_param, imag_param, ans_param]
+#param_combs = list(itertools.product(*params))
 
  ###########initialize variables to concat all outputs from simulations
 
@@ -274,25 +301,9 @@ sim_data3 = [] #saves mean curves and parameters
 sim_data6 = []
 sim_data  = []
 I_data = []
+current_strategy = [];
 
-## ==============================================================
-## set up strategy distribution
-## ==============================================================
 
-RL25 = np.random.permutation(
-    np.concatenate(
-    [np.repeat(1,132*0.25) , 
-    np.repeat(2, 132 * 0.75)]))
-
-RL50 = np.random.permutation(
-    np.concatenate(
-    [np.repeat(1,132*0.5) , 
-    np.repeat(2, 132 * 0.5)]))
-
-RL75 = np.random.permutation(
-    np.concatenate(
-    [np.repeat(1,132*0.75) , 
-    np.repeat(2, 132 * 0.25)]))
 
 
 
@@ -302,14 +313,19 @@ RL75 = np.random.permutation(
 ## ==============================================================
 
 
-def run_simulation(bll, alpha, egs, imag, ans, nSims):
+def run_simulation(bll, alpha, egs, imag, ans,strtg, nSims):
    
     global i
     global sim_data3
     global sim_data
     global sim_data6
     global accuracy
+    global current_strategy
     print('vars reset')
+    
+    current_strategy = eval(strtg)
+    print(current_strategy)
+        
     temp3 = [] 
     temp6 = []
     #accuracy = np.repeat(0, nTrials).tolist()
@@ -324,7 +340,7 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         actr.set_parameter_value(":egs", egs)
         actr.set_parameter_value(":imaginal-activation", imag)
         actr.set_parameter_value(":ans", ans)
-
+        
         i = 0
         win = None
         model_loop()
@@ -408,7 +424,7 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         #sim_data.append([temp3, temp6, np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
         #del temp3, temp6
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
-    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
+    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans, strtg])
         #del temp3, temp6   
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        

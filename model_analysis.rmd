@@ -165,9 +165,9 @@ for(s in c(1:nrow(sdat.mod))) { # for each subject
 #------ Exrtact row indices to get parameter set of parameters for best fit model
 
 #------------first find the smalled mse
-RL.fit     = as.matrix(apply(mseRL.temp, 1, min))
-LTM.fit    = as.matrix(apply(mseLTM.temp, 1, min))
-RL_LTM.fit = as.matrix(apply(mseRL_LTM.temp, 1, min))
+RL.fit     = as.matrix(apply(mseRL.temp, 1, min))     %>% sqrt()
+LTM.fit    = as.matrix(apply(mseLTM.temp, 1, min))    %>% sqrt()
+RL_LTM.fit = as.matrix(apply(mseRL_LTM.temp, 1, min)) %>% sqrt()
 
 
 
@@ -193,23 +193,40 @@ for ( i in 1:length(RL_LTM.fit)) {
   
 }
 
-#-------------which model fits a participant most?| 1= RL; 2= LTM; 3=RL_LTM
+#-------------which model fits a participant most?| 1= RL; 2= LTM; 3=RL_LTM 
+#--------------There are no min.col functions? Work around find the max after inverting:
 participants.fit <- ((cbind(RL.fit, LTM.fit, RL_LTM.fit) -1 ) * -1) %>% 
   max.col() 
 
+#fit plots
 #participants.fit %>% 
  # hist(main='Counts of participants by model', xlab = ("1= RL; 2= LTM; 3=RL_LTM"), #lwd=4.3)
+fit.labels <- ifelse(participants.fit==2, 'LTM', ifelse(participants.fit==3, 'RL-LTM','RL'))
 
 data.frame('cond'= participants.fit)  %>% 
   ggplot(aes(cond)) + 
   geom_histogram() +
    ggtitle('Counts of participants by model') +
   theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+model.fits <- data.frame(RL.fit, LTM.fit, RL_LTM.fit, fit.labels)
+model.fits %>% 
+  melt() %>% 
+  ggplot(aes(y=value,variable, group=variable)) +
+  geom_boxplot() + 
+  ggtitle('Root mean squared error')+
+  xlab('model')+
+  theme_bw(base_size = 20,base_family = 'Calibri')+
+  theme(legend.position='none')
+
 ```
 
 
 ```{r model plots}
-plt.sim.rl <- data.frame('accuracy'= c(RL.sim.dat[,1:12] %>% t() %>% c(),RL.sim.dat[,13:24] %>% t() %>% c()), 'index'=rep(1:12,50), 'condition'=c(rep('set3', 12*25), rep('set6',12*25)))
+plt.sim.rl <- data.frame('accuracy'= c(RL.sim.dat[,1:12] %>% t() %>% c(),RL.sim.dat[,13:24] %>% t() %>% c()),
+                         'index'=rep(1:12,50),
+                         'condition'=c(rep('set3', 12*25), rep('set6',12*25)))
 
 plt.sim.rl %>% 
   ggplot(aes(factor(index), accuracy, group=condition))+
@@ -224,7 +241,10 @@ plt.sim.rl %>%
   theme_classic(base_size = 20,base_family = 'Calibri')
 
 
-plt.sim.ltm <- data.frame('accuracy'= c(LTM.sim.dat[,1:12] %>% t() %>% c(),LTM.sim.dat[,13:24] %>% t() %>% c()), 'index'=rep(1:12,250), 'condition'=c(rep('set3', 12*125), rep('set6',12*125)))
+plt.sim.ltm <- data.frame('accuracy'= c(LTM.sim.dat[,1:12] %>% t() %>% c(),
+                                        LTM.sim.dat[,13:24] %>% t() %>% c()), 
+                          'index'=rep(1:12,250), 
+                          'condition'=c(rep('set3', 12*125), rep('set6',12*125)))
 
 plt.sim.ltm %>% 
   ggplot(aes(factor(index), accuracy, group=condition))+
@@ -239,7 +259,9 @@ plt.sim.ltm %>%
   theme_classic(base_size = 20,base_family = 'Calibri')
 
 
-plt.sim.rl_ltm <- data.frame('accuracy'= c(RL_LTM.sim.dat[,1:12] %>% t() %>% c(),RL_LTM.sim.dat[,13:24] %>% t() %>% c()), 'index'=rep(1:12,6250), 'condition'=c(rep('set3', 12*3125), rep('set6',12*3125)))
+plt.sim.rl_ltm <- data.frame('accuracy'= c(RL_LTM.sim.dat[,1:12] %>% t() %>% c(),RL_LTM.sim.dat[,13:24] %>% t() %>% c()),
+                             'index'=rep(1:12,6250),
+                             'condition'=c(rep('set3', 12*3125), rep('set6',12*3125)))
 
 plt.sim.rl_ltm %>% 
   ggplot(aes(factor(index), accuracy, group=condition))+
@@ -257,6 +279,12 @@ plt.sim.rl_ltm %>%
 
 ```
 
+```{r unique fits}
+uniq.RL_LTM.models <- ind.temp.RL_LTM[participants.fit==3] %>% unique()
+uniq.LTM.models <- ind.temp.LTM[participants.fit==2] %>% unique()
+
+
+```
 
 ```{r summary plots, message=FALSE, fig.height=16, fig.width=16}
 #-------These plots show the learning and test mean across all participants and data from models
@@ -408,6 +436,10 @@ simsLTM$data[ind.temp.LTM[participants.fit==2],c('bll','imag','ans')]   %>%
 
 ```
 
+
+
+
+failed radial plot
 ```{r}
 testlen<-runif(10,0,10)
  testpos<-seq(0,18*pi/10,length=5)
