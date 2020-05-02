@@ -43,7 +43,7 @@ from matplotlib import pyplot
 import itertools
 
 
-show_output = True
+show_output = False
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -64,13 +64,13 @@ def present_stim():
     if i < nTrials:
        
        #### For this model, a strategy parameter is used. 
-        print(current_strategy)
+        #print(current_strategy)
         
     
         chunks = actr.define_chunks(['isa', 'stimulus', 
             'picture', stims[i],
             'do-strategy', np.str(current_strategy[i])]  )
-        
+
         actr.set_buffer_chunk('visual', chunks[0])
         if(show_output):
             print('Presented: ', stims[i])
@@ -275,11 +275,11 @@ RL80 = np.random.permutation(
 
 
 #parameter ranges for simulation
-bll_param   = [0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory 
-alpha_param = [0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection
-egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
-imag_param  = [1, 2, 3, 4, 5] #simulates working memory as attentional focus 
-ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
+bll_param   = [0.4, 0.5, 0.6]#[0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,range around .5 actr rec val
+alpha_param = [0.1, 0.15, 0.2]#[0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection 0.2 rec val
+egs_param   = [0.2, 0.3, 0.4]#[0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
+imag_param  = [1, 2, 3]# , 4, 5] #simulates working memory as attentional focus 
+ans_param   = [0.2, 0.3, 0.4]#[0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
 strtg_param   = ['RL20', 'RL40', 'RL60', 'RL80'] # this is the strategy parameter - proportion of decl/proced to use.
 #Integrated model params
 
@@ -324,7 +324,7 @@ def run_simulation(bll, alpha, egs, imag, ans,strtg, nSims):
     print('vars reset')
     
     current_strategy = eval(strtg)
-    print(current_strategy)
+    #print(current_strategy)
         
     temp3 = [] 
     temp6 = []

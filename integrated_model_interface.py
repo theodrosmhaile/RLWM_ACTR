@@ -227,6 +227,9 @@ sim_data6 = []
 sim_data  = []
 I_data = []
 #i=0
+
+
+
 def run_simulation(bll, alpha, egs, imag, ans, nSims):
    
     global i
