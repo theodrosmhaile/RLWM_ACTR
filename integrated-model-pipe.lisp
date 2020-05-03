@@ -117,11 +117,21 @@
    =goal>
      strategy nil  
      fproc yes
+   
+     ?manual>
+     preparation free
+     processor   free
+     execution   free
 ==>
    =visual>
      
    *goal>
      strategy declarative
+
+   +manual> 
+   cmd  press-key
+   key  "2"
+
 )
 
 (p choose-procedural
@@ -134,6 +144,11 @@
    =goal>
      strategy nil  
      fproc yes
+   
+   ?manual>
+     preparation free
+     processor   free
+     execution   free
 ==>
    =visual>
      
@@ -144,6 +159,10 @@
   picture  nil
   associated-key nil
   outcome  nil
+
+  +manual>
+ cmd press-key
+ key "1"		
 )
 
 
