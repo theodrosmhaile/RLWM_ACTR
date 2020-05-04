@@ -32,6 +32,10 @@
 ;;;           stimulus-response-outcome information is stored in DM.
 ;;;
 ;;; ============================================================== ;;;
+;;;  changelog
+;;; ============================================================== ;;;
+;;;  This version also now reports strategy.  
+;;;
 
 
 
@@ -100,11 +104,20 @@
    =goal>
      strategy nil  
      fproc yes
+
+     ?manual>
+     preparation free
+     processor   free
+     execution   free
 ==>
    =visual>
      
    *goal>
      strategy declarative
+
+  +manual> 
+   cmd  press-key
+   key  0
 )
 
 (p choose-procedural
@@ -117,11 +130,21 @@
    =goal>
      strategy nil  
      fproc yes
+
+     ?manual>
+     preparation free
+     processor   free
+     execution   free
 ==>
    =visual>
      
    *goal>
      strategy procedural
+
+    +manual> 
+   cmd  press-key
+   key  1
+
 )
 
 
