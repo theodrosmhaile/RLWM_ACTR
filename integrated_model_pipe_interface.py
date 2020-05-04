@@ -45,16 +45,17 @@ def get_response(model, key):
     global current_response
     global i
     global strategy_used
-   
-    if (key==1 or key==2):
-      strategy_used[i] = key
-	
+
+    if (key=="1" or key=="0"):
+        strategy_used[i] = np.int(key)
+       # print(strategy_used)
+        return strategy_used
+
     else:
-    
-      actr.schedule_event_relative(0, 'present_feedback')
-      current_response[i] = key
-	   
-      return current_response
+        actr.schedule_event_relative(0, 'present_feedback')
+        current_response[i] = key 
+        print('response')
+        return current_response
 
 
 def present_feedback():
@@ -77,6 +78,7 @@ def present_feedback():
         if (show_output):
             print("Feedback given: X, test phase" )
             print(accuracy)
+
 
   
     else:
@@ -247,6 +249,7 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
     global sim_data
     global sim_data6
     global accuracy
+    global strategy_used
     print('vars reset')
     temp3 = [] 
     temp6 = []
@@ -347,7 +350,7 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         #sim_data.append([temp3, temp6, np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
         #del temp3, temp6
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
-    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
+    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans, np.mean(strategy_used) ])
         #del temp3, temp6   
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        

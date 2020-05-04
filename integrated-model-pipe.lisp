@@ -66,7 +66,7 @@
      :er t
      :ul t
      :esc t
-     :v t ;;"/home/master-tedward/RLWM_ACTR/v_output.txt"
+     :v nil ;;"/home/master-tedward/RLWM_ACTR/v_output.txt"
           ) 
 
 ;;; --------------------------------------------------------  
@@ -130,7 +130,7 @@
 
    +manual> 
    cmd  press-key
-   key  "2"
+   key  0
 
 )
 
@@ -161,8 +161,8 @@
   outcome  nil
 
   +manual>
- cmd press-key
- key "1"		
+   cmd press-key
+   key 1
 )
 
 
