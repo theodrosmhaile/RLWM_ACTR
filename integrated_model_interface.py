@@ -20,7 +20,7 @@ show_output = True
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp")) #integrated-model.lisp
+actr.load_act_r_model(os.path.join(curr_dir, "memory_model2.lisp")) #integrated-model.lisp
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
 
@@ -198,13 +198,12 @@ chunks = None
 current_response  = np.repeat('x', nTrials * 2).tolist() #multiply by 2 for number of blocks
 lastLearnTrial = np.size(stims3 + stims6) -1
 
-
 #parameter ranges for simulation
-bll_param   = [0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory 
-alpha_param = [0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection
-egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
-imag_param  = [1, 2, 3, 4, 5] #simulates working memory as attentional focus 
-ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
+bll_param   = [0.4, 0.5, 0.6]#[0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,range around .5 actr rec val
+alpha_param = [0.1, 0.15, 0.2]#[0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection 0.2 rec val
+egs_param   = [0.2, 0.3, 0.4]#[0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
+imag_param  = [1, 2, 3]# , 4, 5] #simulates working memory as attentional focus 
+ans_param   = [0.2, 0.3, 0.4]#[0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual
 
 #Integrated model params
 
@@ -248,8 +247,8 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         #actr.hide_output()
 
         actr.set_parameter_value(":bll", bll)
-        actr.set_parameter_value(":alpha", alpha)
-        actr.set_parameter_value(":egs", egs)
+        #actr.set_parameter_value(":alpha", alpha)
+        #actr.set_parameter_value(":egs", egs)
         actr.set_parameter_value(":imaginal-activation", imag)
         actr.set_parameter_value(":ans", ans)
         
