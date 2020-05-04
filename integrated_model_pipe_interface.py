@@ -16,7 +16,7 @@ from matplotlib import pyplot
 import itertools
 
 
-show_output = True
+show_output = False
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -54,7 +54,7 @@ def get_response(model, key):
     else:
         actr.schedule_event_relative(0, 'present_feedback')
         current_response[i] = key 
-        print('response')
+        #print('response')
         return current_response
 
 
@@ -221,16 +221,16 @@ ans_param   = [0.2, 0.3, 0.4]#[0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in 
 #Integrated model params
 
 #combine all params for a loop 
-#params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
-#param_combs = list(itertools.product(*params))
+params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
+param_combs = list(itertools.product(*params))
 
 #RL model params
 #params = [alpha_param, egs_param]
 #param_combs = list(itertools.product(*params))
 
 # LTM model params
-params = [bll_param, imag_param, ans_param]
-param_combs = list(itertools.product(*params))
+#params = [bll_param, imag_param, ans_param]
+#param_combs = list(itertools.product(*params))
 
  ###########initialize variables to concat all outputs from simulations
 
