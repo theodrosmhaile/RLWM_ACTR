@@ -20,7 +20,7 @@ show_output = False
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "integrated-model-pipe.lisp")) #integrated-model.lisp
+actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp")) #integrated-model.lisp
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
 
