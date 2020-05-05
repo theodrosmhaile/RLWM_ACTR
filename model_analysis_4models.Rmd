@@ -1,0 +1,517 @@
+---
+title: "model Analysis"
+author: "Theodros H."
+date: "04/12/20220"
+output: 
+  html_document:
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r set up, echo=FALSE, warning=FALSE, message=FALSE}
+#rm(list = ls())
+library(matlab)
+library(reshape2)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(MLmetrics)
+library(readr)
+library(data.table)
+library(jsonlite)
+library(data.table)
+library(knitr)
+library(gridExtra)
+```
+
+
+
+
+```{r import data}
+#----- import subject data
+# 
+
+sdat = fread('./RLWM_data/all_subject_n83_learn_test_data.csv', header = T) %>% t()
+# sdat contains data fro 83 participants (columns), 
+# rows 1:12 learn accuracy set 3 ; 
+# rows 13:24 learn accuracy set 6 ;
+# row 25 test set 3 accuracy ;
+# row 26 test set 6 accuracy ;
+
+#------ Modify subject data to 'weight' accuracy in test for 3 and 6 by repeating each 12x 
+sdat.temp <- rep(sdat[ , 25:26], 12) %>% 
+  as.matrix() %>% 
+  reshape(., 996,2) %>% 
+  reshape(., 166,12) 
+
+sdat.mod  <- cbind(sdat[, 1:24], 
+                   sdat.temp[1:83,], 
+                   sdat.temp[84:166, ])
+
+
+
+#----- import model data (has to be converted from JSON to data frames)
+#--------- Integrated model original
+simsRL_LTMorig <- fromJSON('sim_data_all_params_integrated_model_100s_031620.JSON')
+
+ simsRL_LTMorig.set3learn <- simsRL_LTMorig$data$set3_learn %>%
+  unlist() %>%
+  as.matrix() %>%
+  reshape(., 12, nrow(simsRL_LTMorig$data)) %>%
+  t()
+
+simsRL_LTMorig.set6learn <- simsRL_LTMorig$data$set6_learn %>% 
+  unlist() %>% 
+  as.matrix() %>%
+  reshape(., 12, nrow(simsRL_LTMorig$data)) %>%
+  t() 
+
+simsRL_LTMorig.s3s6test.temp <-
+  simsRL_LTMorig$data$set3_test %>%
+  cbind(., simsRL_LTMorig$data$set6_test) %>% 
+   rep(., 12) %>%
+   as.matrix() %>%
+   reshape(., row(simsRL_LTMorig$data)*12, 2) %>%
+   reshape(., row(simsRL_LTMorig$data)*2, 12) 
+
+ RL_LTMorig.sim.dat <- cbind(simsRL_LTMorig.set3learn, 
+                         simsRL_LTMorig.set6learn, 
+                         simsRL_LTMorig.s3s6test.temp[1:nrow(simsRL_LTMorig$data), ], 
+                         simsRL_LTMorig.s3s6test.temp[244:486, ] )
+
+ 
+ 
+ #--------- Integrated model RL to LTM pipe
+simsRL_LTMpipe <- fromJSON('RLLTM2_pipe_sim_data050420.JSON')
+
+ simsRL_LTMpipe.set3learn <- simsRL_LTMpipe$data$set3_learn %>%
+  unlist() %>%
+  as.matrix() %>%
+  reshape(., 12, nrow(simsRL_LTMpipe$data)) %>%
+  t()
+
+simsRL_LTMpipe.set6learn <- simsRL_LTMpipe$data$set6_learn %>% 
+  unlist() %>% 
+  as.matrix() %>%
+  reshape(., 12, nrow(simsRL_LTMpipe$data)) %>%
+  t() 
+
+simsRL_LTMpipe.s3s6test.temp <-
+  simsRL_LTMpipe$data$set3_test %>%
+  cbind(., simsRL_LTMpipe$data$set6_test) %>% 
+   rep(., 12) %>%
+   as.matrix() %>%
+   reshape(., nrow(simsRL_LTMpipe$data) * 12, 2) %>%
+   reshape(., nrow(simsRL_LTMpipe$data) *2, 12) 
+
+ RL_LTMpipe.sim.dat <- cbind(simsRL_LTMpipe.set3learn, 
+                         simsRL_LTMpipe.set6learn, 
+                         simsRL_LTMpipe.s3s6test.temp[1:nrow(simsRL_LTMpipe$data), ], 
+                         simsRL_LTMpipe.s3s6test.temp[244 : 486 ] )
+
+ 
+ 
+ #--------- Integrated model assigned strategy
+simsRL_LTMstr <- fromJSON('RLLTM1_strategy_sim_data050420.JSON')
+
+ simsRL_LTMstr.set3learn <- simsRL_LTMstr$data$set3_learn %>%
+  unlist() %>%
+  as.matrix() %>%
+  reshape(., 12, nrow(simsRL_LTMstr$data)) %>%
+  t()
+
+simsRL_LTMstr.set6learn <- simsRL_LTMstr$data$set6_learn %>% 
+  unlist() %>% 
+  as.matrix() %>%
+  reshape(., 12, nrow(simsRL_LTMstr$data)) %>%
+  t() 
+
+simsRL_LTMstr.s3s6test.temp <-
+  simsRL_LTMstr$data$set3_test %>%
+  cbind(., simsRL_LTMstr$data$set6_test) %>% 
+   rep(., 12) %>%
+   as.matrix() %>%
+   reshape(., nrow(simsRL_LTMstr$data) * 12, 2) %>%
+   reshape(., nrow(simsRL_LTMstr$data) *2, 12) 
+
+ RL_LTMstr.sim.dat <- cbind(simsRL_LTMstr.set3learn, 
+                         simsRL_LTMstr.set6learn, 
+                         simsRL_LTMstr.s3s6test.temp[1:nrow(simsRL_LTMstr$data), ], 
+                         simsRL_LTMstr.s3s6test.temp[973 : 1944 ] )
+ 
+ 
+
+#--------- Reinforcement Learning Model
+
+simsRL <- fromJSON('sim_data_all_params_RL_100s_031620.JSON')
+
+ simsRL.set3learn <- simsRL$data$set3_learn %>%
+  unlist() %>%
+  as.matrix() %>%
+  reshape(., 12, 25) %>%
+  t() 
+
+simsRL.set6learn <- simsRL$data$set6_learn %>% 
+  unlist() %>% 
+  as.matrix() %>%
+  reshape(., 12, 25) %>%
+  t() 
+
+ simsRL.s3s6test.temp <-
+  simsRL$data$set3_test %>%
+  cbind(., simsRL$data$set6_test) %>% 
+   rep(., 12) %>%
+   as.matrix() %>%
+   reshape(., 300, 2) %>%
+    reshape(., 50, 12) 
+ 
+
+ RL.sim.dat <- cbind(simsRL.set3learn, 
+                     simsRL.set6learn, 
+                     simsRL.s3s6test.temp[1:25, ], 
+                     simsRL.s3s6test.temp[26:50, ] )
+
+#--------- Longterm Memory/WM/Declarative model 
+ 
+simsLTM    <- fromJSON('LTM_sim_data_3lvparams_050420.JSON') 
+
+ simsLTM.set3learn <- simsLTM$data$set3_learn %>%
+  unlist() %>%
+  as.matrix() %>% 
+  reshape(., 12, nrow(simsLTM$data)) %>% 
+  t()
+
+simsLTM.set6learn <- simsLTM$data$set6_learn %>% 
+  unlist() %>% 
+  as.matrix() %>%
+  reshape(., 12, nrow(simsLTM$data)) %>%
+  t()
+
+simsLTM.s3s6test.temp <-  simsLTM$data$set3_test %>%
+  cbind(., simsLTM$data$set6_test) %>% 
+   rep(., 12) %>% 
+   as.matrix() %>% 
+   reshape(., 324, 2) %>% 
+   reshape(., 54, 12) #54= nrow(sims.LTM) * 2
+
+ LTM.sim.dat <- cbind(simsLTM.set3learn, 
+                      simsLTM.set6learn, 
+                      simsLTM.s3s6test.temp[1:27, ], 
+                      simsLTM.s3s6test.temp[27:54, ] )
+
+```
+
+
+
+```{r fit model data to subject data}
+#----- loop through subject data and check for fit against model data using mean squared error. 
+
+mseRL.temp     =c()
+mseLTM.temp    =c()
+mseRL_LTM.temp =c()
+
+for(s in c(1:nrow(sdat.mod))) { # for each subject
+ # model 1 
+ mseRL.temp     <- rbind(mseRL.temp, apply(RL.sim.dat, 1, function(x,y) MSE(x, sdat.mod[s, ])))
+ # model 2
+ mseLTM.temp    <- rbind(mseLTM.temp, apply(LTM.sim.dat, 1, function(x,y) MSE(x, sdat.mod[s, ] )))
+ # model 3
+ mseRL_LTM.temp <- rbind(mseRL_LTM.temp, apply(RL_LTM.sim.dat, 1, function(x,y) MSE(x, sdat.mod[s, ])))
+  
+}
+
+
+#------ Exrtact row indices to get parameter set of parameters for best fit model
+
+#------------first find the smalled mse
+RL.fit     = as.matrix(apply(mseRL.temp, 1, min))     %>% sqrt()
+LTM.fit    = as.matrix(apply(mseLTM.temp, 1, min))    %>% sqrt()
+RL_LTM.fit = as.matrix(apply(mseRL_LTM.temp, 1, min)) %>% sqrt()
+
+
+
+#temp <- mdat.3 %>% 
+#  data.table() %>% 
+#  .[,`:=`(V66 = V3 - mean(V3))]
+#-------------second, find actual row number using smallest value
+ind.temp.RL <- c()
+ind.temp.RL_LTM <- c()
+ind.temp.LTM <- c()
+
+for ( i in 1:length(RL.fit)) {
+  ind.temp.RL <- rbind(ind.temp.RL, which(mseRL.temp[i,] %in% RL.fit[i]))
+  
+}
+
+for ( i in 1:length(LTM.fit)) {
+  ind.temp.LTM <- rbind(ind.temp.LTM, which(mseLTM.temp[i,] %in% LTM.fit[i]))
+  
+}
+for ( i in 1:length(RL_LTM.fit)) {
+  ind.temp.RL_LTM <- rbind(ind.temp.RL_LTM, which(mseRL_LTM.temp[i,] %in% RL_LTM.fit[i]))
+  
+}
+
+#-------------which model fits a participant most?| 1= RL; 2= LTM; 3=RL_LTM 
+#--------------There are no min.col functions? Work around find the max after inverting:
+participants.fit <- ((cbind(RL.fit, LTM.fit, RL_LTM.fit) -1 ) * -1) %>% 
+  max.col() 
+
+#fit plots
+#participants.fit %>% 
+ # hist(main='Counts of participants by model', xlab = ("1= RL; 2= LTM; 3=RL_LTM"), #lwd=4.3)
+fit.labels <- ifelse(participants.fit==2, 'LTM', ifelse(participants.fit==3, 'RL-LTM','RL'))
+
+data.frame('cond'= participants.fit)  %>% 
+  ggplot(aes(cond)) + 
+  geom_histogram() +
+   ggtitle('Counts of participants by model') +
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+model.fits <- data.frame(RL.fit, LTM.fit, RL_LTM.fit, fit.labels)
+model.fits %>% 
+  melt() %>% 
+  ggplot(aes(y=value,variable, group=variable)) +
+  geom_boxplot() + 
+  ggtitle('Root mean squared error')+
+  xlab('model')+
+  theme_bw(base_size = 20,base_family = 'Calibri')+
+  theme(legend.position='none')
+
+```
+
+
+```{r model plots}
+plt.sim.rl <- data.frame('accuracy'= c(RL.sim.dat[,1:12] %>% t() %>% c(),RL.sim.dat[,13:24] %>% t() %>% c()),
+                         'index'=rep(1:12,50),
+                         'condition'=c(rep('set3', 12*25), rep('set6',12*25)))
+
+plt.sim.rl %>% 
+  ggplot(aes(factor(index), accuracy, group=condition))+
+   geom_smooth(aes(color=condition, fill=condition), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('RL: mean performance across parameter sets') +
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+plt.sim.ltm <- data.frame('accuracy'= c(LTM.sim.dat[,1:12] %>% t() %>% c(),
+                                        LTM.sim.dat[,13:24] %>% t() %>% c()), 
+                          'index'=rep(1:12,250), 
+                          'condition'=c(rep('set3', 12*125), rep('set6',12*125)))
+
+plt.sim.ltm %>% 
+  ggplot(aes(factor(index), accuracy, group=condition))+
+   geom_smooth(aes(color=condition, fill=condition), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('LTM: mean performance across parameter sets') +
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+plt.sim.rl_ltm <- data.frame('accuracy'= c(RL_LTM.sim.dat[,1:12] %>% t() %>% c(),RL_LTM.sim.dat[,13:24] %>% t() %>% c()),
+                             'index'=rep(1:12,6250),
+                             'condition'=c(rep('set3', 12*3125), rep('set6',12*3125)))
+
+plt.sim.rl_ltm %>% 
+  ggplot(aes(factor(index), accuracy, group=condition))+
+   geom_smooth(aes(color=condition, fill=condition), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('RL_LTM: mean performance across parameter sets') +
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+
+```
+
+```{r unique fits}
+uniq.RL_LTM.models <- ind.temp.RL_LTM[participants.fit==3] %>% unique()
+uniq.LTM.models <- ind.temp.LTM[participants.fit==2] %>% unique()
+
+
+```
+
+```{r summary plots, message=FALSE, fig.height=16, fig.width=16}
+#-------These plots show the learning and test mean across all participants and data from models
+
+Subjects = nrow(sdat)
+plot.sdat <- data.frame('set3' = reshape(t(sdat[,1:12]), Subjects * 12,1),
+                        'set6' = t(sdat[,13:24]) %>% c(), 
+                        'iteration' = rep(1:12,Subjects))
+
+
+all.p<- plot.sdat  %>% gather(key='study', value = 'acc', -iteration) %>% 
+  ggplot(aes(iteration, acc, group=study)) + 
+  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('Mean performance of all participants') +
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+
+#-------These plots show the learning and test mean for 'RL' participants and descriptives
+
+plot.sdat.RL <- data.frame('set3' = t(sdat[participants.fit==1, 1:12]) %>% c(),
+                        'set6' = t(sdat[participants.fit==1, 13:24]) %>% c(), 
+                        'iteration' = rep(1:12,sum(participants.fit==1)))
+
+RL.p <- plot.sdat.RL  %>% gather(key='study', value = 'acc', -iteration) %>% 
+  ggplot(aes(iteration, acc, group=study)) + 
+ # geom_point(aes(color=study)) +
+  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2, se=FALSE) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('Mean performance of RL participants') +
+  theme_classic(base_size = 20,base_family = 'Calibri') +
+  theme(legend.position='none')
+
+ind.temp.RL[participants.fit==1] %>% 
+ hist(main='distribution of models')
+
+simsRL$data[ind.temp.RL[participants.fit==1],c('alpha','egs')] %>% 
+  kable()
+
+
+
+
+#-------These plots show the learning and test mean for 'LTM' participants and descriptives
+
+plot.sdat.LTM <- data.frame('set3' = t(sdat[participants.fit==2, 1:12]) %>% c(),
+                        'set6' = t(sdat[participants.fit==2, 13:24]) %>% c(), 
+                        'iteration' = rep(1:12,sum(participants.fit==2)))
+
+LTM.p <- plot.sdat.LTM  %>% gather(key='study', value = 'acc', -iteration) %>% 
+  ggplot(aes(iteration, acc, group=study)) + 
+ # geom_point(aes(color=study)) +
+  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+ ggtitle('Mean performance of LTM participants') +
+  theme_classic(base_size = 20,base_family = 'Calibri')+
+  theme(legend.position='none')
+
+ind.temp.LTM[participants.fit==2] %>% 
+  hist(main='distribution of models')
+
+
+data.frame('model_ID'= ind.temp.LTM[participants.fit==2])  %>% 
+  ggplot(aes(model_ID)) + 
+  geom_histogram(bins=125) +
+  geom_density()+
+   #ggtitle('Counts of participants by model') +
+  theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+
+simsLTM$data[ind.temp.LTM[participants.fit==2],c('bll','imag','ans')] %>% 
+  kable()
+
+
+#-------These plots show the learning and test mean for 'RL-LTM' participants and descriptives
+
+plot.sdat.RL_LTM <- data.frame('set3' = t(sdat[participants.fit==3, 1:12]) %>% c(),
+                        'set6' = t(sdat[participants.fit==3, 13:24]) %>% c(), 
+                        'iteration' = rep(1:12,sum(participants.fit==3)))
+
+RL_LTM.p <- plot.sdat.RL_LTM  %>% gather(key='study', value = 'acc', -iteration) %>% 
+  ggplot(aes(iteration, acc, group=study)) + 
+ # geom_point(aes(color=study)) +
+  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('Mean performance of RL-LTM participants') +
+  theme_classic(base_size = 20,base_family = 'Calibri')+
+  theme(legend.position='none')
+ind.temp.RL_LTM[participants.fit==3] %>% 
+ hist(main='distribution of models')
+
+
+grid.arrange(all.p, RL.p, LTM.p, RL_LTM.p, nrow = 2, ncol = 2,padding = unit(0.5, "line"))
+
+#------ Distribution of participants in model space.
+
+```
+
+```{r}
+simsRL_LTM$data[ind.temp.RL_LTM[participants.fit==3],c('alpha','egs','bll','imag','ans')]   %>% 
+  scale() %>% as.data.frame() %>% 
+  gather(key='parameter', value = 'value') %>% 
+  etlt(id.cars = c(), measur)
+  ggplot(aes(value)) +
+  geom_bar(aes(fill=parameter))
+
+  #geom_histogram(aes(fill=parameter), show.legend = FALSE, bins = 5) +
+  #geom_density(show.legend = FALSE) + 
+  facet_grid(aes(color=parameter), facets = 'parameter')+
+   theme_classic(base_size = 20,base_family = 'Calibri')
+
+
+simsLTM$data[ind.temp.LTM[participants.fit==2],c('bll','imag','ans')]   %>% 
+  scale(center=FALSE) %>% as.data.frame() %>% 
+  gather(key='parameter', value = 'value') %>% zz
+
+
+  hlp %>% 
+   melt(id.vars = c('sub')) %>% 
+  ggplot(aes(value)) +
+  #geom_histogram(aes(fill=variable), show.legend = FALSE, bins = 5 ) +
+    geom_col(aes(as.factor(variable), value, fill = variable)) +
+             #geom_density(show.legen#zzd = FALSE) + 
+    facet_wrap(.~sub)+
+  #facet_grid( .~sub)+
+   theme_classic(base_size = 20,base_family = 'Calibri') +
+    the
+
+```
+
+
+
+
+failed radial plot
+```{r}
+testlen<-runif(10,0,10)
+ testpos<-seq(0,18*pi/10,length=5)
+ testlab<-c('alpha','egs','bll','ans')
+ oldpar<-radial.plot(testlen,testpos,main="Test Radial Lines",line.col="red",
+  lwd=3,rad.col="lightblue", rp.type="p")
+# testlen<-c(sin(seq(0,1.98*pi,length=100))+2+rnorm(100)/10)
+ #testpos<-seq(0,1.98*pi,length=100)
+ #adial.plot(testlen,testpos,rp.type="p",main="Test Polygon",line.col="blue",
+  #labels=LETTERS[1:8])
+```
+
+
+
