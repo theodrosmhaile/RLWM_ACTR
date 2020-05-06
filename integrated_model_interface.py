@@ -20,7 +20,7 @@ show_output = False
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "RL_model1.lisp")) #integrated-model.lisp
+actr.load_act_r_model(os.path.join(curr_dir, "memory_model2.lisp")) #integrated-model.lisp
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
 
@@ -212,12 +212,12 @@ ans_param   = [0.2, 0.3, 0.4]#[0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in 
 #param_combs = list(itertools.product(*params))
 
 #RL model params
-params = [alpha_param, egs_param]
-param_combs = list(itertools.product(*params))
+#params = [alpha_param, egs_param]
+#param_combs = list(itertools.product(*params))
 
 # LTM model params
-#params = [bll_param, imag_param, ans_param]
-#param_combs = list(itertools.product(*params))
+params = [bll_param, imag_param, ans_param]
+param_combs = list(itertools.product(*params))
 
  ###########initialize variables to concat all outputs from simulations
 
@@ -246,11 +246,11 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         actr.reset()
         #actr.hide_output()
 
-        #actr.set_parameter_value(":bll", bll)
-        actr.set_parameter_value(":alpha", alpha)
-        actr.set_parameter_value(":egs", egs)
-        #actr.set_parameter_value(":imaginal-activation", imag)
-        #actr.set_parameter_value(":ans", ans)
+        actr.set_parameter_value(":bll", bll)
+        #actr.set_parameter_value(":alpha", alpha)
+        #actr.set_parameter_value(":egs", egs)
+        actr.set_parameter_value(":visual-activation", imag)#formerly imaginal
+        actr.set_parameter_value(":ans", ans)
         
         i = 0
         win = None
