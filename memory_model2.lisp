@@ -31,11 +31,12 @@
      ;;:ans nil
      ;; :rt  0.5  ;; Not needed
      :er  t
-     :v nil
-     ;;:esc t
+     :v t
+     :esc t
      :mas 5.0
-     :visual-activation 5.0 
+     ;:visual-activation 5.0 
      )
+
 ;;---------------------------------------    
 ;; Chunk types
 ;;--------------------------------------- 

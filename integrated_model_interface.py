@@ -16,7 +16,7 @@ from matplotlib import pyplot
 import itertools
 
 
-show_output = False
+show_output = True
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))

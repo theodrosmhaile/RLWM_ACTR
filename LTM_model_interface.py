@@ -2,33 +2,6 @@
 # coding: utf-8
 
 # ### Python interface for integrated model
-## ============================================================== ;;;
-## INTEGRATED DECLARATIVE/PROCEDURAL MODEL INTERFACE
-## ============================================================== ;;;
-## - This interface presents stimuli and feedback to the model and collects 
-##   responses.
-## - It performs analysis of the simulated data and compiles results
-##   across simulations in to the variable sim_data for export.
-## 
-##
-## ============================================================== ;;;
-## Change log:
-##
-## This version differes from integrated_model_interface.py in that
-## it utilizes a parameter for explicitly specifying
-## a strategy(Reinforcement learning OR WM/LTM) for each trial. 
-## These changes are implemented in the present_stim() function.
-##
-## ============================================================== ;;;
-
-
-## ============================================================== ;;;
-##   To execute in python terminal enter: 
-##      1) "run integrated_model_interface.py"
-##      2) "run_simulation(bll, alpha, egs, imag, ans, nSims)" with  
-##         parameters specificed.  
-##
-## ============================================================== ;;;
 
 
 import random as rnd
@@ -43,35 +16,26 @@ from matplotlib import pyplot
 import itertools
 
 
-show_output = False
+show_output = True
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "integrated-model-strategy.lisp")) #integrated-model.lisp
+actr.load_act_r_model(os.path.join(curr_dir, "memory_model2.lisp")) #integrated-model-pipe.lisp
 
-## ==============================================================
-## Daisy chained python functions to present stimuli, get response 
-## and  present feedback.
-## ==============================================================
+## Daisy chained python functions to present stimuli, get response and  present feedback
 
 def present_stim():
     global chunks
     global stims
     global i
     global show_output
-    global current_strategy
 
     if i < nTrials:
-       
-       #### For this model, a strategy parameter is used. 
-        #print(current_strategy)
         
-    
-        chunks = actr.define_chunks(['isa', 'stimulus', 
-            'picture', stims[i],
-            'do-strategy', np.str(current_strategy[i])]  )
-
+   
+        chunks = actr.define_chunks(['isa', 'stimulus', 'picture', stims[i]])
         actr.set_buffer_chunk('visual', chunks[0])
+        
         if(show_output):
             print('Presented: ', stims[i])
             print('correct response: ', cor_resps[i])   
@@ -80,18 +44,25 @@ def present_stim():
 def get_response(model, key):
     global current_response
     global i
-    
-    actr.schedule_event_relative(0, 'present_feedback')
-    
-    current_response[i] = key
-   
-    return current_response
+    global strategy_used
+
+    if (key=="1" or key=="0"):
+        strategy_used[i] = np.int(key)
+       # print(strategy_used)
+        return strategy_used
+
+    else:
+        actr.schedule_event_relative(0, 'present_feedback')
+        current_response[i] = key 
+        #print('response')
+        return current_response
 
 
 def present_feedback():
     global i
     global current_response
     global accuracy
+
 
     if i > lastLearnTrial:
     # this tests whether the current trial is a test phase. This portion presents meaningless feedback and checks accuracy
@@ -107,6 +78,7 @@ def present_feedback():
         if (show_output):
             print("Feedback given: X, test phase" )
             print(accuracy)
+
 
   
     else:
@@ -126,7 +98,7 @@ def present_feedback():
             print(accuracy)
         
         if i == lastLearnTrial:
-            #print("BREAK HERE")
+            #rint("BREAK HERE")
             actr.schedule_event_relative(600, 'present_stim')
         else:
             actr.schedule_event_relative(1, 'present_stim')
@@ -135,15 +107,18 @@ def present_feedback():
     
    
 
-##### This function builds ACT-R representations of the python functions
+# This function builds ACT-R representations of the python functions
 
 def model_loop():
     
     global win
     global accuracy
     global nTrials
+    global strategy_used
     
     accuracy = np.repeat(0, nTrials).tolist()
+    strategy_used = np.repeat(0, nTrials).tolist()
+
 
    
     
@@ -161,27 +136,18 @@ def model_loop():
     #actr.add_dm('shirt'); actr.add_dm('plate'); actr.add_dm('gloves')
     #actr.add_dm('shoes'); actr.add_dm('bowl'); actr.add_dm('jacket')
 
-    actr.goal_focus('make-response')  
-
+    actr.goal_focus('make-response')    
     
-    #fprocessed = actr.define_chunks(['isa', 'goal', 'fproc', "yes"])
-    #actr.set_buffer_chunk('goal', fprocessed[0])
-   
     #open window for interaction
     win = actr.open_exp_window("test", visible = False)
     actr.install_device(win)
     actr.schedule_event_relative(0, 'present_stim' )
-    
+   
     #waits for a key press?
    
     actr.run(2000)
     
     #print(accuracy)
-
-## ==============================================================
-## Set up experiment
-## ==============================================================
-
 
 actr.add_command('present_stim', present_stim, 'presents stimulus') 
 actr.add_command('present_feedback', present_feedback, 'presents feedback')
@@ -197,7 +163,8 @@ test_stims = ["bowl", "shirt", "jeans", "plate", "cup", "jacket"] #Each stimulus
 nPresentations = 12 #learning phase, items were presented 12-14 times during learning
 nTestPresentations = 4
 nTrials = (nPresentations * 9) + (nTestPresentations * np.size(test_stims))  #3 #for sets size three experiment/block
-accuracy =  accuracy = np.repeat(0, nTrials).tolist()
+accuracy = np.repeat(0, nTrials).tolist()
+strategy_used = np.repeat(0, nTrials).tolist()
 
 #associated responses (matches Collins' patterns of response-stim associations)
 stims_3_resps = ['j', 'j', 'l']
@@ -243,57 +210,27 @@ chunks = None
 current_response  = np.repeat('x', nTrials * 2).tolist() #multiply by 2 for number of blocks
 lastLearnTrial = np.size(stims3 + stims6) -1
 
-
-
-## ==============================================================
-## set up strategy distributions
-## ==============================================================
-
-RL20 = np.random.permutation(
-    np.concatenate(
-    [np.repeat(1,132*0.20) , 
-    np.repeat(2, 132 * 0.8)]))
-
-RL40 = np.random.permutation(
-    np.concatenate(
-    [np.repeat(1,132*0.4) , 
-    np.repeat(2, 132 * 0.6)]))
-
-RL60 = np.random.permutation(
-    np.concatenate(
-    [np.repeat(1,132*0.6) , 
-    np.repeat(2, 132 * 0.4)]))
-
-RL80 = np.random.permutation(
-    np.concatenate(
-    [np.repeat(1,132*0.8) , 
-    np.repeat(2, 132 * 0.20)]))
-
-## ==============================================================
-## set up model parameters
-## ==============================================================
-
-
 #parameter ranges for simulation
 bll_param   = [0.4, 0.5, 0.6]#[0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,range around .5 actr rec val
 alpha_param = [0.1, 0.15, 0.2]#[0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection 0.2 rec val
 egs_param   = [0.2, 0.3, 0.4]#[0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
 imag_param  = [1, 2, 3]# , 4, 5] #simulates working memory as attentional focus 
-ans_param   = [0.2, 0.3, 0.4]#[0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
-strtg_param   = ['RL20', 'RL40', 'RL60', 'RL80'] # this is the strategy parameter - proportion of decl/proced to use.
+ans_param   = [0.2, 0.3, 0.4]#[0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual.
+
+
 #Integrated model params
 
 #combine all params for a loop 
-params = [bll_param, alpha_param, egs_param, imag_param, ans_param, strtg_param]
-param_combs = list(itertools.product(*params))
+#params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
+#param_combs = list(itertools.product(*params))
 
 #RL model params
 #params = [alpha_param, egs_param]
 #param_combs = list(itertools.product(*params))
 
 # LTM model params
-#params = [bll_param, imag_param, ans_param]
-#param_combs = list(itertools.product(*params))
+params = [bll_param, imag_param, ans_param]
+param_combs = list(itertools.product(*params))
 
  ###########initialize variables to concat all outputs from simulations
 
@@ -301,31 +238,19 @@ sim_data3 = [] #saves mean curves and parameters
 sim_data6 = []
 sim_data  = []
 I_data = []
-current_strategy = [];
+#i=0
 
 
 
-
-
-
-## ==============================================================
-## simulator and data analysis
-## ==============================================================
-
-
-def run_simulation(bll, alpha, egs, imag, ans,strtg, nSims):
+def run_simulation(bll, alpha, egs, imag, ans, nSims):
    
     global i
     global sim_data3
     global sim_data
     global sim_data6
     global accuracy
-    global current_strategy
+    global strategy_used
     print('vars reset')
-    
-    current_strategy = eval(strtg)
-    #print(current_strategy)
-        
     temp3 = [] 
     temp6 = []
     #accuracy = np.repeat(0, nTrials).tolist()
@@ -336,16 +261,17 @@ def run_simulation(bll, alpha, egs, imag, ans,strtg, nSims):
         #actr.hide_output()
 
         actr.set_parameter_value(":bll", bll)
-        actr.set_parameter_value(":alpha", alpha)
-        actr.set_parameter_value(":egs", egs)
+       # actr.set_parameter_value(":alpha", alpha)
+        #actr.set_parameter_value(":egs", egs)
         actr.set_parameter_value(":visual-activation", imag)#formerly imaginal activation
         actr.set_parameter_value(":ans", ans)
         
         i = 0
         win = None
+        print(i)
         model_loop()
 
-
+       
        ### Analyze generated data: LEARNING
             ##set 3 analysis 
 
@@ -424,7 +350,7 @@ def run_simulation(bll, alpha, egs, imag, ans,strtg, nSims):
         #sim_data.append([temp3, temp6, np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
         #del temp3, temp6
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
-    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans, strtg])
+    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans, np.mean(strategy_used) ])
         #del temp3, temp6   
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        

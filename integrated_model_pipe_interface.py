@@ -20,7 +20,7 @@ show_output = False
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "integrated-model.lisp")) #integrated-model.lisp
+actr.load_act_r_model(os.path.join(curr_dir, "integrated-model-pipe.lisp")) #integrated-model.lisp
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
 
@@ -263,7 +263,7 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         actr.set_parameter_value(":bll", bll)
         actr.set_parameter_value(":alpha", alpha)
         actr.set_parameter_value(":egs", egs)
-        actr.set_parameter_value(":imaginal-activation", imag)
+        actr.set_parameter_value(":visual-activation", imag)#formerly imaginal activation
         actr.set_parameter_value(":ans", ans)
         
         i = 0
