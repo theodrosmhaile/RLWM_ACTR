@@ -11,7 +11,7 @@ editor_options:
 
 
 ```{r set up, echo=FALSE, warning=FALSE, message=FALSE}
-#rm(list = ls())
+rm(list = ls())
 library(matlab)
 library(reshape2)
 library(ggplot2)
@@ -54,7 +54,7 @@ sdat.mod  <- cbind(sdat[, 1:24],
 
 #----- import model data (has to be converted from JSON to data frames)
 #--------- Integrated model original
-simsRL_LTMorig <- fromJSON('sim_data_all_params_integrated_model_100s_031620.JSON')
+simsRL_LTMorig <- fromJSON('RLLTMorig_sim_data050520.JSON')
 
  simsRL_LTMorig.set3learn <- simsRL_LTMorig$data$set3_learn %>%
   unlist() %>%
@@ -145,18 +145,18 @@ simsRL_LTMstr.s3s6test.temp <-
 
 #--------- Reinforcement Learning Model
 
-simsRL <- fromJSON('sim_data_all_params_RL_100s_031620.JSON')
+simsRL <- fromJSON('RL_sim_data_3lvsparams_050420.JSON')
 
  simsRL.set3learn <- simsRL$data$set3_learn %>%
   unlist() %>%
   as.matrix() %>%
-  reshape(., 12, 25) %>%
+  reshape(., 12, nrow(simsRL$data)) %>%
   t() 
 
 simsRL.set6learn <- simsRL$data$set6_learn %>% 
   unlist() %>% 
   as.matrix() %>%
-  reshape(., 12, 25) %>%
+  reshape(., 12, nrow(simsRL$data)) %>%
   t() 
 
  simsRL.s3s6test.temp <-
@@ -164,14 +164,14 @@ simsRL.set6learn <- simsRL$data$set6_learn %>%
   cbind(., simsRL$data$set6_test) %>% 
    rep(., 12) %>%
    as.matrix() %>%
-   reshape(., 300, 2) %>%
-    reshape(., 50, 12) 
+   reshape(., nrow(simsRL$data)*12, 2) %>%
+    reshape(., nrow(simsRL$data)*2, 12) 
  
 
  RL.sim.dat <- cbind(simsRL.set3learn, 
                      simsRL.set6learn, 
-                     simsRL.s3s6test.temp[1:25, ], 
-                     simsRL.s3s6test.temp[26:50, ] )
+                     simsRL.s3s6test.temp[1:nrow(simsRL$data), ], 
+                     simsRL.s3s6test.temp[9:18, ] )
 
 #--------- Longterm Memory/WM/Declarative model 
  
@@ -199,26 +199,39 @@ simsLTM.s3s6test.temp <-  simsLTM$data$set3_test %>%
  LTM.sim.dat <- cbind(simsLTM.set3learn, 
                       simsLTM.set6learn, 
                       simsLTM.s3s6test.temp[1:27, ], 
-                      simsLTM.s3s6test.temp[27:54, ] )
+                      simsLTM.s3s6test.temp[28:54, ] )
 
 ```
 
+```{r model description plots}
+
+```
 
 
 ```{r fit model data to subject data}
 #----- loop through subject data and check for fit against model data using mean squared error. 
 
-mseRL.temp     =c()
-mseLTM.temp    =c()
-mseRL_LTM.temp =c()
+mseRL.temp         =c()
+mseLTM.temp        =c()
+mseRL_LTMorig.temp =c()
+mseRL_LTMpipe.temp =c()
+mseRL_LTMstr.temp  =c()
 
 for(s in c(1:nrow(sdat.mod))) { # for each subject
  # model 1 
  mseRL.temp     <- rbind(mseRL.temp, apply(RL.sim.dat, 1, function(x,y) MSE(x, sdat.mod[s, ])))
  # model 2
  mseLTM.temp    <- rbind(mseLTM.temp, apply(LTM.sim.dat, 1, function(x,y) MSE(x, sdat.mod[s, ] )))
+ 
  # model 3
- mseRL_LTM.temp <- rbind(mseRL_LTM.temp, apply(RL_LTM.sim.dat, 1, function(x,y) MSE(x, sdat.mod[s, ])))
+ mseRL_LTMorig.temp <- rbind(mseRL_LTMorig.temp, 
+                             apply(RL_LTMorig.sim.dat, 1, function(x,y) MSE(x, sdat.mod[s, ])))
+ # model 3.1
+ mseRL_LTMpipe.temp <- rbind(mseRL_LTMpipe.temp, 
+                             apply(RL_LTMpipe.sim.dat, 1, function(x,y) MSE(x, sdat.mod[s, ])))
+ # model 3.2
+mseRL_LTMstr.temp  <- rbind(mseRL_LTMstr.temp, 
+                            apply(RL_LTMstr.sim.dat, 1, function(x,y) MSE(x, sdat.mod[s, ])))
   
 }
 
@@ -228,7 +241,9 @@ for(s in c(1:nrow(sdat.mod))) { # for each subject
 #------------first find the smalled mse
 RL.fit     = as.matrix(apply(mseRL.temp, 1, min))     %>% sqrt()
 LTM.fit    = as.matrix(apply(mseLTM.temp, 1, min))    %>% sqrt()
-RL_LTM.fit = as.matrix(apply(mseRL_LTM.temp, 1, min)) %>% sqrt()
+RL_LTMorig.fit = as.matrix(apply(mseRL_LTMorig.temp, 1, min)) %>% sqrt()
+RL_LTMpipe.fit = as.matrix(apply(mseRL_LTMpipe.temp, 1, min)) %>% sqrt()
+RL_LTMstr.fit = as.matrix(apply(mseRL_LTMstr.temp, 1, min)) %>% sqrt()
 
 
 
@@ -237,7 +252,9 @@ RL_LTM.fit = as.matrix(apply(mseRL_LTM.temp, 1, min)) %>% sqrt()
 #  .[,`:=`(V66 = V3 - mean(V3))]
 #-------------second, find actual row number using smallest value
 ind.temp.RL <- c()
-ind.temp.RL_LTM <- c()
+ind.temp.RL_LTMorig <- c()
+ind.temp.RL_LTMstr <- c()
+ind.temp.RL_LTMpipe <- c()
 ind.temp.LTM <- c()
 
 for ( i in 1:length(RL.fit)) {
@@ -249,10 +266,23 @@ for ( i in 1:length(LTM.fit)) {
   ind.temp.LTM <- rbind(ind.temp.LTM, which(mseLTM.temp[i,] %in% LTM.fit[i]))
   
 }
-for ( i in 1:length(RL_LTM.fit)) {
-  ind.temp.RL_LTM <- rbind(ind.temp.RL_LTM, which(mseRL_LTM.temp[i,] %in% RL_LTM.fit[i]))
+for ( i in 1:length(RL_LTMorig.fit)) {
+  ind.temp.RL_LTMorig <- rbind(ind.temp.RL_LTMorig, 
+                               which(mseRL_LTMorig.temp[i,] %in% RL_LTMorig.fit[i]))
   
 }
+
+for ( i in 1:length(RL_LTMpipe.fit)) {
+  ind.temp.RL_LTMpipe <- rbind(ind.temp.RL_LTMpipe, 
+                           which(mseRL_LTMpipe.temp[i,] %in% RL_LTMpipe.fit[i]))
+  
+}
+
+for ( i in 1:length(RL_LTM.fit)) {
+  ind.temp.RL_LTMstr <- rbind(ind.temp.RL_LTMstr, which(mseRL_LTMstr.temp[i,] %in% RL_LTMstr.fit[i]))
+  
+}
+
 
 #-------------which model fits a participant most?| 1= RL; 2= LTM; 3=RL_LTM 
 #--------------There are no min.col functions? Work around find the max after inverting:
@@ -284,7 +314,7 @@ model.fits %>%
 ```
 
 
-```{r model plots}
+```{r model vs participant plots}
 plt.sim.rl <- data.frame('accuracy'= c(RL.sim.dat[,1:12] %>% t() %>% c(),RL.sim.dat[,13:24] %>% t() %>% c()),
                          'index'=rep(1:12,50),
                          'condition'=c(rep('set3', 12*25), rep('set6',12*25)))
