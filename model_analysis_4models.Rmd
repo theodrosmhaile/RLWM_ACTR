@@ -73,13 +73,14 @@ simsRL_LTMorig.s3s6test.temp <-
   cbind(., simsRL_LTMorig$data$set6_test) %>% 
    rep(., 12) %>%
    as.matrix() %>%
-   reshape(., row(simsRL_LTMorig$data)*12, 2) %>%
-   reshape(., row(simsRL_LTMorig$data)*2, 12) 
+   reshape(., nrow(simsRL_LTMorig$data)*12, 2) %>%
+   reshape(., nrow(simsRL_LTMorig$data)*2, 12) 
 
  RL_LTMorig.sim.dat <- cbind(simsRL_LTMorig.set3learn, 
                          simsRL_LTMorig.set6learn, 
                          simsRL_LTMorig.s3s6test.temp[1:nrow(simsRL_LTMorig$data), ], 
-                         simsRL_LTMorig.s3s6test.temp[244:486, ] )
+                         simsRL_LTMorig.s3s6test.temp[244:486, ],
+                        simsRL_LTMorig$data[,c('bll','alpha','egs','imag','ans')])
 
  
  
@@ -109,7 +110,8 @@ simsRL_LTMpipe.s3s6test.temp <-
  RL_LTMpipe.sim.dat <- cbind(simsRL_LTMpipe.set3learn, 
                          simsRL_LTMpipe.set6learn, 
                          simsRL_LTMpipe.s3s6test.temp[1:nrow(simsRL_LTMpipe$data), ], 
-                         simsRL_LTMpipe.s3s6test.temp[244 : 486 ] )
+                         simsRL_LTMpipe.s3s6test.temp[244 : 486 ],
+                         simsRL_LTMpipe$data[,c('bll','alpha','egs','imag','ans')])
 
  
  
@@ -139,7 +141,8 @@ simsRL_LTMstr.s3s6test.temp <-
  RL_LTMstr.sim.dat <- cbind(simsRL_LTMstr.set3learn, 
                          simsRL_LTMstr.set6learn, 
                          simsRL_LTMstr.s3s6test.temp[1:nrow(simsRL_LTMstr$data), ], 
-                         simsRL_LTMstr.s3s6test.temp[973 : 1944 ] )
+                         simsRL_LTMstr.s3s6test.temp[973 : 1944 ],
+                         simsRL_LTMstr$data[,c('bll','alpha','egs','imag','ans')])
  
  
 
@@ -153,6 +156,8 @@ simsRL <- fromJSON('RL_sim_data_3lvsparams_050420.JSON')
   reshape(., 12, nrow(simsRL$data)) %>%
   t() 
 
+ 
+ 
 simsRL.set6learn <- simsRL$data$set6_learn %>% 
   unlist() %>% 
   as.matrix() %>%
@@ -171,11 +176,12 @@ simsRL.set6learn <- simsRL$data$set6_learn %>%
  RL.sim.dat <- cbind(simsRL.set3learn, 
                      simsRL.set6learn, 
                      simsRL.s3s6test.temp[1:nrow(simsRL$data), ], 
-                     simsRL.s3s6test.temp[9:18, ] )
+                     simsRL.s3s6test.temp[10:18, ] , 
+                     simsRL$data[,c('bll','alpha','egs','imag','ans')])
 
 #--------- Longterm Memory/WM/Declarative model 
  
-simsLTM    <- fromJSON('LTM_sim_data_3lvparams_050420.JSON') 
+simsLTM    <- fromJSON('LTM_viz_sim_data_at_26.JSON')#('LTM_sim_data_3lvparams_050420.JSON') 
 
  simsLTM.set3learn <- simsLTM$data$set3_learn %>%
   unlist() %>%
@@ -196,14 +202,102 @@ simsLTM.s3s6test.temp <-  simsLTM$data$set3_test %>%
    reshape(., 324, 2) %>% 
    reshape(., 54, 12) #54= nrow(sims.LTM) * 2
 
- LTM.sim.dat <- cbind(simsLTM.set3learn, 
-                      simsLTM.set6learn, 
-                      simsLTM.s3s6test.temp[1:27, ], 
-                      simsLTM.s3s6test.temp[28:54, ] )
+ LTM.sim.dat <- cbind('set3_learn'=simsLTM.set3learn %>% c(), 
+                      'set6_learn'=simsLTM.set6learn %>% c(),
+                      'time'=rep(1:12,324/12),
+                      'set3_test'=simsLTM.s3s6test.temp[1:27, ] %>% c(), 
+                      'set6_test'=simsLTM.s3s6test.temp[28:54, ] %>% c(), 
+                      simsLTM$data[,c('bll','alpha','egs','imag','ans')]) %>% 
+   data.table()
+ 
+ 
+ 
+ 
+  yolo = LTM.sim.dat %>% 
+   .[,-c("alpha", "egs")] %>% 
+   melt.data.table(id.vars = c("ans", "bll", "imag", "time"), 
+                   variable.name = "condition")  
+  
+ 
+ 
+ 
+ 
+ 
+ yolo = LTM.sim.dat %>% 
+   data.frame() %>% 
+   data.table() %>% 
+   .[,-c("alpha", "egs")] %>% 
+   melt.data.table(id.vars = c("ans", "bll", "imag", "time"), 
+                   variable.name = "teddy")  
+  
+ 
+ 
+ 
+ 
+  # .[order(alpha, bll, imag)]
+   .[,`:=`(nu_var = str_trunc(variable, 2,"right", ellipsis = "") %>%
+             as.integer(), 
+           nu__cat = str_trunc(variable, 9,"left", ellipsis = ""))] %>% print()
+ 
+yolo %>% 
+ .[,.(avg = mean(value)), by = .(ans, bll, imag, variable)]
+
+yolo %>% 
+ .[,`:=`(avg = mean(value)), by = .(ans, teddy)]
+
+yolo %>% 
+  ggplot() + 
+  geom_point(aes(time, value, color=teddy)) + 
+  facet_grid(teddy+ans~imag+bll)
+  yolo %>% .[order()]
+
+ yolo %>% 
+   .[imag == 1] %>% 
+   .[ans == "0.2"] %>% 
+   .[bll == "0.4"] %>% 
+   .[teddy == "set3_learn"]
+
+ 
+ #TODO
 
 ```
 
 ```{r model description plots}
+
+#------Descriptive measures: learning rate (beta), accuracy learn & Test, differences between learn3 and learn 6
+#--------select data for each level of parameters per model
+
+
+
+
+
+
+
+
+
+function_name <- function(arg_1, arg_2, ...) {
+  
+bll_param   = c(0.4, 0.5, 0.6)
+alpha_param = c(0.1, 0.15, 0.2)
+egs_param   = c(0.2, 0.3, 0.4)
+imag_param  = c(1, 2, 3)
+ans_param   = c(0.2, 0.3, 0.4)
+  
+  
+            temp <- simsRL$data
+            ind  <- (temp$alpha    == input$al & 
+                         temp$bll  == 0 &  
+                         temp$ans  == 0 &
+                         temp$egs  == input$e & 
+                         temp$imag == 0)
+
+  }
+
+
+
+#
+
+
 
 ```
 
@@ -245,8 +339,6 @@ RL_LTMorig.fit = as.matrix(apply(mseRL_LTMorig.temp, 1, min)) %>% sqrt()
 RL_LTMpipe.fit = as.matrix(apply(mseRL_LTMpipe.temp, 1, min)) %>% sqrt()
 RL_LTMstr.fit = as.matrix(apply(mseRL_LTMstr.temp, 1, min)) %>% sqrt()
 
-
-
 #temp <- mdat.3 %>% 
 #  data.table() %>% 
 #  .[,`:=`(V66 = V3 - mean(V3))]
@@ -278,15 +370,21 @@ for ( i in 1:length(RL_LTMpipe.fit)) {
   
 }
 
-for ( i in 1:length(RL_LTM.fit)) {
+for ( i in 1:length(RL_LTMstr.fit)) {
   ind.temp.RL_LTMstr <- rbind(ind.temp.RL_LTMstr, which(mseRL_LTMstr.temp[i,] %in% RL_LTMstr.fit[i]))
   
 }
 
 
-#-------------which model fits a participant most?| 1= RL; 2= LTM; 3=RL_LTM 
+#--------which model fits a participant most?
+#1= RL; 2= LTM; 3=RL_LTMorig; 4= RL_LTMpipe; 5= RL_LTMstr
+
 #--------------There are no min.col functions? Work around find the max after inverting:
-participants.fit <- ((cbind(RL.fit, LTM.fit, RL_LTM.fit) -1 ) * -1) %>% 
+participants.fit <- ((cbind(RL.fit, 
+                            LTM.fit, 
+                            RL_LTMorig.fit, 
+                            RL_LTMpipe.fit,
+                            RL_LTMstr.fit) -1 ) * -1) %>% 
   max.col() 
 
 #fit plots
@@ -302,14 +400,15 @@ data.frame('cond'= participants.fit)  %>%
 
 
 model.fits <- data.frame(RL.fit, LTM.fit, RL_LTM.fit, fit.labels)
+
 model.fits %>% 
   melt() %>% 
   ggplot(aes(y=value,variable, group=variable)) +
   geom_boxplot() + 
   ggtitle('Root mean squared error')+
   xlab('model')+
-  theme_bw(base_size = 20,base_family = 'Calibri')+
-  theme(legend.position='none')
+  theme_bw(base_size = 20,base_family = 'Calibri') +
+  theme(legend.position='none') 
 
 ```
 
@@ -528,7 +627,10 @@ simsLTM$data[ind.temp.LTM[participants.fit==2],c('bll','imag','ans')]   %>%
 ```
 
 
+CHECK IF THE LTM PARAMETERS SHIFT THE RL VS LTM USE OF THE PIPE MODEL AND THISIS A GREAT TALKING POINT!!!! CHECK SAME FOR RL PARAMETERS
 
+
+model plot : k, I realized why I cannot get the model flowchart. It's called "production graph" in the interface; you need to run ACT-R with the recorded history available, which typically comes from the trace or other data. I can play around with it!drive  
 
 failed radial plot
 ```{r}
