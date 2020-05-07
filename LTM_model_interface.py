@@ -16,7 +16,7 @@ from matplotlib import pyplot
 import itertools
 
 
-show_output = True
+show_output = False
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -347,7 +347,7 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
     sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
         #del temp3, temp6   
-   # return sim_data
+    #return np.mean(test_6)
 #sum(np.array(pd.DataFrame(I_data)<132))        
 
 

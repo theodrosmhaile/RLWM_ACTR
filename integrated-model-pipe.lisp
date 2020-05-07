@@ -1192,7 +1192,7 @@
   ==>
        
    +retrieval> 
-     ;; picture =cur_pic
+      picture =cur_pic
       outcome yes
    
    +imaginal>

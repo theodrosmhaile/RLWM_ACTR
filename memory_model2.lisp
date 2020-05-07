@@ -31,9 +31,9 @@
      ;;:ans nil
      ;; :rt  0.5  ;; Not needed
      :er  t
-     :v t
+     :v nil
      :esc t
-     :mas 5.0
+     :mas 8.0
      ;:visual-activation 5.0 
      )
 
@@ -93,7 +93,7 @@
   ==>
        
    +retrieval> 
-      ;; picture =cur_pic
+      picture =cur_pic
       outcome yes
    
    +imaginal>
