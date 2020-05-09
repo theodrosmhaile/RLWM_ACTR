@@ -11,7 +11,7 @@ editor_options:
 
 
 ```{r set up, echo=FALSE, warning=FALSE, message=FALSE}
-rm(list = ls())
+#rm(list = ls())
 library(matlab)
 library(reshape2)
 library(ggplot2)
@@ -25,12 +25,14 @@ library(data.table)
 library(knitr)
 library(gridExtra)
 source('param_influence.R')
+library(Rmisc)
+library(ggpubr)
 ```
 
 
 
 
-```{r import data}
+```{r import data,  message=FALSE, warning=FALSE}
 #----- import subject data
 # 
 
@@ -86,7 +88,7 @@ simsRL_LTMorig.s3s6test.temp <-
  
  
  #--------- Integrated model RL to LTM pipe
-simsRL_LTMpipe <- fromJSON('./outdated_sim_data/RLLTM2_pipe_sim_data050420.JSON')
+simsRL_LTMpipe <- fromJSON('./RLLTM_pipe_visual_activation_050720.JSON')
 
  simsRL_LTMpipe.set3learn <- simsRL_LTMpipe$data$set3_learn %>%
   unlist() %>%
@@ -118,7 +120,7 @@ simsRL_LTMpipe.s3s6test.temp <-
  
  
  #--------- Integrated model assigned strategy
-simsRL_LTMstr <- fromJSON('./outdated_sim_data/RLLTM1_strategy_sim_data050420.JSON')
+simsRL_LTMstr <- fromJSON('./RLLTM_str_visual_activation_050720.JSON')
 
  simsRL_LTMstr.set3learn <- simsRL_LTMstr$data$set3_learn %>%
   unlist() %>%
@@ -225,7 +227,12 @@ simsLTM.s3s6test.temp <-  simsLTM$data$set3_test %>%
  
 ```
 
-```{r model description analysis and plots}
+
+### These plots show how accuracy during learning and test change as parameter values go up:
+### RL only on left, LTM only second, RL_LTM meta RL, RL_LTM explicit strategy. 
+
+
+```{r model description analysis and plots,  message=FALSE, warning=FALSE, fig.height=12,fig.width=12}
 
 #------Descriptive measures: learning rate (beta), accuracy learn & Test, differences between learn3 and learn 6
 #--------select data for each level of parameters per model
@@ -238,52 +245,87 @@ tmp.color = c('#ca0020','#f4a582' ,'#0571b0','#92c5de')
 
 
 
-RL.params %>% 
+
+
+
+p1 <- RL.params %>% 
   melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
   ggplot(aes(level, accuracy, color=variable)) + 
   geom_point()+
   geom_line() +
   facet_grid('parameter')+
   theme_bw(base_size = 16, base_line_size = 1)+
-   scale_color_manual(values = tmp.color)
+   scale_color_manual(values = tmp.color)+
+  ylim(c(.3,1)) +
+  theme(legend.position='top', legend.direction = 'vertical')
    #scale_colour_brewer( palette = "RdBu", direction = 1) 
 
 
-LTM.params %>% 
+p2 <- LTM.params %>% 
   melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
   ggplot(aes(level, accuracy, color=variable)) + 
   geom_point()+
   geom_line() +
+   ylim(c(.3,1)) +
   facet_grid('parameter')+
   theme_bw(base_size = 16, base_line_size = 1)+
-   scale_color_manual(values = tmp.color)
+   scale_color_manual(values = tmp.color)+
+  theme(legend.position='none')
 
 
-RLLTMpipe.params %>% 
+p3 <- RLLTMpipe.params %>% 
   melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
   ggplot(aes(level, accuracy, color=variable)) + 
   geom_point()+
   geom_line() +
+   ylim(c(.3,1)) +
   facet_grid('parameter')+
   theme_bw(base_size = 16, base_line_size = 1)+
-   scale_color_manual(values = tmp.color)
+   scale_color_manual(values = tmp.color)+
+  theme(legend.position='none')
 
-RLLTMstr.params %>% 
+p4 <- RLLTMstr.params %>% 
   melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
   ggplot(aes(level, accuracy, color=variable)) + 
   geom_point()+
   geom_line() +
+   ylim(c(.3,1)) +
   facet_grid('parameter')+
   theme_bw(base_size = 16, base_line_size = 1)+
-   scale_color_manual(values = tmp.color)
+   scale_color_manual(values = tmp.color)+
+  theme(legend.position='none')
 
-
+grid.arrange(p1,p2,p3, nrow=1, ncol=4)
 
 ```
 
+### The Explicit RL_LTM model fits the most people, followed by the LTM model (second from left)
 
-```{r fit model data to subject data}
+
+```{r fit model data to subject data, message=FALSE, warning=FALSE}
 #----- loop through subject data and check for fit against model data using mean squared error. 
+#(1) Transform RMSE into residual sum of squares by doing RSS = RMSE^2 * n
+#11:34
+#(2) Calculate BIC as: BIC = n + n log (2*pi) + n log (RSS/n) + log(n) * (k + 1)
+#11:36
+#In RL, k = 2; in LTM, k = 3; and Integrated, k = 5 or k = 6
+
+
+
+
+Andys_BIC <- function(rmse, k) {
+  
+  # RSS first
+  n = 48 #lean3 + learn 6 + (test3)*12 + (test6)*12
+  RSS <- ((rmse)^2) * n
+  
+  # BIC next
+  bic <- n + (n * log(2*pi)) + (n * log(RSS/n)) + (log(n) * (k + 1))
+  
+  return(bic)
+}
+
+
 
 mseRL.temp         =c()
 mseLTM.temp        =c()
@@ -293,36 +335,55 @@ mseRL_LTMstr.temp  =c()
 
 for(s in c(1:nrow(sdat.mod))) { # for each subject
  # model 1 
- mseRL.temp     <- rbind(mseRL.temp, apply(RL.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ])))
+ mseRL.temp     <- rbind(mseRL.temp, apply(RL.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ])) %>% sqrt()
+                         )
  # model 2
- mseLTM.temp    <- rbind(mseLTM.temp, apply(LTM.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ] )))
+ mseLTM.temp    <- rbind(mseLTM.temp, apply(LTM.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ] )) %>%  sqrt()
+                         )
  
  # model 3
- mseRL_LTMorig.temp <- rbind(mseRL_LTMorig.temp, 
-                             apply(RL_LTMorig.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ])))
+ # mseRL_LTMorig.temp <- rbind(mseRL_LTMorig.temp, 
+                             # apply(RL_LTMorig.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ])) %>% sqrt()
+                             # )
  # model 3.1
  mseRL_LTMpipe.temp <- rbind(mseRL_LTMpipe.temp, 
-                             apply(RL_LTMpipe.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ])))
+                             apply(RL_LTMpipe.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ])) %>% sqrt()
+                             )
  # model 3.2
 mseRL_LTMstr.temp  <- rbind(mseRL_LTMstr.temp, 
-                            apply(RL_LTMstr.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ])))
+                            apply(RL_LTMstr.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ])) %>% sqrt()
+                            )
   
 }
 
 
+
+
+
+
 #------ Exrtact row indices to get parameter set of parameters for best fit model
 
-#------------first find the smalled mse
-RL.fit     = as.matrix(apply(mseRL.temp, 1, min))     %>% sqrt()
-LTM.fit    = as.matrix(apply(mseLTM.temp, 1, min))    %>% sqrt()
-RL_LTMorig.fit = as.matrix(apply(mseRL_LTMorig.temp, 1, min)) %>% sqrt()
-RL_LTMpipe.fit = as.matrix(apply(mseRL_LTMpipe.temp, 1, min)) %>% sqrt()
-RL_LTMstr.fit = as.matrix(apply(mseRL_LTMstr.temp, 1, min)) %>% sqrt()
+#------------first find the smalled BIC
+RL.bic = Andys_BIC(mseRL.temp, 2)
+LTM.bic = Andys_BIC(mseLTM.temp, 3)
+RL_LTMpipe.bic = Andys_BIC(mseRL_LTMpipe.temp, 5)
+RL_LTMstr.bic = Andys_BIC(mseRL_LTMstr.temp, 6)
+
+RL.fit     = as.matrix(apply(RL.bic , 1, min))   
+LTM.fit    = as.matrix(apply(LTM.bic , 1, min))  
+# RL_LTMorig.fit = as.matrix(apply(   (mseRL_LTMorig.temp), 1, min))
+RL_LTMpipe.fit = as.matrix(apply(RL_LTMpipe.bic, 1, min)) 
+RL_LTMstr.fit = as.matrix(apply(RL_LTMstr.bic , 1, min))
+
 
 #temp <- mdat.3 %>% 
 #  data.table() %>% 
 #  .[,`:=`(V66 = V3 - mean(V3))]
+
+
 #-------------second, find actual row number using smallest value
+
+
 ind.temp.RL <- c()
 ind.temp.RL_LTMorig <- c()
 ind.temp.RL_LTMstr <- c()
@@ -330,351 +391,492 @@ ind.temp.RL_LTMpipe <- c()
 ind.temp.LTM <- c()
 
 for ( i in 1:length(RL.fit)) {
-  ind.temp.RL <- rbind(ind.temp.RL, which(mseRL.temp[i,] %in% RL.fit[i]))
+  ind.temp.RL <- rbind(ind.temp.RL, which(RL.bic[i,] %in% RL.fit[i]))
   
 }
 
 for ( i in 1:length(LTM.fit)) {
-  ind.temp.LTM <- rbind(ind.temp.LTM, which(mseLTM.temp[i,] %in% LTM.fit[i]))
+  ind.temp.LTM <- rbind(ind.temp.LTM, which(LTM.bic[i,] %in% LTM.fit[i]))
   
 }
-for ( i in 1:length(RL_LTMorig.fit)) {
-  ind.temp.RL_LTMorig <- rbind(ind.temp.RL_LTMorig, 
-                               which(mseRL_LTMorig.temp[i,] %in% RL_LTMorig.fit[i]))
-  
-}
+# for ( i in 1:length(RL_LTMorig.fit)) {
+#   ind.temp.RL_LTMorig <- rbind(ind.temp.RL_LTMorig, 
+#                                which(mseRL_LTMorig.temp[i,] %in% RL_LTMorig.fit[i]))
+#   
+# }
 
 for ( i in 1:length(RL_LTMpipe.fit)) {
   ind.temp.RL_LTMpipe <- rbind(ind.temp.RL_LTMpipe, 
-                           which(mseRL_LTMpipe.temp[i,] %in% RL_LTMpipe.fit[i]))
+                           which(RL_LTMpipe.bic[i,] %in% RL_LTMpipe.fit[i]))
   
 }
 
 for ( i in 1:length(RL_LTMstr.fit)) {
-  ind.temp.RL_LTMstr <- rbind(ind.temp.RL_LTMstr, which(mseRL_LTMstr.temp[i,] %in% RL_LTMstr.fit[i]))
+  ind.temp.RL_LTMstr <- rbind(ind.temp.RL_LTMstr, which(RL_LTMstr.bic[i,] %in% RL_LTMstr.fit[i]))
   
 }
 
 
 #--------which model fits a participant most?
-#1= RL; 2= LTM; 3=RL_LTMorig; 4= RL_LTMpipe; 5= RL_LTMstr
+#1= RL; 2= LTM; 3 = RL_LTMpipe; 4 = RL_LTMstr
+
+
+
+
 
 #--------------There are no min.col functions? Work around find the max after inverting:
-participants.fit <- ((cbind(RL.fit, 
-                            LTM.fit, 
-                            RL_LTMorig.fit, 
-                            RL_LTMpipe.fit,
-                            RL_LTMstr.fit) -1 ) * -1) %>% 
-  max.col() 
+participants.fit=c()
+model.fits <- data.frame(RL.fit, LTM.fit, RL_LTMpipe.fit)#, RL_LTMstr.fit)#, fit.labels)
+participant.min <- apply(model.fits, 1, min)
+     
+for (s in 1:nrow(model.fits)){
 
+       participants.fit =rbind(participants.fit, which(participant.min[s] == model.fits[s,]))
+     }
+          
+```
+
+```{r model fit plots}
 #fit plots
 #participants.fit %>% 
  # hist(main='Counts of participants by model', xlab = ("1= RL; 2= LTM; 3=RL_LTM"), #lwd=4.3)
-fit.labels <- ifelse(participants.fit==2, 'LTM', ifelse(participants.fit==3, 'RL-LTM','RL'))
 
-data.frame('cond'= participants.fit)  %>% 
-  ggplot(aes(cond)) + 
-  geom_histogram() +
-   ggtitle('Counts of participants by model') +
-  theme_classic(base_size = 20,base_family = 'Calibri')
+fit.labels <- ifelse(participants.fit==2, 'LTM', 
+                     ifelse(participants.fit==3, 'RL-LTM',
+                            ifelse(participants.fit==4,'RL-LTMexplicit','RL')
+                            )
+                     )
+
+models.name=c('RL', 'LTM', 'combined RL-LTM ')#, 'RL_LTM explicit')
+data.frame('model'= participants.fit)  %>% 
+  ggplot(aes(factor(model))) + 
+  geom_bar() +
+  # ggtitle('Counts of participants by model') +
+  theme_bw(base_size = 20)+
+  scale_x_discrete(labels=models.name )+
+  xlab("Models")
 
 
-model.fits <- data.frame(RL.fit, LTM.fit, RL_LTM.fit, fit.labels)
 
 model.fits %>% 
   melt() %>% 
   ggplot(aes(y=value,variable, group=variable)) +
   geom_boxplot() + 
-  ggtitle('Root mean squared error')+
+  ggtitle('BIC')+
   xlab('model')+
-  theme_bw(base_size = 20,base_family = 'Calibri') +
+  theme_bw(base_family = 'Calibri') +
   theme(legend.position='none') +
    scale_colour_brewer( palette = "Set1") 
 
 ```
 
 
-```{r model vs participant plots}
-plt.sim.rl <- data.frame('accuracy'= c(RL.sim.dat[,1:12] %>% t() %>% c(),RL.sim.dat[,13:24] %>% t() %>% c()),
-                         'index'=rep(1:12,50),
-                         'condition'=c(rep('set3', 12*25), rep('set6',12*25)))
+### These plots show mean learning curves for all participants and all parameter combinations -  this should show poor fit since we are collapsing across a lot of variability.
+```{r model vs participant plots,  message=FALSE, warning=FALSE, fig.height=18, fig.width=6}
+plt.sim.rl <- data.frame('accuracy'= c(RL.sim.dat[,1:12] %>% t() %>% c(), 
+                                       sdat[,1:12] %>% t() %>% c(),
+                                       RL.sim.dat[,13:24] %>% t() %>% c(),
+                                       sdat[,13:24] %>% t() %>% c()),
+                         'index'=rep(1:12,184),
+                         'condition'=c(rep('set3_model', 12*9),rep('set3_data', 12*83), rep('set6_model',12*9), rep('set6_data', 12*83))
+                         ) # the numbers are counts of learn trials for set 3 and 6 along with models
 
-plt.sim.rl %>% 
-  ggplot(aes(factor(index), accuracy, group=condition))+
-   geom_smooth(aes(color=condition, fill=condition), method = lm, formula = 'y~poly(x,2)', size=2) +
-  scale_colour_brewer( palette = "Set1") +
+sim.p1 <- plt.sim.rl %>% 
+  summarySE( measurevar = "accuracy", groupvars = c("index", "condition")) %>% 
+  ggplot(aes(factor(index), accuracy, color=condition, group=condition))+
+   #geom_smooth(aes(color=condition, fill=condition), method = lm, formula = 'y~poly(x,2)', size=2) +
+  geom_point() +
+  geom_line() +
+   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+  scale_color_manual(values = tmp.color)+ #scale_colour_brewer( palette = "Set1") +
   ylab('Accuracy') + 
   xlab('Number of stimulus presentations') +
   xlim(as.character(1:12) )+
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
   ggtitle('RL: mean performance across parameter sets') +
-  theme_classic(base_size = 20,base_family = 'Calibri')
+  theme_bw(base_family = 'Calibri')+
+   theme(legend.position='top',legend.direction = 'horizontal')
 
 
 plt.sim.ltm <- data.frame('accuracy'= c(LTM.sim.dat[,1:12] %>% t() %>% c(),
-                                        LTM.sim.dat[,13:24] %>% t() %>% c()), 
-                          'index'=rep(1:12,250), 
-                          'condition'=c(rep('set3', 12*125), rep('set6',12*125)))
+                                         sdat[,1:12] %>% t() %>% c(),
+                                        LTM.sim.dat[,13:24] %>% t() %>% c(),
+                                         sdat[,13:24] %>% t() %>% c()), 
+                          'index'= rep(1:12,220), 
+                          'condition'= c(rep('set3_model', 12*27),rep('set3_data', 12*83), rep('set6_model',12*27), rep('set6_data', 12*83))
+                          )
 
-plt.sim.ltm %>% 
-  ggplot(aes(factor(index), accuracy, group=condition))+
-   geom_smooth(aes(color=condition, fill=condition), method = lm, formula = 'y~poly(x,2)', size=2) +
-  scale_colour_brewer( palette = "Set1") +
+sim.p2 <- plt.sim.ltm %>% 
+   summarySE( measurevar = "accuracy", groupvars = c("index", "condition")) %>% 
+  ggplot(aes(factor(index), accuracy,color=condition, group=condition))+
+   geom_point() +
+   geom_line() +
+   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+   scale_color_manual(values = tmp.color)+ # scale_colour_brewer( palette = "Set1") +
   ylab('Accuracy') + 
   xlab('Number of stimulus presentations') +
   xlim(as.character(1:12) )+
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
   ggtitle('LTM: mean performance across parameter sets') +
-  theme_classic(base_size = 20,base_family = 'Calibri')
+  theme_bw(base_family = 'Calibri')+
+  theme(legend.position='none')
 
 
-plt.sim.rl_ltm <- data.frame('accuracy'= c(RL_LTM.sim.dat[,1:12] %>% t() %>% c(),RL_LTM.sim.dat[,13:24] %>% t() %>% c()),
-                             'index'=rep(1:12,6250),
-                             'condition'=c(rep('set3', 12*3125), rep('set6',12*3125)))
+ plt.sim.rl_ltmpipe <- data.frame('accuracy'= c(RL_LTMpipe.sim.dat[,1:12] %>% t() %>% c(), 
+                                           sdat[,1:12] %>% t() %>% c(),
+                                           RL_LTMpipe.sim.dat[,13:24] %>% t() %>% c(),
+                                           sdat[,13:24] %>% t() %>% c()),
+                             'index'=rep(1:12,652),
+                              'condition'= c(rep('set3_model', 12*243),rep('set3_data', 12*83), rep('set6_model',12*243), rep('set6_data', 12*83))
+                             )
 
-plt.sim.rl_ltm %>% 
-  ggplot(aes(factor(index), accuracy, group=condition))+
-   geom_smooth(aes(color=condition, fill=condition), method = lm, formula = 'y~poly(x,2)', size=2) +
-  scale_colour_brewer( palette = "Set1") +
+
+sim.p3 <- plt.sim.rl_ltmpipe %>% 
+   summarySE( measurevar = "accuracy", groupvars = c("index", "condition")) %>% 
+  ggplot(aes(factor(index), accuracy,color=condition, group=condition))+
+   geom_point() +
+   geom_line() +
+   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+   scale_color_manual(values = tmp.color)+ #
   ylab('Accuracy') + 
   xlab('Number of stimulus presentations') +
   xlim(as.character(1:12) )+
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
-  ggtitle('RL_LTM: mean performance across parameter sets') +
-  theme_classic(base_size = 20,base_family = 'Calibri')
+  ggtitle('RL_LTM pipe: mean performance across parameter sets') +
+  theme_bw(base_family = 'Calibri')+
+  theme(legend.position='none')
 
 
+ plt.sim.rl_ltmstr <- data.frame('accuracy'= c(RL_LTMstr.sim.dat[,1:12] %>% t() %>% c(), 
+                                           sdat[,1:12] %>% t() %>% c(),
+                                           RL_LTMstr.sim.dat[,13:24] %>% t() %>% c(),
+                                           sdat[,13:24] %>% t() %>% c()),
+                             'index'=rep(1:12,2110),
+                              'condition'= c(rep('set3_model', 12*972),rep('set3_data', 12*83), rep('set6_model',12*972), rep('set6_data', 12*83))
+                             )
+
+
+sim.p4 <-plt.sim.rl_ltmstr %>% 
+   summarySE( measurevar = "accuracy", groupvars = c("index", "condition")) %>% 
+  ggplot(aes(factor(index), accuracy,color=condition, group=condition))+
+   geom_point() +
+   geom_line() +
+   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+   scale_color_manual(values = tmp.color)+ #
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('RL_LTM str: mean performance across parameter sets') +
+  theme_bw(base_family = 'Calibri')+
+  theme(legend.position='none')
+
+grid.arrange(sim.p1, sim.p2, sim.p3, ncol=1)
 
 ```
+
+
+### These are the same plots but filtered for participants who fit that model best. These plots should show good fit....but they don't really. Especially the last model that fit the most people/ I'm planning about two more plots that show variabiltiy in parameters within the model groups. 
+
+```{r model vs fitted participant plots ,  message=FALSE, warning=FALSE, fig.height=18, fig.width=6}
+plt.sim.fit.rl <- data.frame('accuracy'= c(RL.sim.dat[,1:12] %>% t() %>% c(), 
+                                       sdat[participants.fit==1, 1:12] %>% t() %>% c(),
+                                       RL.sim.dat[, 13:24] %>% t() %>% c(),
+                                       sdat[participants.fit==1,13:24] %>% t() %>% c()),
+                             
+                         'index'=rep(1:12, (nrow(RL.sim.dat)+nrow(sdat[participants.fit==1,]))*2),
+                        
+                          'condition'=c(rep('set3_model', 12*9),
+                                       rep('set3_data', 12*sum(participants.fit==1)), 
+                                       rep('set6_model',12*9), 
+                                       rep('set6_data', 12*sum(participants.fit==1)))
+                         ) # the numbers are counts of learn trials for set 3 and 6 along with models
+
+sim.fit.p1 <- plt.sim.fit.rl %>% 
+  summarySE( measurevar = "accuracy", groupvars = c("index", "condition")) %>% 
+  ggplot(aes(factor(index), accuracy, color=condition, group=condition))+
+   #geom_smooth(aes(color=condition, fill=condition), method = lm, formula = 'y~poly(x,2)', size=2) +
+  geom_point() +
+  geom_line() +
+   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+  scale_color_manual(values = tmp.color)+ #scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('RL: mean performance across parameter sets') +
+  theme_bw(base_family = 'Calibri')+
+   theme(legend.position='top',legend.direction = 'horizontal')
+
+
+plt.sim.fit.ltm <- data.frame('accuracy'= c(LTM.sim.dat[,1:12] %>% t() %>% c(),
+                                         sdat[participants.fit==2,1:12] %>% t() %>% c(),
+                                        LTM.sim.dat[,13:24] %>% t() %>% c(),
+                                         sdat[participants.fit==2,13:24] %>% t() %>% c()), 
+                              
+                          'index'= rep(1:12,(nrow(LTM.sim.dat) + nrow(sdat[participants.fit==2,]))*2), 
+                          'condition'= c(rep('set3_model', 12*27),
+                                         rep('set3_data', 12*sum(participants.fit==2)), 
+                                         rep('set6_model',12*27), 
+                                         rep('set6_data', 12*sum(participants.fit==2)))
+                          )
+
+sim.fit.p2 <- plt.sim.fit.ltm %>% 
+   summarySE( measurevar = "accuracy", groupvars = c("index", "condition")) %>% 
+  ggplot(aes(factor(index), accuracy,color=condition, group=condition))+
+   geom_point() +
+   geom_line() +
+   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+   scale_color_manual(values = tmp.color)+ # scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('LTM: mean performance across parameter sets') +
+  theme_bw(base_family = 'Calibri')+
+  theme(legend.position='none')
+
+
+ plt.sim.fit.rl_ltmpipe <- data.frame('accuracy'= c(RL_LTMpipe.sim.dat[,1:12] %>% t() %>% c(), 
+                                           sdat[participants.fit==3,1:12] %>% t() %>% c(),
+                                           RL_LTMpipe.sim.dat[,13:24] %>% t() %>% c(),
+                                           sdat[participants.fit==3,13:24] %>% t() %>% c()),
+                                      
+                             'index'=rep(1:12,(nrow(RL_LTMpipe.sim.dat) + nrow(sdat[participants.fit==3,]) )*2),
+                              'condition'= c(rep('set3_model', 12*243),
+                                             rep('set3_data', 12*sum(participants.fit==3)), 
+                                             rep('set6_model',12*243), 
+                                             rep('set6_data', 12*sum(participants.fit==3)))
+                             )
+
+
+sim.fit.p3 <- plt.sim.fit.rl_ltmpipe %>% 
+   summarySE( measurevar = "accuracy", groupvars = c("index", "condition")) %>% 
+  ggplot(aes(factor(index), accuracy,color=condition, group=condition))+
+   geom_point() +
+   geom_line() +
+   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+   scale_color_manual(values = tmp.color)+ #
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('RL_LTM pipe: mean performance across parameter sets') +
+  theme_bw(base_family = 'Calibri')+
+  theme(legend.position='none')
+
+
+ plt.sim.fit.rl_ltmstr <- data.frame('accuracy'= c(RL_LTMstr.sim.dat[,1:12] %>% t() %>% c(), 
+                                           sdat[participants.fit==4,1:12] %>% t() %>% c(),
+                                           RL_LTMstr.sim.dat[,13:24] %>% t() %>% c(),
+                                           sdat[participants.fit==4,13:24] %>% t() %>% c()),
+                                     
+                             'index'=rep(1:12,(nrow(RL_LTMstr.sim.dat) + nrow(sdat[participants.fit==4, ]))*2),
+                             
+                              'condition'= c(rep('set3_model', 12*972),
+                                             rep('set3_data', 12*sum(participants.fit==4)),
+                                             rep('set6_model',12*972), 
+                                             rep('set6_data', 12*sum(participants.fit==4)))
+                             )
+
+
+sim.fit.p4 <-plt.sim.fit.rl_ltmstr %>% 
+   summarySE( measurevar = "accuracy", groupvars = c("index", "condition")) %>% 
+  ggplot(aes(factor(index), accuracy,color=condition, group=condition))+
+   geom_point() +
+   geom_line() +
+   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+   scale_color_manual(values = tmp.color)+ #
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  ggtitle('RL_LTM str: mean performance across parameter sets') +
+  theme_bw(base_family = 'Calibri')+
+  theme(legend.position='none')
+
+grid.arrange(sim.fit.p1, sim.fit.p2, sim.fit.p3, sim.fit.p4, nrow=4, ncol=1)
+
+```
+
 
 ```{r unique fits}
-uniq.RL_LTM.models <- ind.temp.RL_LTM[participants.fit==3] %>% unique()
-uniq.LTM.models <- ind.temp.LTM[participants.fit==2] %>% unique()
+# unique.RL_LTM.models <- ind.temp.RL_LTM[participants.fit==3] %>% unique()
+# unique.LTM.models <- ind.temp.LTM[participants.fit==2] %>% unique()
 
 
 ```
 
-```{r summary plots, message=FALSE, fig.height=16, fig.width=16}
-#-------These plots show the learning and test mean across all participants and data from models
 
-Subjects = nrow(sdat)
-plot.sdat <- data.frame('set3' = reshape(t(sdat[,1:12]), Subjects * 12,1),
-                        'set6' = t(sdat[,13:24]) %>% c(), 
-                        'iteration' = rep(1:12,Subjects))
-
-
-all.p<- plot.sdat  %>% gather(key='study', value = 'acc', -iteration) %>% 
-  ggplot(aes(iteration, acc, group=study)) + 
-  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
-  scale_colour_brewer( palette = "Set1") +
-  ylab('Accuracy') + 
-  xlab('Number of stimulus presentations') +
-  xlim(as.character(1:12) )+
-  ylim(c(0.2,1))+
-  #scale_x_discrete(limits = 1:12,)+
-  ggtitle('Mean performance of all participants') +
-  theme_classic(base_size = 20,base_family = 'Calibri')
-
-
-
-#-------These plots show the learning and test mean for 'RL' participants and descriptives
-
-plot.sdat.RL <- data.frame('set3' = t(sdat[participants.fit==1, 1:12]) %>% c(),
-                        'set6' = t(sdat[participants.fit==1, 13:24]) %>% c(), 
-                        'iteration' = rep(1:12,sum(participants.fit==1)))
-
-RL.p <- plot.sdat.RL  %>% gather(key='study', value = 'acc', -iteration) %>% 
-  ggplot(aes(iteration, acc, group=study)) + 
- # geom_point(aes(color=study)) +
-  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2, se=FALSE) +
-  scale_colour_brewer( palette = "Set1") +
-  ylab('Accuracy') + 
-  xlab('Number of stimulus presentations') +
-  xlim(as.character(1:12) )+
-  ylim(c(0.2,1))+
-  #scale_x_discrete(limits = 1:12,)+
-  ggtitle('Mean performance of RL participants') +
-  theme_classic(base_size = 20,base_family = 'Calibri') +
-  theme(legend.position='none')
-
-ind.temp.RL[participants.fit==1] %>% 
- hist(main='distribution of models')
-
-simsRL$data[ind.temp.RL[participants.fit==1],c('alpha','egs')] %>% 
-  kable()
-
-
-
-
-#-------These plots show the learning and test mean for 'LTM' participants and descriptives
-
-plot.sdat.LTM <- data.frame('set3' = t(sdat[participants.fit==2, 1:12]) %>% c(),
-                        'set6' = t(sdat[participants.fit==2, 13:24]) %>% c(), 
-                        'iteration' = rep(1:12,sum(participants.fit==2)))
-
-LTM.p <- plot.sdat.LTM  %>% gather(key='study', value = 'acc', -iteration) %>% 
-  ggplot(aes(iteration, acc, group=study)) + 
- # geom_point(aes(color=study)) +
-  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
-  scale_colour_brewer( palette = "Set1") +
-  ylab('Accuracy') + 
-  xlab('Number of stimulus presentations') +
-  xlim(as.character(1:12) )+
-  ylim(c(0.2,1))+
-  #scale_x_discrete(limits = 1:12,)+
- ggtitle('Mean performance of LTM participants') +
-  theme_classic(base_size = 20,base_family = 'Calibri')+
-  theme(legend.position='none')
-
-ind.temp.LTM[participants.fit==2] %>% 
-  hist(main='distribution of models')
-
-
-data.frame('model_ID'= ind.temp.LTM[participants.fit==2])  %>% 
-  ggplot(aes(model_ID)) + 
-  geom_histogram(bins=125) +
-  geom_density()+
-   #ggtitle('Counts of participants by model') +
-  theme_classic(base_size = 20,base_family = 'Calibri')
-
-
-
-simsLTM$data[ind.temp.LTM[participants.fit==2],c('bll','imag','ans')] %>% 
-  kable()
-
-
-#-------These plots show the learning and test mean for 'RL-LTM' participants and descriptives
-
-plot.sdat.RL_LTM <- data.frame('set3' = t(sdat[participants.fit==3, 1:12]) %>% c(),
-                        'set6' = t(sdat[participants.fit==3, 13:24]) %>% c(), 
-                        'iteration' = rep(1:12,sum(participants.fit==3)))
-
-RL_LTM.p <- plot.sdat.RL_LTM  %>% gather(key='study', value = 'acc', -iteration) %>% 
-  ggplot(aes(iteration, acc, group=study)) + 
- # geom_point(aes(color=study)) +
-  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
-  scale_colour_brewer( palette = "Set1") +
-  ylab('Accuracy') + 
-  xlab('Number of stimulus presentations') +
-  xlim(as.character(1:12) )+
-  ylim(c(0.2,1))+
-  #scale_x_discrete(limits = 1:12,)+
-  ggtitle('Mean performance of RL-LTM participants') +
-  theme_classic(base_size = 20,base_family = 'Calibri')+
-  theme(legend.position='none')
-ind.temp.RL_LTM[participants.fit==3] %>% 
- hist(main='distribution of models')
-
-
-grid.arrange(all.p, RL.p, LTM.p, RL_LTM.p, nrow = 2, ncol = 2,padding = unit(0.5, "line"))
-
-#------ Distribution of participants in model space.
-
-```
 
 ```{r}
-simsRL_LTM$data[ind.temp.RL_LTM[participants.fit==3],c('alpha','egs','bll','imag','ans')]   %>% 
-  scale() %>% as.data.frame() %>% 
-  gather(key='parameter', value = 'value') %>% 
-  etlt(id.cars = c(), measur)
-  ggplot(aes(value)) +
-  geom_bar(aes(fill=parameter))
 
-  #geom_histogram(aes(fill=parameter), show.legend = FALSE, bins = 5) +
-  #geom_density(show.legend = FALSE) + 
-  facet_grid(aes(color=parameter), facets = 'parameter')+
-   theme_classic(base_size = 20,base_family = 'Calibri')
-
-
-simsLTM$data[ind.temp.LTM[participants.fit==2],c('bll','imag','ans')]   %>% 
-  scale(center=FALSE) %>% as.data.frame() %>% 
-  gather(key='parameter', value = 'value') %>% zz
-
-
-  hlp %>% 
-   melt(id.vars = c('sub')) %>% 
-  ggplot(aes(value)) +
-  #geom_histogram(aes(fill=variable), show.legend = FALSE, bins = 5 ) +
-    geom_col(aes(as.factor(variable), value, fill = variable)) +
-             #geom_density(show.legen#zzd = FALSE) + 
-    facet_wrap(.~sub)+
-  #facet_grid( .~sub)+
-   theme_classic(base_size = 20,base_family = 'Calibri') +
-    the
+# 
+#  temp.RL_LTM = cbind((simsRL_LTMpipe$data[ind.temp.RL_LTMpipe[participants.fit==3] %>% unique(), c('alpha','egs','bll','imag','ans')]),  
+#          
+#                       'index'= c(1:length(unique(ind.temp.RL_LTMpipe[participants.fit==3]))))
+# 
+# temp.RL_LTM %>%
+#   data.table() %>% 
+#   melt.data.table(id.vars ='index'#, measure.vars=c('alpha','egs','bll','imag','ans') 
+#                   ) %>% 
+#   .[,`:=`(nu = (value-mean(value))/sd(value)), by = .(variable)] %>% 
+#   # # dplyr::group_by(variable) %>% 
+#   # # mutate(value=scale(value)) %>% ungroup() %>% View()
+#   ggplot() +
+#   geom_point(aes(variable, nu, color= as.factor(index))) +
+#   geom_line(aes(variable, nu, color= as.factor(index)))
+# 
+# 
+# 
+# simsRL_LTMpipe$data[ind.temp.RL_LTMpipe[participants.fit==3],c('alpha','egs','bll','imag','ans')]   %>%
+#   scale() %>% as.data.frame() %>%
+#   gather(key='parameter', value = 'value') %>%
+#   ggplot(aes(parameter,value, color=parameter)) +
+#  # geom_density()+
+#   geom_point()+
+#   #geom_line()+
+#  # facet_grid(aes(color=parameter), facets = 'parameter')+
+#   theme_bw() +
+#   theme(legend.position='none')
+# 
+# 
+# simsLTM$data[ind.temp.LTM[participants.fit==3],c('bll','imag','ans')]   %>%
+#   scale() %>% as.data.frame() %>%
+#   gather(key='parameter', value = 'value') %>%
+#   ggplot(aes(parameter,value, fill=parameter)) +
+#  # geom_density()+
+#   geom_point()+
+#  # facet_grid(aes(color=parameter), facets = 'parameter')+
+#   theme_bw() +
+#   theme(legend.position='none')
+# 
+# 
+# 
+# 
+# 
+# 
+#   #geom_histogram(aes(fill=parameter), show.legend = FALSE, bins = 5) +
+#   #geom_density(show.legend = FALSE) +
+#   facet_grid(aes(color=parameter), facets = 'parameter')+
+#    theme_bw(base_family = 'Calibri')
+# 
+# 
+# simsLTM$data[ind.temp.LTM[participants.fit==2],c('bll','imag','ans')]   %>%
+#   scale(center=FALSE) %>% as.data.frame() %>%
+#   gather(key='parameter', value = 'value') %>% zz
+# 
+# 
+#   hlp %>%
+#    melt(id.vars = c('sub')) %>%
+#   ggplot(aes(value)) +
+#   #geom_histogram(aes(fill=variable), show.legend = FALSE, bins = 5 ) +
+#     geom_col(aes(as.factor(variable), value, fill = variable)) +
+#              #geom_density(show.legen#zzd = FALSE) +
+#     facet_wrap(.~sub)+
+#   #facet_grid( .~sub)+
+#    theme_classic(base_family = 'Calibri') +
+#     the
 
 ```
 
 
-CHECK IF THE LTM PARAMETERS SHIFT THE RL VS LTM USE OF THE PIPE MODEL AND THISIS A GREAT TALKING POINT!!!! CHECK SAME FOR RL PARAMETERS
 
 
-model plot : k, I realized why I cannot get the model flowchart. It's called "production graph" in the interface; you need to run ACT-R with the recorded history available, which typically comes from the trace or other data. I can play around with it!drive  
+```{r function for model plotting, warning=FALSE, message=FALSE, echo=FALSE, fig.height=18, fig.width=6}
 
-failed radial plot
-```{r}
-testlen<-runif(10,0,10)
- testpos<-seq(0,18*pi/10,length=5)
- testlab<-c('alpha','egs','bll','ans')
- oldpar<-radial.plot(testlen,testpos,main="Test Radial Lines",line.col="red",
-  lwd=3,rad.col="lightblue", rp.type="p")
-# testlen<-c(sin(seq(0,1.98*pi,length=100))+2+rnorm(100)/10)
- #testpos<-seq(0,1.98*pi,length=100)
- #adial.plot(testlen,testpos,rp.type="p",main="Test Polygon",line.col="blue",
-  #labels=LETTERS[1:8])
-```
-
-```{r parking}
-
-  yolo = LTM.sim.dat %>% 
-   .[,-c("alpha", "egs")] %>% 
-   melt.data.table(id.vars = c("ans", "bll", "imag", "time"), 
-                   variable.name = "condition")  
+plot_model  <- function(model.id, model.dat){
   
- 
- 
- 
- 
- 
- yolo = LTM.sim.dat %>% 
-   data.frame() %>% 
-   data.table() %>% 
-   .[,-c("alpha", "egs")] %>% 
-   melt.data.table(id.vars = c("ans", "bll", "imag", "time"), 
-                   variable.name = "teddy")  
   
- 
- 
- 
- 
-  # .[order(alpha, bll, imag)]
-   .[,`:=`(nu_var = str_trunc(variable, 2,"right", ellipsis = "") %>%
-             as.integer(), 
-           nu__cat = str_trunc(variable, 9,"left", ellipsis = ""))] %>% print()
- 
-yolo %>% 
- .[,.(avg = mean(value)), by = .(ans, bll, imag, variable)]
+  if (model.id==1) { temp.model.index =unique(ind.temp.RL)}
+  if (model.id==2) {temp.model.index =unique(ind.temp.LTM)}
+  if (model.id==3) {temp.model.index = unique(ind.temp.RL_LTMpipe)}
+  if (model.id==4) {temp.model.index = unique(ind.temp.RL_LTMstr)}
+  
+  
+  
+temp.dat.frame <- data.frame('accuracy'= c(model.dat[temp.model.index, 1:12] %>% t() %>% c(), 
+                                       sdat[, 1:12] %>% t() %>% c(),
+                                       model.dat[temp.model.index, 13:24] %>% t() %>% c(),
+                                       sdat[ ,13:24] %>% t() %>% c()),
+                             
+                         'index'=rep(1:12, (length(temp.model.index) + nrow(sdat[]))*2),
+                        
+                          'condition'=c(rep('set3_model', 12 * length(temp.model.index)),
+                                       rep('set3_data', 12 * 83), 
+                                       rep('set6_model',12 * length(temp.model.index)), 
+                                       rep('set6_data', 12* 83))
+                         ) # the numbers are counts of learn trials for set 3 and 6 along with models
 
-yolo %>% 
- .[,`:=`(avg = mean(value)), by = .(ans, teddy)]
+ temp.dat.frame %>% 
+  summarySE( measurevar = "accuracy", groupvars = c("index", "condition")) %>% 
+  ggplot(aes(factor(index), accuracy, color=condition, group=condition))+
+   #geom_smooth(aes(color=condition, fill=condition), method = lm, formula = 'y~poly(x,2)', size=2) +
+  geom_point() +
+  geom_line() +
+   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+  scale_color_manual(values = tmp.color)+ #scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+  #ggtitle('RL: mean performance across parameter sets') +
+  theme_bw()+
+   theme(legend.position='top',legend.direction = 'horizontal')
 
-yolo %>% 
-  ggplot() + 
-  geom_point(aes(time, value, color=teddy)) + 
-  facet_grid(teddy+ans~imag+bll)
-  yolo %>% .[order()]
+}
 
- yolo %>% 
-   .[imag == 1] %>% 
-   .[ans == "0.2"] %>% 
-   .[bll == "0.4"] %>% 
-   .[teddy == "set3_learn"]
 
- 
- #TODO
 
+
+plot_test <- function(model.id, model,dat){
+  
+  
+    if (model.id==1) { temp.model.index =unique(ind.temp.RL)}
+  if (model.id==2) {temp.model.index =unique(ind.temp.LTM)}
+  if (model.id==3) {temp.model.index = unique(ind.temp.RL_LTMpipe)}
+  if (model.id==4) {temp.model.index = unique(ind.temp.RL_LTMstr)}
+  
+  
+  
+temp.dat.frame <- data.frame('accuracy'= c(model.dat[temp.model.index, 1:12] %>% t() %>% c(), 
+                                       sdat[, 1:12] %>% t() %>% c(),
+                                       model.dat[temp.model.index, 13:24] %>% t() %>% c(),
+                                       sdat[ ,13:24] %>% t() %>% c()),
+                             
+                         'index'=rep(1:12, (length(temp.model.index) + nrow(sdat[]))*2),
+                        
+                          'condition'=c(rep('set3_model', 12 * length(temp.model.index)),
+                                       rep('set3_data', 12 * 83), 
+                                       rep('set6_model',12 * length(temp.model.index)), 
+                                       rep('set6_data', 12* 83))
+                         ) 
+  
+  
+}
+
+
+
+ggarrange(plot_model(1,RL.sim.dat), 
+             plot_model(2,LTM.sim.dat), 
+             plot_model(3,RL_LTMpipe.sim.dat), 
+           
+              ncol=1, common.legend = TRUE)
+
+# grid.arrange(plot_model(1,RL.sim.dat), 
+#              plot_model(2,LTM.sim.dat), 
+#              plot_model(3,RL_LTMpipe.sim.dat), 
+#              plot_model(4,RL_LTMstr.sim.dat),
+#              nrow=4, ncol=1)
 
 ```
 
