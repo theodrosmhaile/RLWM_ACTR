@@ -211,20 +211,52 @@ ns6.test.mean <- c()
 i = 1
 for (s in Subjects) {
   OneSub <- wmotestdata$subject==s  
-  ns3.test.mean[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"],block.3)) & OneSub,"acc"])
+  ns3.test.mean[i] <- mean( wmotestdata[!is.na(match(wmotestdata[,"stim"],block.3)) & OneSub,"acc"]  )
   ns6.test.mean[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"],block.6)) & OneSub,"acc"])
 
   i = i + 1
 }
-TestData = data.frame(ns3.test.mean,ns6.test.mean)
+for (s in Subjects) {
+  OneSub <- wmotestdata$subject==s  
+  ns3.test.mean[i] <- wmotestdata[!is.na(match(wmotestdata[,"stim"],block.3)) & OneSub,"acc"]
+  ns6.test.mean[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"],block.6)) & OneSub,"acc"])
+
+  i = i + 1
+}
+
+TestData = cbind('n3.test'=unlist(ns3.test.mean) %>% as.numeric(),
+                      'n6.test'=unlist(ns6.test.mean) %>% as.numeric())
+
+
 
 #plot
 TestData %>% gather(key='set_size', value = 'Accuracy') %>% 
-  ggplot( aes(set_size,Accuracy, color=set_size)) + geom_boxplot( size = 1) + 
+  ggplot( aes(set_size,Accuracy, color=set_size)) + 
+  geom_bar(s) + 
   xlab("Set size") + 
   scale_colour_brewer( palette = "Set1") +
   #ylim(c(0.2,1))+
-  theme_classic(base_size = 20,base_family = 'Calibri')
+  theme_minimal(base_size = 20)
+tmp = c('#ca0020','#0571b0','#92c5de')
+bar.names=c("set 3", "set 6")
+
+TestData %>% melt() %>% 
+  summarySE(measurevar = 'value', groupvars = c('Var2')) %>% 
+  ggplot(aes(Var2, value, fill=Var2))+
+  geom_bar(stat = 'identity',  width = .4) +
+  geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.1) +
+   theme_minimal(base_size = 20)+
+  theme(legend.position='none') +
+ scale_fill_manual(values = tmp, guide='none')+
+  ylab('Accuracy')+
+  xlab('condition')+
+  scale_x_discrete(labels=bar.names )+
+  ggtitle('Testing phase')+
+  ylim(c(0,1))
+
+
+  
+
 
   
 ```
@@ -256,15 +288,20 @@ LearningRate <- data.frame( "subject" = wmo.s,
 
  
 ```{r saveData}
+RLWM_data <-  data.frame(
+                         "train_3_acc" = colMeans(mean.acc.3[11:12,]),
+                         "train_6_acc" = colMeans(mean.acc.6[11:12,]),
+                         "test_3_acc"  = ns3.test.mean,
+                         "test_6_acc"  = ns6.test.mean
+  )
+
 RLWM_data <-  data.frame("subject" = wmo.s,
-                         "train_3_acc" = colMeans(mean.acc.3),
-                         "train_6_acc" = colMeans(mean.acc.6),
+                         "train_3_acc" = colMeans(mean.acc.3[11:12,]),
+                         "train_6_acc" = colMeans(mean.acc.6[11:12,]),
                          "test_3_acc"  = ns3.test.mean,
                          "test_6_acc"  = ns6.test.mean,
                          "learnDiff"   = wmo.learn.score 
   )
-
-
 if (0) {
   
 #----- Save learn-test data for all subjects for model testing

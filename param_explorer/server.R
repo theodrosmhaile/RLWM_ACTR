@@ -11,7 +11,7 @@ library(jsonlite)
 
 simsRL_LTM <- fromJSON('sim_data_all_params_integrated_model_100s_031620.JSON')
 simsRL     <- fromJSON('sim_data_all_params_RL_100s_031620.JSON')
-simsLTM    <- fromJSON('03_mod_LTM_all_brokenTest.JSON')#fromJSON('03_mod_LTM_all.JSON') #fromJSON('sim_data_all_params_LTM_100s_031620.JSON') 
+simsLTM    <- fromJSON('LTM_visual_activation_allparams_evals26.JSON')#'03_mod_LTM_all_brokenTest.JSON')#fromJSON('03_mod_LTM_all.JSON') #fromJSON('sim_data_all_params_LTM_100s_031620.JSON') 
 
 iter.n <- c(1:12)
 
