@@ -25,6 +25,9 @@ library(data.table)
 library(knitr)
 library(gridExtra)
 ```
+model plot : k, I realized why I cannot get the model flowchart. It's called "production graph" in the interface; you need to run ACT-R with the recorded history available, which typically comes from the trace or other data. I can play around with it!drive  
+CHECK IF THE LTM PARAMETERS SHIFT THE RL VS LTM USE OF THE PIPE MODEL AND THISIS A GREAT TALKING POINT!!!! CHECK SAME FOR RL PARAMETERS
+
 
 
 
@@ -450,6 +453,59 @@ testlen<-runif(10,0,10)
  #testpos<-seq(0,1.98*pi,length=100)
  #adial.plot(testlen,testpos,rp.type="p",main="Test Polygon",line.col="blue",
   #labels=LETTERS[1:8])
+```
+
+
+```{r parking}
+
+  yolo = LTM.sim.dat %>% 
+   .[,-c("alpha", "egs")] %>% 
+   melt.data.table(id.vars = c("ans", "bll", "imag", "time"), 
+                   variable.name = "condition")  
+  
+ 
+ 
+ 
+ 
+ 
+ yolo = LTM.sim.dat %>% 
+   data.frame() %>% 
+   data.table() %>% 
+   .[,-c("alpha", "egs")] %>% 
+   melt.data.table(id.vars = c("ans", "bll", "imag", "time"), 
+                   variable.name = "teddy")  
+  
+ 
+ 
+ 
+ 
+  # .[order(alpha, bll, imag)]
+   .[,`:=`(nu_var = str_trunc(variable, 2,"right", ellipsis = "") %>%
+             as.integer(), 
+           nu__cat = str_trunc(variable, 9,"left", ellipsis = ""))] %>% print()
+ 
+yolo %>% 
+ .[,.(avg = mean(value)), by = .(ans, bll, imag, variable)]
+
+yolo %>% 
+ .[,`:=`(avg = mean(value)), by = .(ans, teddy)]
+
+yolo %>% 
+  ggplot() + 
+  geom_point(aes(time, value, color=teddy)) + 
+  facet_grid(teddy+ans~imag+bll)
+  yolo %>% .[order()]
+
+ yolo %>% 
+   .[imag == 1] %>% 
+   .[ans == "0.2"] %>% 
+   .[bll == "0.4"] %>% 
+   .[teddy == "set3_learn"]
+
+ 
+ #TODO
+
+
 ```
 
 
