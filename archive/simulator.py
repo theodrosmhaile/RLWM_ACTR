@@ -1,5 +1,4 @@
-
-!/usr/bin/env python
+#!/usr/bin/env python
 # coding: utf-8
 
 #import integrated_model_strategy_interface
