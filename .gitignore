@@ -1,0 +1,13 @@
+# ignore all the cache files
+*.pyc
+
+# ignore cache folder
+*__pycache__/
+
+# ignore emacs backups
+#*.*#
+*.*~
+
+# ignore stuff from Macs
+.DS*
+
