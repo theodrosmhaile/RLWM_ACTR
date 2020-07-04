@@ -353,14 +353,14 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
     #return np.mean(test_6)
 #sum(np.array(pd.DataFrame(I_data)<132))        
 
-def execute_sim(n,fromI,toI):
+def execute_sim(n,fromI,toI, frac):
 
     for i in range(fromI, toI):
 
         simulation(param_combs[i][0], 0,0, param_combs[i][1], param_combs[i][2], n)
       
     sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans' ])
-    sim.to_pickle('TESTsim_data_')  
+    sim.to_pickle('./simulated_data/LTM_model/LTM_sim_data_params' + 'frac' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI))  
 
 
 
