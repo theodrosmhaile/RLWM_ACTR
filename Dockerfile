@@ -92,7 +92,7 @@ WORKDIR /
 
 
 
-COPY ./dispatcher.lisp /actr7.x/framework 
+#COPY ./dispatcher.lisp /actr7.x/framework 
 
 EXPOSE 2650
 #initiate experiment

@@ -31,7 +31,7 @@
      ;;:ans nil
      ;; :rt  0.5  ;; Not needed
      :er  t
-     :v nil
+     ;:v nil
      :esc t
      :mas 8.0
      ;:visual-activation 5.0 
