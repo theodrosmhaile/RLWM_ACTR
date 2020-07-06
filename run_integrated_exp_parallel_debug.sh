@@ -40,10 +40,10 @@ for (( i = 90; i < 100; i++ )); do
 	echo ${use_ports[$i]}
 	#docker run -td -v /Users/theodros/RLWM_ACTR:/RLWM_ACTR -p ${use_ports[$i]}:2650 v10actr bash -c "cd RLWM_ACTR; sbcl --load "/actr7.x/load-act-r.lisp""
 		#see if clozure does better
-	docker run -td -v /home/ec2-user/RLWM_ACTR:/RLWM_ACTR -p ${use_ports[$i]}:2650 actr_aws bash -c "cd RLWM_ACTR;PATH=$PATH:/usr/local/src/ccl/scripts; ccl64 --load "/actr7.x/load-act-r.lisp""
+	docker run -td -v /Users/theodros/RLWM_ACTR:/RLWM_ACTR -p ${use_ports[$i]}:2650 v10actr bash -c "cd RLWM_ACTR;PATH=$PATH:/usr/local/src/ccl/scripts; ccl64 --load "/actr7.x/load-act-r.lisp""
 	
 #This starts the interface container --rm
-	docker run -d -v /home/ec2-user/RLWM_ACTR/:/RLWM_ACTR  -p 8000-9000:${use_ports[$i]} --env temp_port=${use_ports[$i]} --env fi=${fromi[$i]} --env ti=${Toi[$i]} --env frac=$i actr_aws bash -c 'cd /root; printf "$temp_port">act-r-port-num.txt; cd /RLWM_ACTR/ ; echo "start sleep"; sleep 20; python3 -c "import strategy_integrated_model_interface as MI; MI.execute_sim(100,$fi,$ti,$frac)"'
+	docker run -d -v /Users/theodros/RLWM_ACTR/:/RLWM_ACTR  -p 8000-9000:${use_ports[$i]} --env temp_port=${use_ports[$i]} --env fi=${fromi[$i]} --env ti=${Toi[$i]} --env frac=$i v10actr bash -c 'cd /root; printf "$temp_port">act-r-port-num.txt; cd /RLWM_ACTR/ ; echo "start sleep"; sleep 20; python3 -c "import strategy_integrated_model_interface as MI; MI.execute_sim(100,$fi,$ti,$frac)"'
 
 done
 
