@@ -71,7 +71,8 @@ RUN curl -LO http://act-r.psy.cmu.edu/actr7.x/actr7.x.zip
 RUN unzip /actr7.x.zip
 RUN rm /actr7.x/framework/dispatcher.lisp
 
-RUN cp /RLWM_ACTR/act-r* /root/
+RUN printf "0.0.0.0">/root/act-r-address.txt
+RUN cp /RLWM_ACTR/act-r-port-nun.txt /root/
 RUN cp /RLWM_ACTR/port_change_actr/dispatcher.lisp  /actr7.x/framework/
 
 
