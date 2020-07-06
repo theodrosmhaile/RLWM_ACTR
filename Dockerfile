@@ -72,7 +72,7 @@ RUN unzip /actr7.x.zip
 RUN rm /actr7.x/framework/dispatcher.lisp
 
 RUN printf "0.0.0.0">/root/act-r-address.txt
-RUN cp /RLWM_ACTR/act-r-port-nun.txt /root/
+RUN cp /RLWM_ACTR/act-r-port-num.txt /root/
 RUN cp /RLWM_ACTR/port_change_actr/dispatcher.lisp  /actr7.x/framework/
 
 
