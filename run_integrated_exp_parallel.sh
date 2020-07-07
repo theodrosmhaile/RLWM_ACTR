@@ -33,17 +33,17 @@ fromi=(0 125 250 375 Ï500 625 750 875 1000 1125 1250 1375 1500 1625 1750 1875 2
 
 Toi=(124 249 374 499 624 749 874 999 1124 1249 1374 1499 1624 1749 1874 1999 2124 2249 2374 2499 2624 2749 2874 2999 3124 3249 3374 3499 3624 3749 3874 3999 4124 4249 4374 4499 4624 4749 4874 4999 5124 5249 5374 5499 5624 5749 5874 5999 6124 6249 6374 6499 6624 6749 6874 6999 7124 7249 7374 7499 7624 7749 7874 7999 8124 8249 8374 8499 8624 8749 8874 8999 9124 9249 9374 9499 9624 9749 9874 9999 10124 10249 10374 10499 10624 10749 10874 10999 11124 11249 11374 11499 11624 11749 11874 11999 12124 12249 12374 12499)
 
-for (( i = 90; i < 100; i++ )); do
+for (( i = 90; i < 93; i++ )); do
 	#statements
 
 #This starts the ACTR server in the background
 	echo ${use_ports[$i]}
 	#docker run -td -v /Users/theodros/RLWM_ACTR:/RLWM_ACTR -p ${use_ports[$i]}:2650 v10actr bash -c "cd RLWM_ACTR; sbcl --load "/actr7.x/load-act-r.lisp""
 		#see if clozure does better
-	docker run -td -v /home/ec2-user/RLWM_ACTR:/RLWM_ACTR -p ${use_ports[$i]}:2650 actr_aws bash -c "cd RLWM_ACTR;PATH=$PATH:/usr/local/src/ccl/scripts; ccl64 --load "/actr7.x/load-act-r.lisp""
+	docker run -td -v /home/ec2-user/RLWM_ACTR:/RLWM_ACTR -p ${use_ports[$i]}:2650 actr_aws bash -c "cd RLWM_ACTR; sbcl --load "/actr7.x/load-act-r.lisp""
 	
 #This starts the interface container --rm
-	docker run -d -v /home/ec2-user/RLWM_ACTR/:/RLWM_ACTR  -p 8000-9000:${use_ports[$i]} --env temp_port=${use_ports[$i]} --env fi=${fromi[$i]} --env ti=${Toi[$i]} --env frac=$i actr_aws bash -c 'cd /root; printf "$temp_port">act-r-port-num.txt; cd /RLWM_ACTR/ ; echo "start sleep"; sleep 20; python3 -c "import strategy_integrated_model_interface as MI; MI.execute_sim(100,$fi,$ti,$frac)"'
+	docker run -d -v /home/ec2-user/RLWM_ACTR/:/RLWM_ACTR  -p 8000-9000:${use_ports[$i]} --env temp_port=${use_ports[$i]} --env fi=${fromi[$i]} --env ti=${Toi[$i]} --env frac=$i actr_aws bash -c 'cd /root; printf "$temp_port">act-r-port-num.txt; cd /RLWM_ACTR/ ; echo "start sleep"; sleep 20; python3 -c "import strategy_integrated_model_interface as MI; MI.execute_sim(1,$fi,$ti,$frac)"'
 
 done
 
