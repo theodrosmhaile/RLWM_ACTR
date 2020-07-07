@@ -1038,7 +1038,7 @@ and the result is written as String."
   
   (if (and (null *allow-external-connections*)
            (not (or (usocket:ip= (usocket::get-peer-address socket) *server-host*)
-                    (usocket:ip= (usocket::get-peer-address socket) #(127 0 0 0)))))
+                    (usocket:ip= (usocket::get-peer-address socket) #(172 17 0 1)))))
            
       (send-error-output "Attempted connection from ~s was denied~%" (usocket::vector-quad-to-dotted-quad (usocket::get-peer-address socket)))
     
