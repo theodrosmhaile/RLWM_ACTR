@@ -51,3 +51,6 @@ done
 #now checking if ccl works better, perhaps sbcl is the problem. 
 # started ccl versions of 4 and 5 at 11:15 pm -  these have verbose on in clisp
 
+#notes July 7: rerun 40 to 49 locally becaue they failed on AWS
+#there are also a few others that failed -  check those out.
+#running the remaining 10 locally. If not finished by morning perhaps try running on aws. 

@@ -34,7 +34,7 @@ use_ports=(2650 2651 2652 2653 2654 2655 2656 2657 2658) #"$(echo {2650..2653})"
 fromi=(0 15 30 45 55 70 85 100 115)
 Toi=(14 29 44 54 69 84 99 114 124)
 
-for (( i = 0; i < 1; i++ )); do
+for (( i = 0; i < 9; i++ )); do
 	#statements
 
 #This starts the ACTR server in the background

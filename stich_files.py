@@ -9,7 +9,7 @@ import glob
 study = 'strategy_model/'
 loc = './simulated_data/' + study
 files =  glob.glob(loc + 'STR*')
-
+files.sort()
 
 
 
