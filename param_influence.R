@@ -1,11 +1,11 @@
 
 
 param.influence <- function(this.data, model) {
-  bll_param   = c(0.4, 0.5, 0.6)
+  bll_param   = c(0.3, 0.4, 0.5, 0.6,0.7)
   alpha_param = c(0.1, 0.15, 0.2)
   egs_param   = c(0.2, 0.3, 0.4)
-  imag_param  = c(1, 2, 3)
-  ans_param   = c(0.2, 0.3, 0.4)
+  imag_param  = c(0.1, 0.2, 0.3, 0.4, 0.5)
+  ans_param   = c(0.1,0.2, 0.3, 0.4,.5)
  # model='RLLTM'
 #  this.data = LTM.sim.dat
   
@@ -44,17 +44,30 @@ param.influence <- function(this.data, model) {
                                    rowMeans() %>% mean(),
                                  this.data[(bll == bll_param[3]), 11:12] %>% 
                                    rowMeans() %>% mean(),
+                                 this.data[(bll == bll_param[4]), 11:12] %>% 
+                                   rowMeans() %>% mean(),
+                                 this.data[(bll == bll_param[5]), 11:12] %>% 
+                                   rowMeans() %>% mean(),
+                                 
                                  this.data[(imag == imag_param[1]), 11:12] %>% 
                                    rowMeans() %>% mean(), 
                                  this.data[(imag == imag_param[2]), 11:12] %>% 
                                    rowMeans() %>% mean(),
                                  this.data[(imag == imag_param[3]), 11:12] %>% 
                                    rowMeans() %>% mean(),
+                                 this.data[(imag == imag_param[4]), 11:12] %>% 
+                                   rowMeans() %>% mean(),
+                                 this.data[(imag == imag_param[5]), 11:12] %>% 
+                                   rowMeans() %>% mean(),
                                  this.data[(ans == ans_param[1]), 11:12] %>% 
                                    rowMeans() %>% mean(), 
                                  this.data[(ans == ans_param[2]), 11:12] %>% 
                                    rowMeans() %>% mean(),
                                  this.data[(ans == ans_param[3]), 11:12] %>% 
+                                   rowMeans() %>% mean(),
+                                 this.data[(ans == ans_param[4]), 11:12] %>% 
+                                   rowMeans() %>% mean(),
+                                 this.data[(ans == ans_param[5]), 11:12] %>% 
                                    rowMeans() %>% mean()
     ),
     'set3_test' = c(
@@ -64,17 +77,29 @@ param.influence <- function(this.data, model) {
                       rowMeans() %>% mean(),
                     this.data[(bll == bll_param[3]), 25] %>% 
                       rowMeans() %>% mean(),
+                    this.data[(bll == bll_param[4]), 25] %>% 
+                      rowMeans() %>% mean(),
+                    this.data[(bll == bll_param[5]), 25] %>% 
+                      rowMeans() %>% mean(),
                     this.data[(imag == imag_param[1]), 25] %>% 
                       rowMeans() %>% mean(), 
                     this.data[(imag == imag_param[2]), 25] %>% 
                       rowMeans() %>% mean(),
                     this.data[(imag == imag_param[3]), 25] %>% 
                       rowMeans() %>% mean(),
+                    this.data[(imag == imag_param[4]), 25] %>% 
+                      rowMeans() %>% mean(),
+                    this.data[(imag == imag_param[5]), 25] %>% 
+                      rowMeans() %>% mean(),
                     this.data[(ans == ans_param[1]), 25] %>% 
                       rowMeans() %>% mean(), 
                     this.data[(ans == ans_param[2]), 25] %>% 
                       rowMeans() %>% mean(),
                     this.data[(ans == ans_param[3]), 25] %>% 
+                      rowMeans() %>% mean(),
+                    this.data[(ans == ans_param[4]), 25] %>% 
+                      rowMeans() %>% mean(),
+                    this.data[(ans == ans_param[5]), 25] %>% 
                       rowMeans() %>% mean()
     ),
     
@@ -85,17 +110,29 @@ param.influence <- function(this.data, model) {
                        rowMeans() %>% mean(),
                      this.data[(bll == bll_param[3]), 23:24] %>% 
                        rowMeans() %>% mean(),
+                     this.data[(bll == bll_param[4]), 23:24] %>% 
+                       rowMeans() %>% mean(),
+                     this.data[(bll == bll_param[5]), 23:24] %>% 
+                       rowMeans() %>% mean(),
                      this.data[(imag == imag_param[1]), 23:24] %>% 
                        rowMeans() %>% mean(), 
                      this.data[(imag == imag_param[2]), 23:24] %>% 
                        rowMeans() %>% mean(),
                      this.data[(imag == imag_param[3]), 23:24] %>% 
                        rowMeans() %>% mean(),
+                     this.data[(imag == imag_param[4]), 23:24] %>% 
+                       rowMeans() %>% mean(),
+                     this.data[(imag == imag_param[5]), 23:24] %>% 
+                       rowMeans() %>% mean(),
                      this.data[(ans == ans_param[1]), 23:24] %>% 
                        rowMeans() %>% mean(), 
                      this.data[(ans == ans_param[2]), 23:24] %>% 
                        rowMeans() %>% mean(),
                      this.data[(ans == ans_param[3]), 23:24] %>% 
+                       rowMeans() %>% mean(),
+                     this.data[(ans == ans_param[4]), 23:24] %>% 
+                       rowMeans() %>% mean(),
+                     this.data[(ans == ans_param[5]), 23:24] %>% 
                        rowMeans() %>% mean()
     ),
     'set6_test' = c(
@@ -105,21 +142,36 @@ param.influence <- function(this.data, model) {
                       rowMeans() %>% mean(),
                     this.data[(bll == bll_param[3]), 37] %>% 
                       rowMeans() %>% mean(),
+                    this.data[(bll == bll_param[4]), 37] %>% 
+                      rowMeans() %>% mean(),
+                    this.data[(bll == bll_param[5]), 37] %>% 
+                      rowMeans() %>% mean(),
                     this.data[(imag == imag_param[1]), 37] %>% 
                       rowMeans() %>% mean(), 
                     this.data[(imag == imag_param[2]), 37] %>% 
                       rowMeans() %>% mean(),
                     this.data[(imag == imag_param[3]), 37] %>% 
                       rowMeans() %>% mean(),
+                    this.data[(imag == imag_param[4]), 37] %>% 
+                      rowMeans() %>% mean(),
+                    this.data[(imag == imag_param[5]), 37] %>% 
+                      rowMeans() %>% mean(),
                     this.data[(ans == ans_param[1]), 37] %>% 
                       rowMeans() %>% mean(), 
                     this.data[(ans == ans_param[2]), 37] %>% 
                       rowMeans() %>% mean(),
                     this.data[(ans == ans_param[3]), 37] %>% 
-                      rowMeans() %>% mean()),
+                      rowMeans() %>% mean(),
+                    this.data[(ans == ans_param[4]), 37] %>% 
+                      rowMeans() %>% mean(),
+                    this.data[(ans == ans_param[5]), 37] %>% 
+                      rowMeans() %>% mean()
+                    ),
+                      
     
-    'parameter' = c( rep('bll',3), rep('imaginal-activation',3), rep('ans',3)),
-    'level'=c(rep(1:3,3), rep(1:3,3), rep(1:3,3))
+    
+    'parameter' = c( rep('bll',5), rep('imaginal-activation',5), rep('ans',5)),
+    'level'=c(rep(1:5,3), rep(1:5,3), rep(1:5,3))
     )
     
   
