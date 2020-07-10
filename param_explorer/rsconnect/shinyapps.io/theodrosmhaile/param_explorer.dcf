@@ -1,12 +1,12 @@
 name: param_explorer
-title:
+title: param_explorer
 username:
 account: theodrosmhaile
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1956359
-bundleId: 2956332
+bundleId: 3369861
 url: https://theodrosmhaile.shinyapps.io/param_explorer/
-when: 1585781143.49231
+when: 1594260081.41429
 asMultiple: FALSE
 asStatic: FALSE

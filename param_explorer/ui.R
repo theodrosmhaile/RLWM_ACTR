@@ -22,7 +22,7 @@ shinyUI(
     radioButtons(inputId = "modelselect", 
                        label= "Select Model to display", 
                        choices = c("RL only", "LTM only", "RL-LTM integrated"), 
-                       selected = "RL-LTM integrated", inline = TRUE
+                       selected = "LTM only", inline = TRUE
                        
                        ),
     # Sidebar with a slider input for number of bins
@@ -39,8 +39,8 @@ shinyUI(
             
             sliderInput("e",
                         "RL noise (egs):",
-                        min = 0.2,
-                        max = 0.4,
+                        min = 0.1,
+                        max = 0.5,
                         value = 0.1, 
                         step = 0.1, 
                         animate = TRUE),
@@ -48,24 +48,24 @@ shinyUI(
        
             sliderInput("i",
                         "Attention/WM (imaginal-activation):",
-                        min = 1,
-                        max = 3,
-                        value = 1, 
-                        step = 1, 
+                        min = 0.1,
+                        max = 0.5,
+                        value = .1, 
+                        step = .1, 
                         animate = TRUE),
      
             sliderInput("an",
                         "LTM Retrieval noise (ans):",
-                        max = 0.4,
-                        min = 0.2,
+                        max = 0.5,
+                        min = 0.1,
                         value = 0.1, 
                         step = 0.1, 
                         animate = TRUE),
         
             sliderInput("b",
                         "LTM decay rate (bll):",
-                        min = 0.4,
-                        max = 0.6,
+                        min = 0.3,
+                        max = 0.7,
                         value = 0.3, 
                         step = 0.1, 
                         animate = TRUE)

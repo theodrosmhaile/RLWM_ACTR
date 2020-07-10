@@ -117,7 +117,7 @@ simsRL.set6learn <- simsRL$data$set6_learn %>%
 
 #--------- Longterm Memory/WM/Declarative model 
  
-simsLTM    <- fromJSON('03_mod_LTM_all.JSON') 
+simsLTM    <- fromJSON('LTM_simdata_0708.JSON')#'LTM_0629_sim_data_complete.JSON')#'03_mod_LTM_all.JSON') 
 
  simsLTM.set3learn <- simsLTM$data$set3_learn %>%
   unlist() %>%
@@ -259,7 +259,7 @@ plt.sim.ltm %>%
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
   ggtitle('LTM: mean performance across parameter sets') +
-  theme_classic(base_size = 20,base_family = 'Calibri')
+  theme_classic(base_size = 20)
 
 
 plt.sim.rl_ltm <- data.frame('accuracy'= c(RL_LTM.sim.dat[,1:12] %>% t() %>% c(),RL_LTM.sim.dat[,13:24] %>% t() %>% c()),
@@ -308,7 +308,7 @@ all.p<- plot.sdat  %>% gather(key='study', value = 'acc', -iteration) %>%
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
   ggtitle('Mean performance of all participants') +
-  theme_classic(base_size = 20,base_family = 'Calibri')
+  theme_classic(base_size = 20)
 
 
 
