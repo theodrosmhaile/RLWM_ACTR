@@ -44,4 +44,5 @@ done
 # started ccl versions of 4 and 5 at 11:15 pm -  these have verbose on in clisp
 
 #ran 0:50 and around 25 broke. so we need to re-run the broken ones. Currently moving forward with 50 to 79 (tmh 07/70-7:30pm)| adding 10 more
-
+#running 14, 29, 32, 33, 34, 35, 36, *37*, 38, 39,40,41, 42, 43, 44, 45,46, 47, 48, 90, 
+#43 maybe mislabeled

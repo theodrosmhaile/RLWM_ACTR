@@ -211,12 +211,11 @@ current_response  = np.repeat('x', nTrials * 2).tolist() #multiply by 2 for numb
 lastLearnTrial = np.size(stims3 + stims6) -1
 
 #parameter ranges for simulation
-bll_param   = [0.4, 0.5, 0.6]#[0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,range around .5 actr rec val
-alpha_param = [0.1, 0.15, 0.2]#[0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection 0.2 rec val
-egs_param   = [0.2, 0.3, 0.4]#[0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
-imag_param  = [1, 2, 3]# , 4, 5] #simulates working memory as attentional focus 
-ans_param   = [0.2, 0.3, 0.4]#[0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual.
-
+bll_param   = [0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,range around .5 actr rec val
+alpha_param = [0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection 0.2 rec val
+egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
+imag_param  = [0.1, 0.2, 0.3 , 0.4, 0.5] #simulates working memory as attentional focus 
+ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual. 
 
 #Integrated model params
 
@@ -242,7 +241,7 @@ I_data = []
 
 
 
-def run_simulation(bll, alpha, egs, imag, ans, nSims):
+def simulation(bll, alpha, egs, imag, ans, nSims):
    
     global i
     global sim_data3
@@ -354,6 +353,16 @@ def run_simulation(bll, alpha, egs, imag, ans, nSims):
         #del temp3, temp6   
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        
+
+def execute_sim(n,fromI,toI):
+
+    for i in range(fromI, toI):
+
+        simulation(param_combs[i][0], param_combs[i][1],param_combs[i][2], param_combs[i][3], param_combs[i][4], n)
+      
+    sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans','strtg' ])
+    sim.to_pickle('./simulated_data/pipe_model/pipe_sim_data_' + np.str(fromI) + '_to_' + np.str(toI))  
+
 
 
         
