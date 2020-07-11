@@ -20,7 +20,7 @@ show_output = False
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-actr.load_act_r_model(os.path.join(curr_dir, "integrated-model-pipe.lisp")) #integrated-model.lisp
+actr.load_act_r_model(os.path.join(curr_dir, "pipe-integrated-model.lisp")) #integrated-model.lisp
 
 ## Daisy chained python functions to present stimuli, get response and  present feedback
 
@@ -354,14 +354,14 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        
 
-def execute_sim(n,fromI,toI):
+def execute_sim(n,fromI,toI,frac):
 
     for i in range(fromI, toI):
 
         simulation(param_combs[i][0], param_combs[i][1],param_combs[i][2], param_combs[i][3], param_combs[i][4], n)
       
     sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans','strtg' ])
-    sim.to_pickle('./simulated_data/pipe_model/pipe_sim_data_' + np.str(fromI) + '_to_' + np.str(toI))  
+    sim.to_pickle('./simulated_data/pipe_model/pipe_sim_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI))  
 
 
 
