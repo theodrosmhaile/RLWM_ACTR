@@ -440,7 +440,7 @@ def execute_sim(n,fromI,toI, frac):
       
     sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans','strtg' ])
     sim.to_pickle('./simulated_data/strategy_model/STR_sim_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI))
-    sim_data = []  
+      
 
 
 
