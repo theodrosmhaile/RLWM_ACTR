@@ -57,35 +57,35 @@ sdat.mod  <- cbind(sdat[, 1:24],
 
 #----- import model data (has to be converted from JSON to data frames)
 #--------- Integrated model original
-simsRL_LTMorig <- fromJSON('./outdated_sim_data/RLLTMorig_sim_data050520.JSON')
-
- simsRL_LTMorig.set3learn <- simsRL_LTMorig$data$set3_learn %>%
-  unlist() %>%
-  as.matrix() %>%
-  reshape(., 12, nrow(simsRL_LTMorig$data)) %>%
-  t()
-
-simsRL_LTMorig.set6learn <- simsRL_LTMorig$data$set6_learn %>% 
-  unlist() %>% 
-  as.matrix() %>%
-  reshape(., 12, nrow(simsRL_LTMorig$data)) %>%
-  t() 
-
-simsRL_LTMorig.s3s6test.temp <-
-  simsRL_LTMorig$data$set3_test %>%
-  cbind(., simsRL_LTMorig$data$set6_test) %>% 
-   rep(., 12) %>%
-   as.matrix() %>%
-   reshape(., nrow(simsRL_LTMorig$data)*12, 2) %>%
-   reshape(., nrow(simsRL_LTMorig$data)*2, 12) 
-
- RL_LTMorig.sim.dat <- cbind(simsRL_LTMorig.set3learn, 
-                         simsRL_LTMorig.set6learn, 
-                         simsRL_LTMorig.s3s6test.temp[1:nrow(simsRL_LTMorig$data), ], 
-                         simsRL_LTMorig.s3s6test.temp[244:486, ],
-                        simsRL_LTMorig$data[,c('bll','alpha','egs','imag','ans')])
-
- 
+# simsRL_LTMorig <- fromJSON('./outdated_sim_data/RLLTMorig_sim_data050520.JSON')
+# 
+#  simsRL_LTMorig.set3learn <- simsRL_LTMorig$data$set3_learn %>%
+#   unlist() %>%
+#   as.matrix() %>%
+#   reshape(., 12, nrow(simsRL_LTMorig$data)) %>%
+#   t()
+# 
+# simsRL_LTMorig.set6learn <- simsRL_LTMorig$data$set6_learn %>% 
+#   unlist() %>% 
+#   as.matrix() %>%
+#   reshape(., 12, nrow(simsRL_LTMorig$data)) %>%
+#   t() 
+# 
+# simsRL_LTMorig.s3s6test.temp <-
+#   simsRL_LTMorig$data$set3_test %>%
+#   cbind(., simsRL_LTMorig$data$set6_test) %>% 
+#    rep(., 12) %>%
+#    as.matrix() %>%
+#    reshape(., nrow(simsRL_LTMorig$data)*12, 2) %>%
+#    reshape(., nrow(simsRL_LTMorig$data)*2, 12) 
+# 
+#  RL_LTMorig.sim.dat <- cbind(simsRL_LTMorig.set3learn, 
+#                          simsRL_LTMorig.set6learn, 
+#                          simsRL_LTMorig.s3s6test.temp[1:nrow(simsRL_LTMorig$data), ], 
+#                          simsRL_LTMorig.s3s6test.temp[244:486, ],
+#                         simsRL_LTMorig$data[,c('bll','alpha','egs','imag','ans')])
+# 
+#  
  
  #--------- Integrated model RL to LTM pipe
 simsRL_LTMpipe <- fromJSON('./RLLTM_pipe_visual_activation_050720.JSON')
@@ -239,65 +239,65 @@ LTM.sim.dat <- cbind(simsLTM.set3learn,
 
 #------Descriptive measures: learning rate (beta), accuracy learn & Test, differences between learn3 and learn 6
 #--------select data for each level of parameters per model
-RL.params        <- param.influence(RL.sim.dat, 'RL')
-RLLTMpipe.params <- param.influence(RL_LTMpipe.sim.dat, 'RLLTM')
-RLLTMstr.params  <- param.influence(RL_LTMstr.sim.dat, 'RLLTM')
-LTM.params       <- param.influence(LTM.sim.dat, 'LTM')
-
-tmp.color = c('#ca0020','#f4a582' ,'#0571b0','#92c5de')
-
-
-
-
-p1 <- RL.params %>% 
-  melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
-  ggplot(aes(level, accuracy, color=variable)) + 
-  geom_point()+
-  geom_line() +
-  facet_grid('parameter')+
-  theme_bw(base_size = 16, base_line_size = 1)+
-   scale_color_manual(values = tmp.color)+
-  ylim(c(.3,1)) +
- theme(legend.position='none')
-   #scale_colour_brewer( palette = "RdBu", direction = 1) 
-
-
-p2 <- LTM.params %>% 
-  melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
-  ggplot(aes(level, accuracy, color=variable)) + 
-  geom_point()+
-  geom_line() +
-   ylim(c(.3,1)) +
-  facet_grid('parameter')+
-  theme_bw(base_size = 16, base_line_size = 1)+
-   scale_color_manual(values = tmp.color)+
-  theme(legend.position='none')
-
-
-p3 <- RLLTMpipe.params %>% 
-  melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
-  ggplot(aes(level, accuracy, color=variable)) + 
-  geom_point()+
-  geom_line() +
-   ylim(c(.3,1)) +
-  facet_grid('parameter')+
-  theme_bw(base_size = 16, base_line_size = 1)+
-   scale_color_manual(values = tmp.color)+
-   theme(legend.position='bottom', legend.direction = 'horizontal')
-
-p4 <- RLLTMstr.params %>% 
-  melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
-  ggplot(aes(level, accuracy, color=variable)) + 
-  geom_point()+
-  geom_line() +
-   ylim(c(.3,1)) +
-  facet_grid('parameter')+
-  theme_bw(base_size = 16, base_line_size = 1)+
-   scale_color_manual(values = tmp.color)+
-  
-  
-
-grid.arrange(p1,p2,p3, nrow=3)
+# RL.params        <- param.influence(RL.sim.dat, 'RL')
+# RLLTMpipe.params <- param.influence(RL_LTMpipe.sim.dat, 'RLLTM')
+# RLLTMstr.params  <- param.influence(RL_LTMstr.sim.dat, 'RLLTM')
+# LTM.params       <- param.influence(LTM.sim.dat, 'LTM')
+# 
+# tmp.color = c('#ca0020','#f4a582' ,'#0571b0','#92c5de')
+# 
+# 
+# 
+# 
+# p1 <- RL.params %>% 
+#   melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
+#   ggplot(aes(level, accuracy, color=variable)) + 
+#   geom_point()+
+#   geom_line() +
+#   facet_grid('parameter')+
+#   theme_bw(base_size = 16, base_line_size = 1)+
+#    scale_color_manual(values = tmp.color)+
+#   ylim(c(.3,1)) +
+#  theme(legend.position='none')
+#    #scale_colour_brewer( palette = "RdBu", direction = 1) 
+# 
+# 
+# p2 <- LTM.params %>% 
+#   melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
+#   ggplot(aes(level, accuracy, color=variable)) + 
+#   geom_point()+
+#   geom_line() +
+#    ylim(c(.3,1)) +
+#   facet_grid('parameter')+
+#   theme_bw(base_size = 16, base_line_size = 1)+
+#    scale_color_manual(values = tmp.color)+
+#   theme(legend.position='none')
+# 
+# 
+# p3 <- RLLTMpipe.params %>% 
+#   melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
+#   ggplot(aes(level, accuracy, color=variable)) + 
+#   geom_point()+
+#   geom_line() +
+#    ylim(c(.3,1)) +
+#   facet_grid('parameter')+
+#   theme_bw(base_size = 16, base_line_size = 1)+
+#    scale_color_manual(values = tmp.color)+
+#    theme(legend.position='bottom', legend.direction = 'horizontal')
+# 
+# p4 <- RLLTMstr.params %>% 
+#   melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
+#   ggplot(aes(level, accuracy, color=variable)) + 
+#   geom_point()+
+#   geom_line() +
+#    ylim(c(.3,1)) +
+#   facet_grid('parameter')+
+#   theme_bw(base_size = 16, base_line_size = 1)+
+#    scale_color_manual(values = tmp.color)+
+#   
+#   
+# 
+# grid.arrange(p1,p2,p3, nrow=3)
 
 ```
 
@@ -458,7 +458,7 @@ data.frame('model'= participants.fit)  %>%
    scale_fill_brewer( palette = "Paired")+
 theme(legend.position='none') 
   
-theme_pan
+#theme_pan
 
 
 model.fits %>% 
@@ -467,7 +467,7 @@ model.fits %>%
   geom_boxplot() + 
   ggtitle('BIC')+
   xlab('model')+
-  theme_bw(base_family = 'Calibri') +
+  theme_bw() +
   theme(legend.position='none') +
    scale_colour_brewer( palette = "Set1") 
 
