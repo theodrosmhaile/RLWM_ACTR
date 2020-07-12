@@ -53,4 +53,11 @@ done
 
 #notes July 7: rerun 40 to 49 locally becaue they failed on AWS
 #there are also a few others that failed -  check those out.
-#running the remaining 10 locally. If not finished by morning perhaps try running on aws. 
+#running the remaining 10 locally. If not finished by morning perhaps try running on aws. [didn't work]
+
+# To do now:
+# 1) test missing
+# 2) write email
+# 3) need to rerun missing 100 sims that were victims of indexing
+# 4) rerun missing spots in another aws session 
+# 5) provide logs of errors
