@@ -881,5 +881,73 @@ ggarrange(plot_model(1,RL.sim.dat),
 
 ```
 
+```{r}
+
+plt.all.sims <- data.frame('accuracy'= c(RL.sim.dat[,1:12] %>% t() %>% c(), 
+                                        LTM.sim.dat[,1:12] %>% t() %>% c(),
+                                        RL_LTMpipe.sim.dat[,1:12] %>% t() %>% c(),
+                                        RL_LTMstr.sim.dat[,1:12] %>% t() %>% c(),
+                                        RL.sim.dat[,13:24] %>% t() %>% c(),
+                                        LTM.sim.dat[,13:24] %>% t() %>% c(),
+                                        RL_LTMpipe.sim.dat[,13:24] %>% t() %>% c(),
+                                        RL_LTMstr.sim.dat[,13:24] %>% t() %>% c()
+                                       ),
+                         
+                           'index'=rep(1:12,(nrow(RL.sim.dat) + nrow(LTM.sim.dat) + nrow(RL_LTMpipe.sim.dat) + nrow(RL_LTMstr.sim.dat)) * 2),
+                           
+                         'Models'=c(rep('RL set3', nrow(RL.sim.dat)*12 ),rep('LTM set3', nrow(LTM.sim.dat)*12), 
+                                       rep('RL-LTM set3',nrow(RL_LTMpipe.sim.dat)*12), rep('RL-LTM biased set3', nrow(RL_LTMstr.sim.dat)*12),
+                                       rep('RL set6', nrow(RL.sim.dat)*12),rep('LTM set6', nrow(LTM.sim.dat)*12), 
+                                       rep('RL-LTM set6',nrow(RL_LTMpipe.sim.dat)*12), rep('RL-LTM biased set6', nrow(RL_LTMstr.sim.dat)*12)
+                                       )
+)
+
+
+plt.all.sims %>% 
+   summarySE( measurevar = "accuracy", groupvars = c("index", "Models")) %>% 
+  ggplot(aes(factor(index), accuracy,color=Models, group=Models))+
+   geom_point() +
+   geom_line() +
+   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+   #scale_color_manual(values = tmp.color)+ #
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  scale_color_brewer(palette = "Paired") +
+  #scale_x_discrete(limits = 1:12,)+
+  
+  theme_minimal(base_size = 18) +
+  theme(legend.position='bottom')
+  
+# plt.all.sims %>% 
+#    summarySE( measurevar = "accuracy", groupvars = c("index", "Models")) %>% 
+#   ggplot(aes(factor(index), 
+#              accuracy, 
+#              color= Models %>% 
+#                str_trunc(4,"right", ellipsis = "") %>% 
+#                            as.factor(), 
+#              shape = Models %>% 
+#                str_trunc(4,"left", ellipsis = "") %>% 
+#                            as.factor()), 
+#          group = Models) +
+#    geom_point() +
+#    geom_line() +
+#    geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+#    #scale_color_manual(values = tmp.color)+ #
+#   ylab('Accuracy') + 
+#   xlab('Number of stimulus presentations') +
+#   xlim(as.character(1:12) )+
+#   ylim(c(0.2,1))+
+#   scale_fill_brewer( palette = "Paired", direction = -1) +
+#   #scale_x_discrete(limits = 1:12,)+
+#   
+#   theme_minimal(base_size = 18) #+
+#   #theme(legend.position='none')
+#                     
+
+
+```
+
 
 
