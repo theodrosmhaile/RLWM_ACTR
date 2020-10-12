@@ -1,0 +1,106 @@
+\PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provides euro and other symbols
+\else % if luatex or xelatex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage[]{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\usepackage{hyperref}
+\hypersetup{
+            pdftitle={model Analysis},
+            pdfauthor={Theodros H.},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+% set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+
+\title{model Analysis}
+\author{Theodros H.}
+\date{09/2020}
+
+\begin{document}
+\maketitle
+
+\begin{quote}
+The LTM model fits the most number of participants (54) followed by the
+biased version of the combined RL-LTM model (18) and the meta-RL
+combined model at third (10). The RL only model has only one participant
+that fit it best.
+\end{quote}
+
+\includegraphics{model_analysis_v4_files/figure-latex/model fit plots: group fit summary1-1.pdf}
+\includegraphics{model_analysis_v4_files/figure-latex/model fit plots: group fit summary1-2.pdf}
+
+\includegraphics{model_analysis_v4_files/figure-latex/model fit plots: group fit summary2-1.pdf}
+
+\begin{quote}
+These plots show the mean accuracy for particant behavioral data. The
+model lines are averages across parameters for that group.
+\end{quote}
+
+\includegraphics{model_analysis_v4_files/figure-latex/unnamed-chunk-1-1.pdf}
+
+\includegraphics{model_analysis_v4_files/figure-latex/models only-1.pdf}
+
+\hypertarget{individual-plots}{%
+\subsection{Individual plots:}\label{individual-plots}}
+
+\includegraphics{model_analysis_v4_files/figure-latex/show individual plots RL-1.pdf}
+
+\includegraphics{model_analysis_v4_files/figure-latex/unnamed-chunk-2-1.pdf}
+
+\includegraphics{model_analysis_v4_files/figure-latex/indiv plots, metaRL-1.pdf}
+
+\includegraphics{model_analysis_v4_files/figure-latex/indiv plots LTM-1.pdf}
+
+\end{document}
