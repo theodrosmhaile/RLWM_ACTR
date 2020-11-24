@@ -1,0 +1,13 @@
+\contentsline {section}{Abstract}{1}{section*.2}%
+\contentsline {section}{Objectives}{1}{section*.3}%
+\contentsline {subsection}{ACT-R Models}{1}{section*.4}%
+\contentsline {subsection}{Approach}{2}{section*.5}%
+\contentsline {section}{Results}{2}{section*.6}%
+\contentsline {subsubsection}{Model fits}{2}{section*.7}%
+\contentsline {subsubsection}{Assesments of Model fits}{2}{section*.8}%
+\contentsline {subsection}{Parameters}{14}{section*.9}%
+\contentsline {subsubsection}{Parameter spread}{14}{section*.10}%
+\contentsline {subsubsection}{Individual parameter effects on outcomes}{15}{section*.11}%
+\contentsline {subsubsection}{Combined effect of parameters on outcomes}{15}{section*.12}%
+\contentsline {subsection}{EEG Beta analysis}{23}{section*.13}%
+\contentsline {subsection}{Individual plots:}{23}{section*.14}%
