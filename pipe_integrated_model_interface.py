@@ -245,6 +245,7 @@ testTemp=[]
 def simulation(bll, alpha, egs, imag, ans, nSims):
    
     global i
+    global testTemp
     global stg_temp
     global sim_data3
     global sim_data
@@ -368,7 +369,7 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
     sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans, np.mean(strategy_used) ])
     sim_data3 = temp3
     sim_data6 = temp6
-    test_temp = test_3     
+    testTemp = test_3     
    #del temp3, temp6   
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        
