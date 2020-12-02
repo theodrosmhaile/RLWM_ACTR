@@ -11,7 +11,7 @@ editor_options:
 
 
 ```{r set up, echo=FALSE, warning=FALSE, message=FALSE}
-#rm(list = ls())
+rm(list = ls())
 library(matlab)
 library(reshape2)
 library(ggplot2)
@@ -57,38 +57,38 @@ sdat.mod  <- cbind(sdat[, 1:24],
 
 #----- import model data (has to be converted from JSON to data frames)
 #--------- Integrated model original
-simsRL_LTMorig <- fromJSON('./outdated_sim_data/RLLTMorig_sim_data050520.JSON')
-
- simsRL_LTMorig.set3learn <- simsRL_LTMorig$data$set3_learn %>%
-  unlist() %>%
-  as.matrix() %>%
-  reshape(., 12, nrow(simsRL_LTMorig$data)) %>%
-  t()
-
-simsRL_LTMorig.set6learn <- simsRL_LTMorig$data$set6_learn %>% 
-  unlist() %>% 
-  as.matrix() %>%
-  reshape(., 12, nrow(simsRL_LTMorig$data)) %>%
-  t() 
-
-simsRL_LTMorig.s3s6test.temp <-
-  simsRL_LTMorig$data$set3_test %>%
-  cbind(., simsRL_LTMorig$data$set6_test) %>% 
-   rep(., 12) %>%
-   as.matrix() %>%
-   reshape(., nrow(simsRL_LTMorig$data)*12, 2) %>%
-   reshape(., nrow(simsRL_LTMorig$data)*2, 12) 
-
- RL_LTMorig.sim.dat <- cbind(simsRL_LTMorig.set3learn, 
-                         simsRL_LTMorig.set6learn, 
-                         simsRL_LTMorig.s3s6test.temp[1:nrow(simsRL_LTMorig$data), ], 
-                         simsRL_LTMorig.s3s6test.temp[244:486, ],
-                        simsRL_LTMorig$data[,c('bll','alpha','egs','imag','ans')])
-
- 
+# simsRL_LTMorig <- fromJSON('./outdated_sim_data/RLLTMorig_sim_data050520.JSON')
+# 
+#  simsRL_LTMorig.set3learn <- simsRL_LTMorig$data$set3_learn %>%
+#   unlist() %>%
+#   as.matrix() %>%
+#   reshape(., 12, nrow(simsRL_LTMorig$data)) %>%
+#   t()
+# 
+# simsRL_LTMorig.set6learn <- simsRL_LTMorig$data$set6_learn %>% 
+#   unlist() %>% 
+#   as.matrix() %>%
+#   reshape(., 12, nrow(simsRL_LTMorig$data)) %>%
+#   t() 
+# 
+# simsRL_LTMorig.s3s6test.temp <-
+#   simsRL_LTMorig$data$set3_test %>%
+#   cbind(., simsRL_LTMorig$data$set6_test) %>% 
+#    rep(., 12) %>%
+#    as.matrix() %>%
+#    reshape(., nrow(simsRL_LTMorig$data)*12, 2) %>%
+#    reshape(., nrow(simsRL_LTMorig$data)*2, 12) 
+# 
+#  RL_LTMorig.sim.dat <- cbind(simsRL_LTMorig.set3learn, 
+#                          simsRL_LTMorig.set6learn, 
+#                          simsRL_LTMorig.s3s6test.temp[1:nrow(simsRL_LTMorig$data), ], 
+#                          simsRL_LTMorig.s3s6test.temp[244:486, ],
+#                         simsRL_LTMorig$data[,c('bll','alpha','egs','imag','ans')])
+# 
+#  
  
  #--------- Integrated model RL to LTM pipe
-simsRL_LTMpipe <- fromJSON('./RLLTM_pipe_visual_activation_050720.JSON')
+simsRL_LTMpipe <- fromJSON("RLLTM_pipe_visual_activation_050720.JSON")
 
  simsRL_LTMpipe.set3learn <- simsRL_LTMpipe$data$set3_learn %>%
   unlist() %>%
@@ -236,67 +236,67 @@ simsLTM.s3s6test.temp <-  simsLTM$data$set3_test %>%
 
 #------Descriptive measures: learning rate (beta), accuracy learn & Test, differences between learn3 and learn 6
 #--------select data for each level of parameters per model
-RL.params        <- param.influence(RL.sim.dat, 'RL')
-RLLTMpipe.params <- param.influence(RL_LTMpipe.sim.dat, 'RLLTM')
-RLLTMstr.params  <- param.influence(RL_LTMstr.sim.dat, 'RLLTM')
-LTM.params       <- param.influence(LTM.sim.dat, 'LTM')
-
-tmp.color = c('#ca0020','#f4a582' ,'#0571b0','#92c5de')
-
-
-
-
-
-
-p1 <- RL.params %>% 
-  melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
-  ggplot(aes(level, accuracy, color=variable)) + 
-  geom_point()+
-  geom_line() +
-  facet_grid('parameter')+
-  theme_bw(base_size = 16, base_line_size = 1)+
-   scale_color_manual(values = tmp.color)+
-  ylim(c(.3,1)) +
- theme(legend.position='none')
-   #scale_colour_brewer( palette = "RdBu", direction = 1) 
-
-
-p2 <- LTM.params %>% 
-  melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
-  ggplot(aes(level, accuracy, color=variable)) + 
-  geom_point()+
-  geom_line() +
-   ylim(c(.3,1)) +
-  facet_grid('parameter')+
-  theme_bw(base_size = 16, base_line_size = 1)+
-   scale_color_manual(values = tmp.color)+
-  theme(legend.position='none')
-
-
-p3 <- RLLTMpipe.params %>% 
-  melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
-  ggplot(aes(level, accuracy, color=variable)) + 
-  geom_point()+
-  geom_line() +
-   ylim(c(.3,1)) +
-  facet_grid('parameter')+
-  theme_bw(base_size = 16, base_line_size = 1)+
-   scale_color_manual(values = tmp.color)+
-   theme(legend.position='bottom', legend.direction = 'horizontal')
-
-p4 <- RLLTMstr.params %>% 
-  melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
-  ggplot(aes(level, accuracy, color=variable)) + 
-  geom_point()+
-  geom_line() +
-   ylim(c(.3,1)) +
-  facet_grid('parameter')+
-  theme_bw(base_size = 16, base_line_size = 1)+
-   scale_color_manual(values = tmp.color)+
-  
-  
-
-grid.arrange(p1,p2,p3, nrow=3)
+# RL.params        <- param.influence(RL.sim.dat, 'RL')
+# RLLTMpipe.params <- param.influence(RL_LTMpipe.sim.dat, 'RLLTM')
+# RLLTMstr.params  <- param.influence(RL_LTMstr.sim.dat, 'RLLTM')
+# LTM.params       <- param.influence(LTM.sim.dat, 'LTM')
+# 
+ tmp.color = c('#ca0020','#f4a582' ,'#0571b0','#92c5de')
+# 
+# 
+# 
+# 
+# 
+# 
+# p1 <- RL.params %>% 
+#   melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
+#   ggplot(aes(level, accuracy, color=variable)) + 
+#   geom_point()+
+#   geom_line() +
+#   facet_grid('parameter')+
+#   theme_bw(base_size = 16, base_line_size = 1)+
+#    scale_color_manual(values = tmp.color)+
+#   ylim(c(.3,1)) +
+#  theme(legend.position='none')
+#    #scale_colour_brewer( palette = "RdBu", direction = 1) 
+# 
+# 
+# p2 <- LTM.params %>% 
+#   melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
+#   ggplot(aes(level, accuracy, color=variable)) + 
+#   geom_point()+
+#   geom_line() +
+#    ylim(c(.3,1)) +
+#   facet_grid('parameter')+
+#   theme_bw(base_size = 16, base_line_size = 1)+
+#    scale_color_manual(values = tmp.color)+
+#   theme(legend.position='none')
+# 
+# 
+# p3 <- RLLTMpipe.params %>% 
+#   melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
+#   ggplot(aes(level, accuracy, color=variable)) + 
+#   geom_point()+
+#   geom_line() +
+#    ylim(c(.3,1)) +
+#   facet_grid('parameter')+
+#   theme_bw(base_size = 16, base_line_size = 1)+
+#    scale_color_manual(values = tmp.color)+
+#    theme(legend.position='bottom', legend.direction = 'horizontal')
+# 
+# p4 <- RLLTMstr.params %>% 
+#   melt(value.name = 'accuracy',id.vars=c('parameter','level')) %>% 
+#   ggplot(aes(level, accuracy, color=variable)) + 
+#   geom_point()+
+#   geom_line() +
+#    ylim(c(.3,1)) +
+#   facet_grid('parameter')+
+#   theme_bw(base_size = 16, base_line_size = 1)+
+#    scale_color_manual(values = tmp.color)+
+#   
+#   
+# 
+# grid.arrange(p1,p2,p3, nrow=3)
 
 ```
 
@@ -457,7 +457,7 @@ data.frame('model'= participants.fit)  %>%
    scale_fill_brewer( palette = "Paired")+
 theme(legend.position='none') 
   
-theme_pan
+#theme_pan
 
 
 model.fits %>% 
@@ -466,7 +466,7 @@ model.fits %>%
   geom_boxplot() + 
   ggtitle('BIC')+
   xlab('model')+
-  theme_bw(base_family = 'Calibri') +
+  theme_bw() +
   theme(legend.position='none') +
    scale_colour_brewer( palette = "Set1") 
 
@@ -497,7 +497,7 @@ sim.p1 <- plt.sim.rl %>%
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
   ggtitle('RL: mean performance across parameter sets') +
-  theme_bw(base_family = 'Calibri')+
+  theme_bw()+
    theme(legend.position='top',legend.direction = 'horizontal')
 
 
@@ -522,7 +522,7 @@ sim.p2 <- plt.sim.ltm %>%
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
   ggtitle('LTM: mean performance across parameter sets') +
-  theme_bw(base_family = 'Calibri')+
+  theme_bw()+
   theme(legend.position='none')
 
 
@@ -548,7 +548,7 @@ sim.p3 <- plt.sim.rl_ltmpipe %>%
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
   ggtitle('RL_LTM pipe: mean performance across parameter sets') +
-  theme_bw(base_family = 'Calibri')+
+  theme_bw()+
   theme(legend.position='none')
 
 
@@ -574,7 +574,7 @@ sim.p4 <-plt.sim.rl_ltmstr %>%
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
   ggtitle('RL_LTM str: mean performance across parameter sets') +
-  theme_bw(base_family = 'Calibri')+
+  theme_bw()+
   theme(legend.position='none')
 
 grid.arrange(sim.p1, sim.p2, sim.p3, ncol=1)
@@ -612,7 +612,7 @@ sim.fit.p1 <- plt.sim.fit.rl %>%
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
   ggtitle('RL: mean performance across parameter sets') +
-  theme_bw(base_family = 'Calibri')+
+  theme_bw()+
    theme(legend.position='top',legend.direction = 'horizontal')
 
 
@@ -641,7 +641,7 @@ sim.fit.p2 <- plt.sim.fit.ltm %>%
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
   ggtitle('LTM: mean performance across parameter sets') +
-  theme_bw(base_family = 'Calibri')+
+  theme_bw()+
   theme(legend.position='none')
 
 
@@ -671,7 +671,7 @@ sim.fit.p3 <- plt.sim.fit.rl_ltmpipe %>%
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
   ggtitle('RL_LTM pipe: mean performance across parameter sets') +
-  theme_bw(base_family = 'Calibri')+
+  theme_bw()+
   theme(legend.position='none')
 
 
@@ -702,7 +702,7 @@ sim.fit.p4 <-plt.sim.fit.rl_ltmstr %>%
   ylim(c(0.2,1))+
   #scale_x_discrete(limits = 1:12,)+
   ggtitle('RL_LTM str: mean performance across parameter sets') +
-  theme_bw(base_family = 'Calibri')+
+  theme_bw()+
   theme(legend.position='none')
 
 grid.arrange(sim.fit.p1, sim.fit.p2, sim.fit.p3, sim.fit.p4, nrow=4, ncol=1)
@@ -878,6 +878,74 @@ ggarrange(plot_model(1,RL.sim.dat),
 #              plot_model(3,RL_LTMpipe.sim.dat), 
 #              plot_model(4,RL_LTMstr.sim.dat),
 #              nrow=4, ncol=1)
+
+```
+
+```{r}
+
+plt.all.sims <- data.frame('accuracy'= c(RL.sim.dat[,1:12] %>% t() %>% c(), 
+                                        LTM.sim.dat[,1:12] %>% t() %>% c(),
+                                        RL_LTMpipe.sim.dat[,1:12] %>% t() %>% c(),
+                                        RL_LTMstr.sim.dat[,1:12] %>% t() %>% c(),
+                                        RL.sim.dat[,13:24] %>% t() %>% c(),
+                                        LTM.sim.dat[,13:24] %>% t() %>% c(),
+                                        RL_LTMpipe.sim.dat[,13:24] %>% t() %>% c(),
+                                        RL_LTMstr.sim.dat[,13:24] %>% t() %>% c()
+                                       ),
+                         
+                           'index'=rep(1:12,(nrow(RL.sim.dat) + nrow(LTM.sim.dat) + nrow(RL_LTMpipe.sim.dat) + nrow(RL_LTMstr.sim.dat)) * 2),
+                           
+                         'Models'=c(rep('RL set3', nrow(RL.sim.dat)*12 ),rep('LTM set3', nrow(LTM.sim.dat)*12), 
+                                       rep('RL-LTM set3',nrow(RL_LTMpipe.sim.dat)*12), rep('RL-LTM biased set3', nrow(RL_LTMstr.sim.dat)*12),
+                                       rep('RL set6', nrow(RL.sim.dat)*12),rep('LTM set6', nrow(LTM.sim.dat)*12), 
+                                       rep('RL-LTM set6',nrow(RL_LTMpipe.sim.dat)*12), rep('RL-LTM biased set6', nrow(RL_LTMstr.sim.dat)*12)
+                                       )
+)
+
+
+plt.all.sims %>% 
+   summarySE( measurevar = "accuracy", groupvars = c("index", "Models")) %>% 
+  ggplot(aes(factor(index), accuracy,color=Models, group=Models))+
+   geom_point() +
+   geom_line() +
+   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+   #scale_color_manual(values = tmp.color)+ #
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  scale_color_brewer(palette = "Paired") +
+  #scale_x_discrete(limits = 1:12,)+
+  
+  theme_minimal(base_size = 18) +
+  theme(legend.position='bottom')
+  
+# plt.all.sims %>% 
+#    summarySE( measurevar = "accuracy", groupvars = c("index", "Models")) %>% 
+#   ggplot(aes(factor(index), 
+#              accuracy, 
+#              color= Models %>% 
+#                str_trunc(4,"right", ellipsis = "") %>% 
+#                            as.factor(), 
+#              shape = Models %>% 
+#                str_trunc(4,"left", ellipsis = "") %>% 
+#                            as.factor()), 
+#          group = Models) +
+#    geom_point() +
+#    geom_line() +
+#    geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.1) +
+#    #scale_color_manual(values = tmp.color)+ #
+#   ylab('Accuracy') + 
+#   xlab('Number of stimulus presentations') +
+#   xlim(as.character(1:12) )+
+#   ylim(c(0.2,1))+
+#   scale_fill_brewer( palette = "Paired", direction = -1) +
+#   #scale_x_discrete(limits = 1:12,)+
+#   
+#   theme_minimal(base_size = 18) #+
+#   #theme(legend.position='none')
+#                     
+
 
 ```
 
