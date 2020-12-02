@@ -237,6 +237,7 @@ sim_data3 = [] #saves mean curves and parameters
 sim_data6 = []
 sim_data  = []
 I_data = []
+stg_temp = []
 #i=0
 
 
@@ -244,6 +245,7 @@ I_data = []
 def simulation(bll, alpha, egs, imag, ans, nSims):
    
     global i
+    global stg_temp
     global sim_data3
     global sim_data
     global sim_data6
@@ -341,6 +343,7 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
             f3.close()
             f6.close()
         I_data.append(i)
+        stg_temp.append(strategy_used)
 
        
 
@@ -350,7 +353,9 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
         #del temp3, temp6
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
     sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans, np.mean(strategy_used) ])
-        #del temp3, temp6   
+    sim_data3 = temp3
+    sim_data6 = temp6     
+   #del temp3, temp6   
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        
 
@@ -363,6 +368,3 @@ def execute_sim(n,fromI,toI,frac):
     sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans','strtg' ])
     sim.to_pickle('./simulated_data/pipe_model/pipe_sim_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI))  
 
-
-
-        
