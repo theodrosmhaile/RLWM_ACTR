@@ -239,7 +239,7 @@ sim_data  = []
 I_data = []
 stg_temp = []
 #i=0
-
+testTemp=[]
 
 
 def simulation(bll, alpha, egs, imag, ans, nSims):
@@ -254,6 +254,8 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
     print('vars reset')
     temp3 = [] 
     temp6 = []
+    tempStg3 = []
+    tempStg6 = []
     #accuracy = np.repeat(0, nTrials).tolist()
     nsimulations = np.arange(nSims) #set the number of simulations "subjects"
     for n in nsimulations:
@@ -278,12 +280,14 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
 
         stims_array = np.asarray(stims[0:lastLearnTrial + 1]) 
         acc_array   = np.asarray(accuracy[0:lastLearnTrial + 1]) 
+        stg_array   =np.asarray(strategy_used[0:lastLearnTrial + 1])
 
         cup_presented   = np.where(stims_array == 'cup') 
         bowl_presented  = np.where(stims_array == 'bowl') 
         plate_presented = np.where(stims_array == 'plate') 
 
         acc3 = np.mean([acc_array[cup_presented], acc_array[plate_presented], acc_array[bowl_presented]],0)
+        stg3 = np.mean([stg_array[cup_presented], stg_array[plate_presented], stg_array[bowl_presented]],0)
           
                ##set 6 analysis 
         
@@ -301,9 +305,18 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
             acc_array[shirt_presented],
             acc_array[jacket_presented],
             acc_array[jeans_presented]], 0)
-       
+
+        stg6 = np.mean([stg_array[hat_presented], 
+            stg_array[gloves_presented], 
+            stg_array[shoes_presented],
+            stg_array[shirt_presented],
+            stg_array[jacket_presented],
+            stg_array[jeans_presented]], 0)
+       #These aggregate data across simulations but are cleared across paramter-value sets
         temp3.append(acc3)
         temp6.append(acc6)
+        tempStg3.append(stg3)
+        tempStg6.append(stg6)
 
             ### Analyze generated data:  TESTING PHASE
     
@@ -354,7 +367,8 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
     sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans, np.mean(strategy_used) ])
     sim_data3 = temp3
-    sim_data6 = temp6     
+    sim_data6 = temp6
+    test_temp = test_3     
    #del temp3, temp6   
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        
