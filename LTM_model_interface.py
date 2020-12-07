@@ -251,6 +251,8 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
     print('vars reset')
     temp3 = [] 
     temp6 = []
+    temp_test3 = []
+    temp_test6 = []
     #accuracy = np.repeat(0, nTrials).tolist()
     nsimulations = np.arange(nSims) #set the number of simulations "subjects"
     for n in nsimulations:
@@ -325,7 +327,10 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
             test_acc_array[shirt_presented_t],
             test_acc_array[jacket_presented_t],
             test_acc_array[jeans_presented_t]], 0)
-       # print(temp3)
+        
+        #aggregate accuracies across simulations
+        temp_test3.append(test_3)
+        temp_test6.append(test_6)
 
        # print('accuracy ', np.mean(accuracy))
             #pyplot.figure(dpi=120)
@@ -349,6 +354,8 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
         #del temp3, temp6
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
     sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
+    sim_data3.append(temp_test3)
+    sim_data6.append(temp_test6)
         #del temp3, temp6   
     #return np.mean(test_6)
 #sum(np.array(pd.DataFrame(I_data)<132))        
