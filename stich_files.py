@@ -6,9 +6,9 @@
 import pandas as pd 
 import numpy as np
 import glob
-study = 'strategy_model/'
+study = 'LTM_model/'
 loc = './simulated_data/' + study
-files =  glob.glob(loc + 'STR*')#'STR*'
+files =  glob.glob(loc + 'LTM*')#'STR*'
 files.sort()
 
 
