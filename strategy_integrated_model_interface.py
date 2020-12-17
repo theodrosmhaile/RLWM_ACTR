@@ -18,6 +18,8 @@
 ## it utilizes a parameter for explicitly specifying
 ## a strategy(Reinforcement learning OR WM/LTM) for each trial. 
 ## These changes are implemented in the present_stim() function.
+## 12-2020 Fixed a bug that was preventing means of all simulations 
+##          from being saved for test data. 
 ##
 ## ============================================================== ;;;
 
@@ -332,6 +334,8 @@ def simulation(bll, alpha, egs, imag, ans,strtg, nSims):
         
     temp3 = [] 
     temp6 = []
+    temp_test3 = []
+    temp_test6 = []
     #accuracy = np.repeat(0, nTrials).tolist()
     nsimulations = np.arange(nSims) #set the number of simulations "subjects"
     for n in nsimulations:
@@ -407,6 +411,10 @@ def simulation(bll, alpha, egs, imag, ans,strtg, nSims):
             test_acc_array[jeans_presented_t]], 0)
        # print(temp3)
 
+        #aggregate accuracies across simulations
+        temp_test3.append(test_3)
+        temp_test6.append(test_6)
+
        # print('accuracy ', np.mean(accuracy))
             #pyplot.figure(dpi=120)
             #sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)]) 
@@ -428,8 +436,10 @@ def simulation(bll, alpha, egs, imag, ans,strtg, nSims):
         #sim_data.append([temp3, temp6, np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
         #del temp3, temp6
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
-    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans, strtg])
-        #del temp3, temp6   
+    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(np.mean(temp_test3,1)), np.mean(np.mean(temp_test6, 1)),
+     bll, alpha, egs, imag, ans, strtg])
+    temp_test3 = test_3
+          
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        
 def execute_sim(n,fromI,toI, frac):
