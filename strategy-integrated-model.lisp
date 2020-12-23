@@ -49,7 +49,8 @@
      :er t
      :ul t
      :esc t
-     :v nil ;;"/home/master-tedward/RLWM_ACTR/v_output.txt"
+     :v nil
+     :model-warnings nil
           ) 
 
 ;;; --------------------------------------------------------  

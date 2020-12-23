@@ -339,9 +339,10 @@ def simulation(bll, alpha, egs, imag, ans,strtg, nSims):
     #accuracy = np.repeat(0, nTrials).tolist()
     nsimulations = np.arange(nSims) #set the number of simulations "subjects"
     for n in nsimulations:
-        print("sim ", n)
+        if n == 99:
+            print("sim ", n)
         actr.reset()
-        #actr.hide_output()
+        actr.hide_output()
 
         actr.set_parameter_value(":bll", bll)
         actr.set_parameter_value(":alpha", alpha)
@@ -438,7 +439,7 @@ def simulation(bll, alpha, egs, imag, ans,strtg, nSims):
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
     sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(np.mean(temp_test3,1)), np.mean(np.mean(temp_test6, 1)),
      bll, alpha, egs, imag, ans, strtg])
-    temp_test3 = test_3
+    sim_data3 = temp_test3
           
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        
