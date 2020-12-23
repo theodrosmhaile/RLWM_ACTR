@@ -242,6 +242,7 @@ stg_temp = []
 testTemp=[]
 
 
+
 def simulation(bll, alpha, egs, imag, ans, nSims):
    
     global i
@@ -252,11 +253,14 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
     global sim_data6
     global accuracy
     global strategy_used
+    
     print('vars reset')
     temp3 = [] 
     temp6 = []
     tempStg3 = []
     tempStg6 = []
+    temp_test3 = []
+    temp_test6 = []
     #accuracy = np.repeat(0, nTrials).tolist()
     nsimulations = np.arange(nSims) #set the number of simulations "subjects"
     for n in nsimulations:
@@ -342,6 +346,10 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
             test_acc_array[shirt_presented_t],
             test_acc_array[jacket_presented_t],
             test_acc_array[jeans_presented_t]], 0)
+
+        # Aggregate across simulations
+        temp_test3.append(test_3)
+        temp_test6.append(test_6)
        # print(temp3)
 
        # print('accuracy ', np.mean(accuracy))
@@ -366,7 +374,11 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
         #sim_data.append([temp3, temp6, np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
         #del temp3, temp6
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
-    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans, np.mean(strategy_used) ])
+    sim_data.append([np.mean(temp3,0), np.mean(temp6,0),  
+        np.mean(np.mean(temp_test3,1)), 
+        np.mean(np.mean(temp_test6, 1)),
+     bll, alpha, egs, imag, ans, np.mean(strategy_used) ])
+   
     sim_data3 = temp3
     sim_data6 = temp6
     testTemp = test_3     
