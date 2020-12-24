@@ -350,6 +350,7 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
         # Aggregate across simulations
         temp_test3.append(test_3)
         temp_test6.append(test_6)
+        stg_temp.append(strategy_used)
        # print(temp3)
 
        # print('accuracy ', np.mean(accuracy))
@@ -365,7 +366,7 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
             f3.close()
             f6.close()
         I_data.append(i)
-        stg_temp.append(strategy_used)
+        
 
        
 
@@ -377,10 +378,10 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
     sim_data.append([np.mean(temp3,0), np.mean(temp6,0),  
         np.mean(np.mean(temp_test3,1)), 
         np.mean(np.mean(temp_test6, 1)),
-     bll, alpha, egs, imag, ans, np.mean(strategy_used) ])
+     bll, alpha, egs, imag, ans, np.mean(stg_temp) ])
    
-    sim_data3 = temp3
-    sim_data6 = temp6
+    sim_data3 = tempStg3
+    sim_data6 = tempStg6
     testTemp = test_3     
    #del temp3, temp6   
    # return sim_data
