@@ -353,6 +353,8 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
         #del temp3, temp6
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
     sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(temp_test3), np.mean(temp_test6), bll, alpha, egs, imag, ans ])
+    sim_data3 = temp_test3
+    sim_data6 = test_3
         #del temp3, temp6   
     #return np.mean(test_6)
 #sum(np.array(pd.DataFrame(I_data)<132))        
