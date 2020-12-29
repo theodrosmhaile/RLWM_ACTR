@@ -106,7 +106,8 @@ sdat.mod  <- cbind(sdat[, 1:24],
 
 
  #--------- Integrated model RL to LTM pipe
-simsRL_LTMpipe <- fromJSON('./simulated_data/pipe_model/sim_data_072020/pipe_all_data_5params_071320.JSON')
+simsRL_LTMpipe <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_12292020_corrected.JSON')
+  #fromJSON('./simulated_data/pipe_model/sim_data_072020/pipe_all_data_5params_071320.JSON')
 
  simsRL_LTMpipe.set3learn <- simsRL_LTMpipe$data$set3_learn %>%
   unlist() %>%
@@ -138,7 +139,8 @@ simsRL_LTMpipe.s3s6test.temp <-
  
  
  #--------- Integrated model assigned strategy
-simsRL_LTMstr <- fromJSON('./simulated_data/strategy_model/sim_data_072020/strategy_all_data_5params_071320.JSON')
+simsRL_LTMstr <- fromJSON('./simulated_data/strategy_model/strategy_sim_data_12262020_corrected.JSON')
+  #fromJSON('./simulated_data/strategy_model/sim_data_072020/strategy_all_data_5params_071320.JSON')
 
  simsRL_LTMstr.set3learn <- simsRL_LTMstr$data$set3_learn %>%
   unlist() %>%
@@ -171,7 +173,7 @@ simsRL_LTMstr.s3s6test.temp <-
 
 #--------- Reinforcement Learning Model
 
-simsRL <- fromJSON('./simulated_data/RL_model/sim_data_072020/RL_all_data_5params_071329.JSON')
+simsRL <- fromJSON('./simulated_data/RL_model/RL_simulated_data_12292020_corrected.JSON')
 
  simsRL.set3learn <- simsRL$data$set3_learn %>%
   unlist() %>%
@@ -205,7 +207,8 @@ simsRL.set6learn <- simsRL$data$set6_learn %>%
 
 #--------- Longterm Memory/WM/Declarative model 
  
-simsLTM    <- fromJSON('./simulated_data/LTM_model/sim_data_072020/LTM_all_data_5params_071320.JSON')
+simsLTM    <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_122020_corrected.JSON')
+  #fromJSON('./simulated_data/LTM_model/sim_data_072020/LTM_all_data_5params_071320.JSON')
 
  simsLTM.set3learn <- simsLTM$data$set3_learn %>%
   unlist() %>%
@@ -344,6 +347,7 @@ for ( i in 1:length(RL_LTMstr.fit)) {
 
 #--------------There are no min.col functions? Work around find the max after inverting:
 participants.fit = c()
+
 model.fits <- data.frame(RL.fit, LTM.fit, RL_LTMpipe.fit, RL_LTMstr.fit)#, fit.labels)
 participant.min <- apply(model.fits, 1, min)
      
@@ -1087,11 +1091,14 @@ library(ggridges)
 
 ### Individual parameter effects on outcomes
 ```{r effects of individual parameters on outcomes,fig.width=12,fig.height=4, fig.cap="Figure 12"}
+
 temp4join1 <- 
   fit.lr %>% 
   dplyr::filter(estimate.type=='slope') %>% 
   reshape2::dcast(subjects  + model ~ setSize + estimate.type + type, value.var = 'estimate') %>% 
-  scale()
+  select(-model, -subjects) %>% 
+  scale() %>% 
+  data.frame(., 'subjects'=p.behav.model$subjects, 'model'=p.behav.model$model)
 
 temp4join2 <- 
   learnTestDiff %>% 
@@ -1255,6 +1262,10 @@ p.param.outcomes %>%
 
 ```
 
+```{r pre-post correction comparison}
+pre_corrected_values = read.csv('pre_corrected_values.csv')
+current_values = data.frame(p.behav.model[c("subjects", "model" ,'bll','alpha','egs','imag','ans', 'bias' )], participant.min)
+```
 
 
 
@@ -1279,40 +1290,40 @@ linear_param <-
 These plots show that in the biased model, most of the subjects are at very low percentage of RL use. But also, higher rates of RL use or, more even split between RL and LTM indicates a separation between s3 and s6 learning accuracy. 
 
 ```{r parameters:biased model}
-melted.p.behav.model %>%
-
-  filter(model=='biased') %>%
-  filter(iteration==12)%>%
-  filter(type== 'behav') %>%
-  summarySE(groupvars =c( "bias","type", "setSize") , measurevar = "accuracy") %>%
-  ggplot(aes(as.factor(bias), accuracy, group=setSize,color=setSize)) +
-  geom_point()+geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se)) +
-  ylim(0.3,1)
-
-
-melted.p.behav.model %>%
-  filter(model=='biased') %>%
-  filter(iteration==13)%>%
-  filter(type== 'behav') %>%
-  summarySE(groupvars =c("bias","type", "setSize") , measurevar = "accuracy") %>%
-  ggplot(aes(as.factor(bias), accuracy, group=setSize,color=setSize)) +
-  geom_point() +
-  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se))
-
-
-melted.p.behav.model %>%
-  filter(model=='biased' | model=='metaRL', iteration==12, type== 'behav') %>%
-  select(subjects, model,bias, alpha, egs)%>%
-  merge(s3s6Diff %>% 
-          filter(model=='biased' | model=='metaRL') %>% 
-          select(subjects,learnDiff), by='subjects') %>% 
- lm(learnDiff ~  egs + alpha, data=.)%>% 
-  #plot(which=4)
- summary()
-   
-ggplot(aes(bias,learnDiff)) +
-  geom_point(alpha=.4, size=2) + 
-  geom_smooth()
+# melted.p.behav.model %>%
+# 
+#   filter(model=='biased') %>%
+#   filter(iteration==12)%>%
+#   filter(type== 'behav') %>%
+#   summarySE(groupvars =c( "bias","type", "setSize") , measurevar = "accuracy") %>%
+#   ggplot(aes(as.factor(bias), accuracy, group=setSize,color=setSize)) +
+#   geom_point()+geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se)) +
+#   ylim(0.3,1)
+# 
+# 
+# melted.p.behav.model %>%
+#   filter(model=='biased') %>%
+#   filter(iteration==13)%>%
+#   filter(type== 'behav') %>%
+#   summarySE(groupvars =c("bias","type", "setSize") , measurevar = "accuracy") %>%
+#   ggplot(aes(as.factor(bias), accuracy, group=setSize,color=setSize)) +
+#   geom_point() +
+#   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se))
+# 
+# 
+# melted.p.behav.model %>%
+#   filter(model=='biased' | model=='metaRL', iteration==12, type== 'behav') %>%
+#   select(subjects, model,bias, alpha, egs)%>%
+#   merge(s3s6Diff %>% 
+#           filter(model=='biased' | model=='metaRL') %>% 
+#           select(subjects,learnDiff), by='subjects') %>% 
+#  lm(learnDiff ~  egs + alpha, data=.)%>% 
+#   #plot(which=4)
+#  summary()
+#    
+# ggplot(aes(bias,learnDiff)) +
+#   geom_point(alpha=.4, size=2) + 
+#   geom_smooth()
 
 
 ```
