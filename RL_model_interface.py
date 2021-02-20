@@ -235,6 +235,7 @@ param_combs = list(itertools.product(*params))
 sim_data3 = [] #saves mean curves and parameters
 sim_data6 = []
 sim_data  = []
+sim_std=[]
 I_data = []
 #i=0
 
@@ -247,6 +248,7 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
     global sim_data
     global sim_data6
     global accuracy
+    global sim_std
     
     print('vars reset')
     temp3 = [] 
@@ -353,6 +355,8 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
         #del temp3, temp6
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
     sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(temp_test3), np.mean(temp_test6), bll, alpha, egs, imag, ans ])
+     #grab stds for distribution
+     sim_std.append([np.std(temp3,0), np.std(temp6,0), np.std(np.mean(temp_test3,1)), np.std(np.mean(temp_test6, 1))])
     sim_data3 = temp_test3
     sim_data6 = test_3
         #del temp3, temp6   

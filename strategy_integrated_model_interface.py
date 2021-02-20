@@ -307,6 +307,7 @@ sim_data3 = [] #saves mean curves and parameters
 sim_data6 = []
 sim_data  = [] 
 I_data = []
+sim_std=[]
 current_strategy = [];
 
 
@@ -327,6 +328,7 @@ def simulation(bll, alpha, egs, imag, ans,strtg, nSims):
     global sim_data6
     global accuracy
     global current_strategy
+    global sim_std
     print('vars reset')
     
     current_strategy = eval(strtg)
@@ -439,7 +441,9 @@ def simulation(bll, alpha, egs, imag, ans,strtg, nSims):
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
     sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(np.mean(temp_test3,1)), np.mean(np.mean(temp_test6, 1)),
      bll, alpha, egs, imag, ans, strtg])
-    sim_data3 = temp_test3
+    #grab stds for distribution
+    sim_std.append([np.std(temp3,0), np.std(temp6,0), np.std(np.mean(temp_test3,1)), np.std(np.mean(temp_test6, 1))])
+    #sim_data3 = temp_test3
           
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))        
