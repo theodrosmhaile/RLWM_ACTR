@@ -372,6 +372,8 @@ def execute_sim(n,fromI,toI, frac):
         simulation(param_combs[i][0], 0,0, param_combs[i][1], param_combs[i][2], n)
       
     sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans' ])
+    sim_st = pd.DataFrame(sim_std, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test'])
+    sim_st.to_JSON('./simulated_data/LTM_model/LTM_sim_std_date.JSON',orient='table')
     sim.to_pickle('./simulated_data/LTM_model/LTM_sim_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI))  
 
 

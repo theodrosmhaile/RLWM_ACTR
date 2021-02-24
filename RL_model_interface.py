@@ -356,7 +356,7 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
     sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(temp_test3), np.mean(temp_test6), bll, alpha, egs, imag, ans ])
      #grab stds for distribution
-     sim_std.append([np.std(temp3,0), np.std(temp6,0), np.std(np.mean(temp_test3,1)), np.std(np.mean(temp_test6, 1))])
+    sim_std.append([np.std(temp3,0), np.std(temp6,0), np.std(np.mean(temp_test3,1)), np.std(np.mean(temp_test6, 1))])
     sim_data3 = temp_test3
     sim_data6 = test_3
         #del temp3, temp6   
@@ -370,6 +370,9 @@ def execute_sim(n,fromI,toI, frac):
         simulation(0, param_combs[i][0],param_combs[i][1], 0, 0, n)
       
     sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans' ])
+    sim_st = pd.DataFrame(sim_std, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test'])
+    sim_st.to_json('./simulated_data/RL_model/RL_sim_std_date.JSON',orient='table')
+
     sim.to_pickle('./simulated_data/RL_model/RL_sim_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI))  
 
 
