@@ -454,6 +454,9 @@ def execute_sim(n,fromI,toI, frac):
         simulation(param_combs[i][0], param_combs[i][1],param_combs[i][2], param_combs[i][3], param_combs[i][4],param_combs[i][5], n)
       
     sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans','strtg' ])
+    sim_st = pd.DataFrame(sim_std, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test'])
+    
+    sim_st.to_pickle('./simulated_data/strategy_model/STR_std_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI))  
     sim.to_pickle('./simulated_data/strategy_model/STR_sim_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI))
     
 
