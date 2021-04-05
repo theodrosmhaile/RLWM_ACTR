@@ -1,7 +1,7 @@
 ---
-title: "ACT-R model fitting and outcome analysis"
+title: "RLWM ACT-R RMSE model fitting and outcome analysis"
 author: "Theodros H."
-date: "10/2020"
+date: "04/2021"
 output:
   html_document:
     code_folding: hide
@@ -54,6 +54,7 @@ The expectations and outcomes are described below.
 ```{r set up, echo=FALSE, warning=FALSE, message=FALSE}
 rm(list = ls())
 library(MASS)
+
 library(ggpubr)
 library(matlab)
 library(broom)
@@ -84,6 +85,7 @@ theme_set(theme_pubclean(base_size = 12))
 
 ```{r import data,  message=FALSE, warning=FALSE}
 #----- import subject data
+
 # 
 subjects = read.csv("./RLWM_data/wmo_subjects_across_studies_031820.csv", header = F)
 colnames(subjects)='subjects'
@@ -106,7 +108,8 @@ sdat.mod  <- cbind(sdat[, 1:24],
 
 
  #--------- Integrated model RL to LTM pipe
-simsRL_LTMpipe <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_12292020_corrected.JSON')
+simsRL_LTMpipe <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_032021.JSON')
+#fromJSON('./simulated_data/pipe_model/pipe_sim_data_12292020_corrected.JSON')
   #fromJSON('./simulated_data/pipe_model/sim_data_072020/pipe_all_data_5params_071320.JSON')
 
  simsRL_LTMpipe.set3learn <- simsRL_LTMpipe$data$set3_learn %>%
@@ -133,13 +136,13 @@ simsRL_LTMpipe.s3s6test.temp <-
                          simsRL_LTMpipe.set6learn, 
                          simsRL_LTMpipe.s3s6test.temp[1:nrow(simsRL_LTMpipe$data), ], 
                          simsRL_LTMpipe.s3s6test.temp[3126 :  nrow(simsRL_LTMpipe.s3s6test.temp), ], #copy the seond half of columns out
-                         simsRL_LTMpipe$data[,c('bll','alpha','egs','imag','ans','strtg')]) %>% 
+                         simsRL_LTMpipe$data[,c('bll','alpha','egs','imag','ans','strtg', 'strtg3','strtg6')]) %>% 
    data.table()
 
  
- 
  #--------- Integrated model assigned strategy
-simsRL_LTMstr <- fromJSON('./simulated_data/strategy_model/strategy_sim_data_12262020_corrected.JSON')
+simsRL_LTMstr <- fromJSON('./simulated_data/strategy_model/STR_sim_data_032021.JSON')
+#fromJSON('./simulated_data/strategy_model/strategy_sim_data_12262020_corrected.JSON')
   #fromJSON('./simulated_data/strategy_model/sim_data_072020/strategy_all_data_5params_071320.JSON')
 
  simsRL_LTMstr.set3learn <- simsRL_LTMstr$data$set3_learn %>%
@@ -173,7 +176,8 @@ simsRL_LTMstr.s3s6test.temp <-
 
 #--------- Reinforcement Learning Model
 
-simsRL <- fromJSON('./simulated_data/RL_model/RL_simulated_data_12292020_corrected.JSON')
+simsRL <- fromJSON('./simulated_data/RL_model/RL_sim_dat_032021.JSON')
+#fromJSON('./simulated_data/RL_model/RL_simulated_data_12292020_corrected.JSON')
 
  simsRL.set3learn <- simsRL$data$set3_learn %>%
   unlist() %>%
@@ -207,7 +211,8 @@ simsRL.set6learn <- simsRL$data$set6_learn %>%
 
 #--------- Longterm Memory/WM/Declarative model 
  
-simsLTM    <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_122020_corrected.JSON')
+simsLTM    <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')
+#fromJSON('./simulated_data/LTM_model/LTM_sim_data_122020_corrected.JSON')
   #fromJSON('./simulated_data/LTM_model/sim_data_072020/LTM_all_data_5params_071320.JSON')
 
  simsLTM.set3learn <- simsLTM$data$set3_learn %>%
@@ -252,6 +257,7 @@ LTM.sim.dat <- cbind(simsLTM.set3learn,
 ```
 
 ```{r fit model data to subject data, message=FALSE, warning=FALSE}
+
 
 #(1) Transform RMSE into residual sum of squares by doing RSS = RMSE^2 * n
 #11:34
@@ -361,6 +367,7 @@ for (s in 1:nrow(model.fits)){
 
 ```{r attach model and behavioral data }
 
+
 #1= RL; 2= LTM; 3 = RL_LTMpipe; 4 = RL_LTMstr
 
 RL.p.model   <- data.frame('subjects' = subjects[participants.fit==1],
@@ -444,7 +451,7 @@ melted.p.behav.model <- p.behav.model %>%
 plot.indiv <- function(this.model, title, columns) {
  
   melted.p.behav.model %>% 
-    filter(iteration != 13) %>% 
+    #filter(iteration != 13) %>% 
     filter(model == this.model) %>% 
     ggplot(aes(as.numeric(iteration), accuracy, color=cond.model, group=cond.model)) + 
     geom_point() +
@@ -813,6 +820,7 @@ Figure 10 below shows accuracy at end of learning and test. The models closely t
 ```{r Learning and test combined plot, fig.width=12, fig.height=12,fig.cap="figure 10"}
 #------Learning and test combined
 
+
 melted.p.behav.model %>% 
   filter(iteration>=12) %>% #Grab both the 12th iteration and test
   summarySE( measurevar = "accuracy", groupvars = c( "model","cond.model", "iteration")) %>% 
@@ -825,7 +833,8 @@ melted.p.behav.model %>%
   xlab('condition') +
  theme_pubclean(base_size = 24)  +
   scale_x_discrete(labels=c("learn","test"))+
-   facet_wrap(vars(model))  
+   facet_wrap(vars(model))
+  
 
 
 #stats 
@@ -838,7 +847,7 @@ melted.p.behav.model %>%
 #   facet_wrap(vars(setSize))
 
   melted.p.behav.model %>% 
-  filter(type=='behav', iteration==12 | iteration==13) %>% 
+  filter(type=='behav', iteration>=12) %>% 
   select(setSize, accuracy, iteration) %>% 
     lm(accuracy ~ setSize * iteration, data=.) %>% 
   anova() %>%  
@@ -898,6 +907,7 @@ melted.p.behav.model %>%
 The models predict learning rate for set size 3 for most of the models (not in the explicit biased model, too few data points in RL to say). But the models predicted learing rate for s6 only in the biased model. See figure 11 below. 
 
 ```{r alternative learning rate,fig.width=12, fig.height=12, fig.cap='Figure 11.'}
+
 #----- Alternative learning rate
 
 fit.lr <-  melted.p.behav.model %>% 
@@ -923,6 +933,7 @@ fit.lr <-  melted.p.behav.model %>%
    ggtitle("learning rate: slope estimate of first 6 iterations")
    
  
+  
  #Some stats for report
  
  # fit.lr %>% 
@@ -936,18 +947,21 @@ fit.lr <-  melted.p.behav.model %>%
  #   select(setSize, estimate) %>% 
  #   ggplot(aes(estimate, fill=setSize)) + geom_density(alpha=.4)
  
+  
 fit.lr %>% 
    ungroup() %>% 
    dplyr::filter(type=='behav', estimate.type=='slope') %>% 
    select(setSize, estimate) %>%
    t.test(estimate ~ setSize, data = .) 
     
+
    fit.lr %>% 
    filter(estimate.type=='slope') %>% 
    group_by(setSize,type, model) %>%
    dplyr::summarize('mean'= mean(estimate),
                     'se' = sd(estimate, na.rm = T) / sqrt(sum(!is.na(estimate)))) %>% 
      kable(caption = 'Descriptive stats of model and behavioral learning rate')
+   
    
    # mean differences
    # fit.lr %>% 
@@ -968,6 +982,7 @@ fit.lr %>%
    #    #ggplot(aes(estimate, fill=setSize)) +
    #    #geom_density(alpha=.4)
    #   wilcox.test(estimate ~ setSize, data = .) 
+   
    
 ```
 
@@ -1061,7 +1076,7 @@ pairwise.t.test(learnDiff,model, p.adjust.method = 'bonferroni', exact=FALSE) %>
   ggplot(aes(model, value, color=cond.model, group=cond.model)) + 
       geom_point(position=position_dodge(width = 0.4),size=2) + 
       geom_errorbar(position=position_dodge(width = 0.4),aes(ymax=value+se, ymin=value-se), size=1,width=.75) +
-      theme_pubclean(base_size = 18) +
+      theme_pubclean(base_size = 24) +
       ggtitle("Change from training to test: test - learn")+
         scale_color_brewer(palette = "Paired") +
       theme(legend.position = 'none')+
@@ -1134,6 +1149,20 @@ library(ggridges)
                   ) %>% 
     kable(caption='mean and medians of parameter values')
 
+  
+##
+  
+ 
+  p.behav.model %>% 
+  select('model','bias') %>% 
+    filter(model=='metaRL' | model=='biased' ) %>% 
+  reshape2::melt(id.vars='model', value.name = 'unscaled.vals')  %>%
+    group_by(model) %>% 
+    summarise('mean'=mean(unscaled.vals), 'median'=median(unscaled.vals))
+    ggplot(aes(y=unscaled.vals, group=model, fill=model))+
+    geom_boxplot()
+  
+  
 ```
 
 ### Individual parameter effects on outcomes
@@ -1216,7 +1245,7 @@ molt.param.out <- p.param.outcomes %>%
    geom_tile() +
     geom_text(aes(label=round(cor.spearman,2), size=.5), show.legend = F)+
     facet_wrap(vars(setSize))+
-   theme_pubclean(base_size = 18) +
+   theme_pubclean(base_size = 20) +
      scale_fill_gradient2(limits=c(-1,1),
                           low='#2b83ba',
                            high = '#d7191c',
@@ -1227,7 +1256,9 @@ molt.param.out <- p.param.outcomes %>%
                           breaks= c(-1,-.5,0,.5,1)
      ) +
 # scale_fill_distiller(palette = 'Spectral', guide='colorbar') +
-   theme(legend.position = 'right')
+   theme(legend.position = 'right') +
+   xlab('parameters') +
+   scale_y_discrete(labels=c('learn accuracy','test accuracy','learn difference','learning-rate','test-forgetting'))
  
  # all_dat_cors %>%
  #   ggplot(aes(params, condition, fill=cor.pearson)) +
@@ -1321,6 +1352,8 @@ molt.param.out %>%
 
 ```
 
+### Bias in meta-learning model
+
 ```{r bias parameter in metaRL model}
 #Differences in RL use in s3 and s6
 simsRL_LTMpipe$data %>%
@@ -1361,8 +1394,8 @@ simsRL_LTMpipe$data %>%
 simsRL_LTMpipe$data %>% 
   select( bll, ans, imag, egs,alpha) %>% #, egs,, alpha
   scale(center=F) %>% 
-  data.frame('strtg3'=simsRL_LTMpipe$data$strtg3,'strtg6'=simsRL_LTMpipe$data$strtg6, 'strtg'=simsRL_LTMpipe$data$strtg) %>% 
-  reshape2::melt(id.vars=c('strtg3','strtg6','strtg'), value.name = 'param_value', variable.name='parameter') %>% 
+  data.frame('strtg3'=simsRL_LTMpipe$data$strtg3,'strtg6'=simsRL_LTMpipe$data$strtg6) %>% #, 'strtg'=simsRL_LTMpipe$data$strtg
+  reshape2::melt(id.vars=c('strtg3','strtg6'), value.name = 'param_value', variable.name='parameter') %>% #,'strtg'
   reshape2::melt(id.vars=c('parameter','param_value'), value.name='bias', variable.name='setsize' ) %>%
   group_by(parameter,param_value, setsize) %>%  
     summarise('mean'=mean(bias), 'sem' = std(bias)/sqrt(n()) ) %>% 
@@ -1389,14 +1422,22 @@ simsRL_LTMpipe$data %>%
 
 
 melted.p.behav.model %>%
-
-  filter(model=='biased') %>%
-  filter(iteration==12)%>%
+  filter(model=='biased' | model=='metaRL') %>%
+  filter(setSize=='s3')%>%
   filter(type== 'behav') %>%
-  summarySE(groupvars =c( "bias","type", "setSize") , measurevar = "accuracy") %>%
-  ggplot(aes(as.factor(bias), accuracy, group=setSize,color=setSize)) +
-  geom_point()+geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se)) +
-  ylim(0.3,1)
+  filter(iteration==12) %>% 
+  summarySE(groupvars =c('model',"type") , measurevar = "bias") %>%
+  ggplot(aes(x=model,y=bias, group=model,fill=model)) +
+  geom_bar(stat = 'identity') +
+  geom_errorbar(aes(ymin=bias-se, ymax=bias+se)) 
+
+melted.p.behav.model %>%
+  filter(model=='metaRL' ) %>%
+  filter(setSize=='s3')%>%
+  filter(type== 'behav') %>%
+  filter(iteration==12) %>% View
+  ggplot(aes(x=bias, group=model,fill=model)) +
+  geom_histogram()
 
 
 melted.p.behav.model %>%
@@ -1423,10 +1464,22 @@ ggplot(aes(bias,learnDiff)) +
   geom_point(alpha=.4, size=2) +
   geom_smooth()
 
+ data.frame(
+  'bias'  =  RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],54] %>%  unlist() %>% as.numeric(),
+  'bias3' =  RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],55] %>%  unlist() %>% as.numeric(),
+  'bias6' =  RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],56] %>%  unlist() %>% as.numeric()
+  ) %>% 
+     melt() %>% 
+     summarySE(groupvars = 'variable', measurevar = 'value' ) %>% 
+   ggplot(aes(y=value,x=variable, fill=variable)) +
+   geom_bar(stat = 'identity') + 
+   geom_errorbar(aes(ymin=value-se, ymax=value+se))
+   
+    
 
 ```
 
-<!-- ### Combined effect of parameters on outcomes
+### Combined effect of parameters on outcomes
 
 ```{r correlate parameters with behavioral data}
 
@@ -1438,7 +1491,7 @@ ggplot(aes(bias,learnDiff)) +
 param.cluster <-
   p.behav.model %>% 
   filter(model=='LTM') %>% 
-  select('bll','imag','ans' ) %>% 
+  select('bll','imag' ) %>% 
   scale(center = F) %>% 
    kmeans(centers = 4, iter.max = 12)
 
@@ -1453,7 +1506,7 @@ p.behav.model  %>%
   geom_errorbar( aes(y=value, ymin=value-se, ymax=value+se), position = position_dodge(width = .75))
 
 ```
-
+<!-- 
 Some specific plans are to estimate the three LTM parameters for all 83 participants and see if they are related to WM, PSS measures. Also, how are the parameters related to the "separation" between s3 and s6? 
 
 Some more specific things to test might be effect of delay between stimulus presentations. 

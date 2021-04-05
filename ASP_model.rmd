@@ -1,0 +1,466 @@
+---
+title: "ASP_model_simulation"
+author: "Cher"
+date: "9/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(gtools)
+library(ggpubr)
+library(rstatix)
+library(ggpubr)
+rm(list = ls())
+```
+### simulation data - per conditionn
+```{r}
+model1_mean <- c(0.97625, 0.97675, 0.40575, 0.4045)#c(0.5936, 0.6088, 0.4068, 0.404) 
+model1_std <- c(0.04935521755599882, 0.04908602143176807, 0.1556179215257674, 0.15509593805125915)
+
+model2_data <- c(0.664, 0.536, 0.34, 0.32)
+
+pd<-position_dodge(0.1)
+df_summary <- data.frame(
+  P_type=c('DOC', 'DOI', 'POC', 'POI'),
+  mean=c(0.98 , 0.971, 0.416, 0.443),
+  std=c(0.0424, 0.0535, 0.1528, 0.1387)) %>%
+  mutate( 
+    syn_voice=as.factor(ifelse((P_type=="DOC")|(P_type=="DOI"), "DO", "PO")),
+    syn_corr=as.factor(ifelse((P_type=="DOC")|(P_type=="POC"), "C", "I")),
+    mean_upper=mean+std,
+    mean_lower=mean-std,
+    mean_upper=(ifelse(mean_upper>1, 1, mean_upper)))
+param='N: 32000; ans: 0.3; bll: 0.8; lf: 0.5;'
+
+model_plot <- df_summary %>%
+  ggplot(aes(x=syn_voice, y=mean,  group=syn_corr, col=syn_corr)) + 
+  geom_col(stat="identity", position='dodge2', 
+           width = .7, colour="black") + 
+  ylim(c(0,1))  + 
+  ggtitle('Simulation Results of ACT-R Declarative Model (Model 1)', 
+          subtitle = param) + 
+  labs(x = "Prime Conditions", 
+       y='Proportion of DO descriptions') +
+  scale_fill_manual(values=c("white", "gray"), labels = c("Correct", "Incorrect"), name = "Syntactic Correctness") +
+  theme_gray(base_size = 20)
+model_plot+theme(legend.position = c(0.8,0.8))
+
+
+  
+```
+
+### simulation data
+```{r}
+# read model simulation data
+# skip second line (params)
+sim_data <- "./MODEL220201027233740.txt"
+
+df <- read.csv(sim_data, header = TRUE,  sep = ",")[-1,]
+param <- as.character(read.csv(sim_data, header = FALSE,  sep = ",")[2,1])
+
+# data summary
+df_summary <- df %>%
+  gather(key='P_type', value='prop_DO', DOC:POI) %>%
+  mutate(P_type=as.factor(P_type), 
+         prop_DO=as.numeric(prop_DO),
+         syn_voice = as.factor(ifelse((P_type=="DOC")|(P_type=="DOI"), 
+                            "DO", "PO")),
+         syn_corr = as.factor(ifelse((P_type=="DOC")|(P_type=="POC"), 
+                            "C", "I"))) %>%
+  group_by(P_type, syn_voice, syn_corr) %>%
+  get_summary_stats(type = 'mean_se')
+```
+
+
+plot
+```{r}
+# change name
+#levels(df_summary$P_type) <- c("S1C","S1I","S2C","S2I")
+#levels(df_summary$syn_voice) <- c("S1","S2")
+
+model_plot <- df_summary %>%
+  ggplot(aes(x=syn_voice, y=mean,  group=syn_corr, fill=syn_corr)) + 
+  geom_col(stat="identity", position='dodge2', 
+           width = .7, colour="black") + 
+  #geom_text(aes(label = round(mean,2)), 
+  #          position = position_dodge(0.7),  vjust = 5) +
+  geom_errorbar(aes(ymin = mean-se, 
+                    ymax = mean+se), 
+                width=0.1, 
+                position=position_dodge(width=0.7)) +
+  #ylim(c(0,1))  + 
+  ggtitle('Results of ACT-R Surprisal Model', 
+          subtitle = param) + 
+  labs(x = "Prime Conditions", 
+       y='Proportion of DO descriptions') +
+  scale_fill_manual(values=c("white", "gray"), labels = c("Correct", "Incorrect"), name = "Syntactic Correctness") +
+  theme_gray(base_size = 20)
+
+model_plot + theme(legend.position = c(0.8, 0.8))
+```
+
+```{r}
+files <- list.files('./20201019', full.names = TRUE)
+
+# add param columns
+funct1 <- function(file_path) {
+  df <- read.csv(file_path, header = TRUE,  sep = ",")[-1,]
+  df_param_string <- as.character(read.csv(file_path, header = FALSE,  sep = ",")[2,1])
+  df$param_ans <- str_split(str_split(df_param_string, "; ", simplify = TRUE)[,1], ": ", simplify = TRUE)[,2]
+  df$param_bll <- str_split(str_split(df_param_string, "; ", simplify = TRUE)[,2], ": ", simplify = TRUE)[,2]
+  df$param_lf <- str_split(str_split(df_param_string, "; ", simplify = TRUE)[,3], ": ", simplify = TRUE)[,2]
+  return (df)
+}
+
+
+# concate all dfs
+funct2 <- function(files){
+  df = data.frame()
+  for (f in files){
+    df1 = funct1(f)
+    df = rbind(df, df1)
+  }
+  return(df)
+}
+
+df <- funct2(files)
+```
+
+### Convert sim data to long format
+```{r}
+# convert to long format
+long_df <- df %>%
+  gather(key='P_type', value='prop_DO', DOC:POI) %>%
+  mutate(P_type=as.factor(P_type), 
+         prop_DO=as.numeric(prop_DO),
+         syn_voice = as.factor(ifelse((P_type=="DOC")|(P_type=="DOI"), 
+                            "DO", "PO")),
+         syn_corr = as.factor(ifelse((P_type=="DOC")|(P_type=="POC"), 
+                            "C", "I")),
+         param_ans = as.factor(param_ans),
+         param_bll = as.factor(param_bll),
+         param_lf = as.factor(param_lf))
+
+p3 <- long_df %>% 
+  filter(param_ans==0.1, param_bll==0.2) %>%
+  group_by(P_type, syn_voice, syn_corr, param_lf) %>%
+  get_summary_stats(type = 'mean_se') %>%
+  ggplot(aes(x=P_type, y=mean, col=param_lf, group=param_lf)) + geom_point() + geom_line()
+  #+ facet_grid(cols = vars(param_ans))
+
+p1
+p2
+p3
+```
+
+### Convert sim data to long format
+```{r}
+long_df <- df %>%
+  gather(key='P_type', value='prop_DO', DOC:POI) %>%
+  mutate(P_type=as.factor(P_type), 
+         prop_DO=as.numeric(prop_DO),
+         syn_voice = as.factor(ifelse((P_type=="DOC")|(P_type=="DOI"), 
+                            "DO", "PO")),
+         syn_corr = as.factor(ifelse((P_type=="DOC")|(P_type=="POC"), 
+                            "C", "I")))
+```
+
+### Load Subj Data
+```{r}
+long_df %>%
+  group_by(param_ans, param_bll, param_lf, P_type) %>%
+  get_summary_stats(type = 'mean')
+
+subj_data <- read.csv('../subj_data/ASP3_double_checked.csv')
+
+subj_summary <- subj_data %>% 
+  mutate(isdo=as.numeric(1-ispo),
+         subjID=surveyID) %>%
+  select(subjID, P_type, isdo) %>%
+  group_by(subjID, P_type) %>%
+  get_summary_stats(type = 'mean')
+
+# transform subj data
+wide_subj_summary <- subj_summary %>%
+  select(subjID, P_type, mean) %>%
+  spread(P_type, mean)
+
+write_csv(wide_subj_summary, './ASP3SubjData20201209_clean.csv')
+```
+
+### Calcualte RSS
+```{r}
+
+subj_summary %>%
+  ggplot(aes(x=P_type, y=mean, col=subjID)) + 
+  geom_point() + geom_jitter()
+
+# wide format of subj data
+subj_wide <- subj_summary %>%
+  select(-variable, -n) %>%
+  spread(key = P_type, value = mean)
+
+# model1
+model1 <- long_df %>% 
+  filter(param_ans==0.1, param_bll==0.2, param_lf==0.2) %>%
+  group_by(P_type, syn_voice, syn_corr) %>%
+  get_summary_stats(type = 'mean') %>%
+  select(P_type, mean) %>%
+  spread(key = P_type, value=mean) 
+
+# model1
+model2 <- long_df %>% 
+  filter(param_ans==0.5, param_bll==0.5, param_lf==0.8) %>%
+  group_by(P_type, syn_voice, syn_corr) %>%
+  get_summary_stats(type = 'mean') %>%
+  select(P_type, mean) %>%
+  spread(key = P_type, value=mean) 
+
+# calculate RSS given predicted y and observation
+calc_RSS <- function(subj_wide, model1) {
+  DOC_rss = sum((subj_wide$DOC-model1$DOC)^2)
+  DOI_rss = sum((subj_wide$DOI-model1$DOI)^2)
+  POC_rss = sum((subj_wide$POC-model1$POC)^2)
+  POI_rss = sum((subj_wide$POI-model1$POI)^2)
+  rss = DOC_rss+DOI_rss+POC_rss+POI_rss
+  return(rss)
+}
+
+# calculate BIC
+calc_BIC <- function(RSS, n, k) {
+  bic = n + n*log(2*pi) + n*log(RSS/n) + log(n)*(k+1)
+  return (bic)
+}
+rss1 <- calc_RSS(subj_wide, model1)
+rss2 <- calc_RSS(subj_wide, model2)
+
+bic1 <- calc_BIC(rss1, 47, 3)
+bic1
+
+bic2 <- calc_BIC(rss2, 47, 3)
+bic2
+```
+
+
+### Optimization
+```{r}
+dfo <- read.csv('./model2_param_optimization.csv', header = TRUE,  sep = ",") %>% arrange(rmse)
+  #mutate(ans=factor(ans), bll=factor(bll), ga=factor(ga), lf=factor(lf), mas=factor(mas))
+dfo %>% head()
+dfo %>%
+  filter(ans==0.7, rmse<0.18) %>%
+  #group_by(bll) %>%
+  ggplot(aes(X, rmse, group=ans, col=ans)) + geom_point(alpha=0.5)
+```
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 20201209
+```{r}
+model1 = read_csv('./MODEL1/MODEL1_wide.csv')
+model2 = read_csv('./MODEL2/MODEL2_wide.csv')
+model3 = read_csv('./MODEL3/MODEL3_wide.csv')
+
+rmse = function(m, o){
+  return (sqrt(mean((m - o)^2)))
+}
+
+rmse_diff = function(m, o) {
+  m0 = mean(m[1], m[2], trim = 0.0001) - mean(m[3], m[4])
+  d1 = m[1] - m[2]
+  d2 = m[3] - m[4]
+  
+}
+
+
+
+model1 %>%
+  #filter(rmse < .35) %>%
+  gather('P_type', 'mean_prop', DOC:POI) %>%
+  ggplot(aes(x=P_type, y=mean_prop, color=rmse))+ geom_jitter() + 
+  scale_color_gradient(low="blue", high="yellow")
+
+model2 %>%
+  #filter(rmse < .35) %>%
+  gather('P_type', 'mean_prop', DOC:POI) %>%
+  ggplot(aes(x=P_type, y=mean_prop, group=P_type, color=rmse)) +
+  scale_color_gradient(low="blue", high="yellow") + 
+  geom_jitter()  
+
+
+model3 %>%
+  #filter(rmse < .35) %>%
+  gather('P_type', 'mean_prop', DOC:POI) %>%
+  ggplot(aes(x=P_type, y=mean_prop, group=P_type, color=rmse)) +
+  scale_color_gradient(low="blue", high="yellow") + 
+  geom_jitter() 
+
+```
+
+
+### Individual diff
+```{r}
+fit1to1 <- read_csv("./MODEL1/ASP1MODEL1_drmse.csv")
+fit1to2 <- read_csv("./MODEL2/ASP1MODEL2_drmse.csv")
+fit1to3 <- read_csv("./MODEL3/ASP1MODEL3_drmse.csv")
+hist(fit1to1$min_rmse)
+hist(fit1to2$min_rmse)
+hist(fit1to3$min_rmse)
+
+oldsubj3 <- read_csv("/Users/cheryang/Documents/GitHub/2yearProject-orpp/data/ASP3_data/ASP3_v9_postpro_corrected/ASP3_old_check.csv") %>% distinct(surveyID)
+names(oldsubj3) <- c('subjID')
+
+fit3to1 <- read_csv("./MODEL1/ASP3MODEL1_drmse.csv")
+fit3to2 <- read_csv("./MODEL2/ASP3MODEL2_drmse.csv")
+fit3to3 <- read_csv("./MODEL3/ASP3MODEL3_drmse.csv")
+hist(fit3to1$min_rmse)
+hist(fit3to2$min_rmse)
+hist(fit3to3$min_rmse)
+
+
+s1m1 <- fit1to1 %>%
+    select(mAC, mAI, mPC, mPI) %>%
+    gather(key = "P_type", value = prop_isa, mAC:mPI) %>%
+    group_by(P_type) %>%
+    get_summary_stats(type = 'mean_se') %>%
+    select(P_type, mean, se) %>%
+    mutate(data_type = 'Model1')
+s1m2 <- fit1to2 %>%
+    select(mAC, mAI, mPC, mPI) %>%
+    gather(key = "P_type", value = prop_isa, mAC:mPI) %>%
+    group_by(P_type) %>%
+    get_summary_stats(type = 'mean_se') %>%
+    select(P_type, mean, se) %>%
+    mutate(data_type = 'Model2')
+s1m3 <- fit1to3 %>%
+    select(mAC, mAI, mPC, mPI) %>%
+    gather(key = "P_type", value = prop_isa, mAC:mPI) %>%
+    group_by(P_type) %>%
+    get_summary_stats(type = 'mean_se') %>%
+    select(P_type, mean, se) %>%
+    mutate(data_type = 'Model3')
+
+summary1 <- fit1to1 %>%
+  select(AC, AI, PC, PI) %>%
+  gather(key = "P_type", value = prop_isa, AC:PI) %>%
+  group_by(P_type) %>%
+  get_summary_stats(type = 'mean_se') %>%
+  select(P_type, mean, se) %>% 
+  mutate(data_type = 'Subj') %>%
+  full_join(s1m1) %>%
+  full_join(s1m2) %>%
+  full_join(s1m3)
+summary1$P_type = rep(c("AC", "AI","PC","PI"), 4)
+
+summary1 %>%
+  ggplot(aes(x=P_type, y=mean, group=data_type, col=data_type)) + 
+  geom_point(size=1.5) +
+  geom_errorbar(aes(ymin = mean-se, 
+                    ymax = mean+se), 
+                width=0.1) +
+  ggtitle("Model Data vs. ASP1 Subj Data")
+
+  
+```
+
+
+### ASP1 and model fitting for individual
+```{r}
+# join ASP1 subj data and model1, model2, model3
+subj1toall <- fit1to1 %>%
+  select(subjID, mAC, mAI, mPC, mPI, min_rmse) %>%
+  left_join(fit1to2 %>%
+              select(subjID, mAC, mAI, mPC, mPI, min_rmse), 
+            by='subjID', suffix=c('.m1', '.m2')) %>%
+  left_join(fit1to3 %>%
+              select(subjID, mAC, mAI, mPC, mPI, min_rmse) %>%
+              setNames(c(names(.)[1], paste0(names(.)[-1],".m3"))), 
+            by='subjID') %>%
+  # round min_rmse to 3 digits??
+  mutate_at(vars(starts_with("min_rmse")), funs(round(., 3)))
+
+
+# find min min_rmse and categorize which model is the best
+subj1toall <- left_join(subj1toall, 
+  full_join(
+    data.frame(subjID=subj1toall$subjID, min_rmse=pmin(subj1toall$min_rmse.m1, 
+                             subj1toall$min_rmse.m2, 
+                             subj1toall$min_rmse.m3)), 
+    data.frame(subjID=subj1toall$subjID,
+               best_model=colnames(subj1toall %>%
+           select(starts_with("min_rmse")))[apply(subj1toall %>%
+           select(starts_with("min_rmse"))
+           ,1,which.min)]), 
+    by='subjID'
+    ), by='subjID')
+
+
+
+head(subj1toall)
+subj1toall %>% group_by(best_model) %>% 
+  summarise(n = n()) %>% mutate(freq = n / sum(n)) %>%
+  ggplot(aes(x="", y=n, fill=best_model)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  theme_void() +
+  ggtitle('ASP1 Best Moldel Fitting')
+
+# Over 75% of subjects in ASP1 find model3 fit better than model1 and model2
+```
+
+
+
+### ASP3 and model fitting for individuals
+```{r}
+# join ASP3 subj data and model1, model2, model3
+subj3toall <- fit3to1 %>%
+  select(surveyID, mDOC, mDOI, mPOC, mPOI, min_rmse) %>%
+  left_join(fit3to2 %>%
+              select(surveyID, mDOC, mDOI, mPOC, mPOI, min_rmse), 
+            by='surveyID', suffix=c('.m1', '.m2')) %>%
+  left_join(fit3to3 %>%
+              select(surveyID, mDOC, mDOI, mPOC, mPOI, min_rmse) %>%
+              setNames(c(names(.)[1], paste0(names(.)[-1],".m3"))), 
+            by='surveyID') %>%
+  mutate_at(vars(starts_with("min_rmse")), funs(round(., 3)))
+
+# find min min_rmse and subj3toall which model is the best
+subj3toall <- left_join(subj3toall, 
+  full_join(
+    data.frame(surveyID=subj3toall$surveyID, min_rmse=pmin(subj3toall$min_rmse.m1, 
+                             subj3toall$min_rmse.m2, 
+                             subj3toall$min_rmse.m3)), 
+    data.frame(surveyID=subj3toall$surveyID,
+               best_model=colnames(subj3toall %>%
+           select(starts_with("min_rmse")))[apply(subj3toall %>%
+           select(starts_with("min_rmse"))
+           ,1,which.min)]), 
+    by='surveyID'
+    ), by='surveyID')
+
+subj3toall %>% head()
+
+
+subj3toall %>% group_by(best_model) %>% 
+  summarise(n = n()) %>% mutate(freq = n / sum(n)) %>%
+  ggplot(aes(x="", y=n, fill=best_model)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  theme_void() +
+  ggtitle('ASP3 Best Moldel Fitting (All)')
+
+# only old data
+subj3toall <- subj3toall %>% 
+  anti_join(fit3to1 %>% filter(old==TRUE) %>% distinct(surveyID))
+
+subj3toall %>% group_by(best_model) %>% 
+  summarise(n = n()) %>% mutate(freq = n / sum(n)) %>%
+  ggplot(aes(x="", y=n, fill=best_model)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  theme_void() +
+  ggtitle('ASP3 Best Moldel Fitting (Old)')
+
+```
+

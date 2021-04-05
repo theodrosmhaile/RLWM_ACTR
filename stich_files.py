@@ -8,7 +8,7 @@ import numpy as np
 import glob
 study = 'strategy_model/'
 loc = './simulated_data/' + study
-files =  glob.glob(loc + 'STR*')#'STR*'
+files =  glob.glob(loc + 'STR*std*')#'STR*'
 files.sort()
 
 
@@ -17,7 +17,7 @@ files.sort()
 
 def stc(files):
 	
-	temp_list = pd.DataFrame( columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans' ,'strtg' ])
+	temp_list = pd.DataFrame( columns=['set3_learn','set6_learn', 'set3_test', 'set6_test'])#,'bll', 'alpha', 'egs', 'imag', 'ans' ,'strtg' ])
 
 	for filename in files:
 		temp_df =  pd.read_pickle(filename) 

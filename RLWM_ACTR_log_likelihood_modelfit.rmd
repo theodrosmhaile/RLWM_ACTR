@@ -1,0 +1,437 @@
+---
+title: "RLWM ACT-R log-likelihood model fitting"
+author: "Theodros H."
+date: "04/2021"
+output:
+  html_document:
+    code_folding: show
+    toc: yes
+    toc_float: yes
+editor_options:
+  chunk_output_type: console
+---
+
+```{css, echo=FALSE}
+p {
+  font-size: 18px;
+}
+```
+
+```{r set up, echo=FALSE, warning=FALSE, message=FALSE}
+rm(list = ls())
+library(MASS)
+library(ggpubr)
+library(matlab)
+library(broom)
+library(ggplot2)
+library(tidyr)
+library(MLmetrics)
+library(readr)
+library(data.table)
+library(jsonlite)
+library(data.table)
+library(knitr)
+library(gridExtra)
+source('param_influence.R')
+library(Rmisc)
+library(dplyr)
+library(reshape2)
+library(magrittr)
+library(stringr)
+
+knitr::opts_chunk$set(
+  comment = "#>", echo = FALSE, warning = FALSE, 
+  message = FALSE 
+ 
+)
+theme_set(theme_pubclean(base_size = 12)) 
+
+```
+
+```{r import data}
+subjects = read.csv("./RLWM_data/wmo_subjects_across_studies_031820.csv", header = F)
+colnames(subjects)='subjects'
+sdat = fread('./RLWM_data/all_subject_n83_learn_test_data.csv', header = T) %>% t()
+
+
+
+extract.json <- function(dat.f) {
+  n.cols=12
+  temp <- dat.f %>% unlist() %>% 
+    as.matrix() %>% 
+    reshape(.,n.cols, length(dat.f) ) %>% t()
+  
+  return(temp)
+}
+######### RL ##########
+#----------Extract means data for RL models
+simsRL <- fromJSON('./simulated_data/RL_model/RL_sim_dat_032021.JSON') #%$% 
+  
+RL.sim.dat <- cbind(extract.json(simsRL$data$set3_learn), 
+                    extract.json(simsRL$data$set6_learn), 
+                    simsRL$data$set3_test,  
+                    simsRL$data$set6_test) 
+
+#Extract standard deviations data for RL models
+simsRL_stdev <- fromJSON('./simulated_data/RL_model/RL_sim_std_date.JSON')
+
+RL.sim.std <-   cbind(extract.json(simsRL_stdev$data$set3_learn),
+                      extract.json(simsRL_stdev$data$set6_learn),
+                      simsRL_stdev$data$set3_test,
+                      simsRL_stdev$data$set6_test)
+
+######### LTM ###########
+#--------Extract means data for LTM models
+
+simsLTM  <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')
+
+LTM.sim.dat <- cbind(extract.json(simsLTM$data$set3_learn),
+                     extract.json(simsLTM$data$set6_learn),
+                     simsLTM$data$set3_test,
+                     simsLTM$data$set6_test
+                     )
+
+#--------Extract standard deviations data for LTM models
+simsLTM_stdev <-  fromJSON('./simulated_data/LTM_model/LTM_std_data_02202021.JSON')
+
+LTM.sim.std <- cbind(extract.json(simsLTM_stdev$data$set3_learn),
+                     extract.json(simsLTM_stdev$data$set6_learn),
+                     simsLTM_stdev$data$set3_test,
+                     simsLTM_stdev$data$set6_test
+                     )
+######### RL_LTMpipe ############
+#--------Extract means data for integrated pipe models
+simsRL_LTMpipe <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_032021.JSON')
+
+RL_LTMpipe.sim.dat <- cbind(extract.json(simsRL_LTMpipe$data$set3_learn),
+                     extract.json(simsRL_LTMpipe$data$set6_learn),
+                     simsRL_LTMpipe$data$set3_test,
+                     simsRL_LTMpipe$data$set6_test
+                     )
+#--------Extract standard deviations data for integrated pipe models
+simsRL_LTMpipe_stdev <- fromJSON('./simulated_data/pipe_model/pipe_std_data_032021.JSON')
+
+RL_LTMpipe.sim.std <- cbind(extract.json(simsRL_LTMpipe_stdev$data$set3_learn),
+                     extract.json(simsRL_LTMpipe_stdev$data$set6_learn),
+                     simsRL_LTMpipe_stdev$data$set3_test,
+                     simsRL_LTMpipe_stdev$data$set6_test
+                     )
+
+
+######### RL_LTMstrategy ############
+#--------Extract means data for integrated explicit models
+simsRL_LTMstr <- fromJSON('./simulated_data/strategy_model/STR_sim_data_032021.JSON')
+
+RL_LTMstr.sim.dat <- cbind(extract.json(simsRL_LTMstr$data$set3_learn),
+                     extract.json(simsRL_LTMstr$data$set6_learn),
+                     simsRL_LTMstr$data$set3_test,
+                     simsRL_LTMstr$data$set6_test
+                     )
+#--------Extract standard deviations data for integrated explicit models
+simsRL_LTMstr_stdev <- fromJSON('./simulated_data/strategy_model/STR_std_data_032021.JSON')
+
+RL_LTMstr.sim.std <- cbind(extract.json(simsRL_LTMstr_stdev$data$set3_learn),
+                     extract.json(simsRL_LTMstr_stdev$data$set6_learn),
+                     simsRL_LTMstr_stdev$data$set3_test,
+                     simsRL_LTMstr_stdev$data$set6_test
+                     )
+
+```
+
+```{r find probs subject values}
+#number of mean data points
+
+modsRL =c()
+modsLTM=c()
+mods1=c()
+mods2=c()
+
+RL.logP=c()
+LTM.logP=c()
+RL_LTMstr.logP=c()  
+RL_LTMpipe.logP=c()  
+
+
+#probs a terrible idea but this might be usable
+  #-- In cases where we have very small St.devs,  we have very high z-scores, so reduce those to 1e-10
+RL.sim.std[RL.sim.std < 1e-10] <- 1e-10
+LTM.sim.std[LTM.sim.std < 1e-10] <- 1e-10
+RL_LTMpipe.sim.std[RL_LTMpipe.sim.std < 1e-10] <- 1e-10
+RL_LTMstr.sim.std[RL_LTMstr.sim.std <1e-10] <- 1e-10
+
+
+#zscore and log-likelihood fun
+
+log.likelihood  <- function(subj, means, st.dev) {
+  ret.sum=c()
+  for(n in 1:nrow(means)){
+    #--z-score option--#
+  # temp <-   (subj-m[n,] )/st.dev[n,] %>%
+  #   dnorm(log = F)
+  #   ret.sum=rbind(ret.sum, sum(temp))
+    
+    #--Direct p computation option--#
+     temp <- dnorm(subj, means[n,],st.dev[n,], log = T) %>% 
+         sum() 
+    ret.sum=rbind(ret.sum, c(temp))
+  }
+  return(ret.sum)
+}
+
+
+for (s in 1:nrow(subjects)) { #
+  
+  RL.logP <- cbind(RL.logP, 
+                   log.likelihood(sdat[s,],RL.sim.dat, RL.sim.std))
+
+  LTM.logP <- cbind( LTM.logP,
+                     log.likelihood(sdat[s,],LTM.sim.dat, LTM.sim.std))
+ RL_LTMpipe.logP <- cbind(RL_LTMpipe.logP,
+                          log.likelihood(sdat[s,], RL_LTMpipe.sim.dat, RL_LTMpipe.sim.std))
+
+ RL_LTMstr.logP <- cbind(RL_LTMstr.logP,
+                            log.likelihood(sdat[s,], RL_LTMstr.sim.dat, RL_LTMstr.sim.std))
+
+
+}
+```
+
+
+```{r find most probable model}
+
+#row bind all model probabilities and find the max for each column/subject
+ 
+model.logP <- rbind(data.frame(RL.logP,model='RL'),
+      data.frame(LTM.logP,model='LTM'),
+      data.frame(RL_LTMpipe.logP,model='pipe'),
+      data.frame(RL_LTMstr.logP, model='str')
+      ) 
+
+model.max.logP <- model.logP %>% 
+  select(-model) %>% 
+   apply(., 2, max)
+ 
+participant.fit=c()
+participant.model=c()
+# Identify which model
+
+for (s in 1:nrow(subjects)) {
+  temp=model.logP[,s]  %in% model.max.logP %>% which
+
+  participant.fit <- cbind(participant.fit, c(temp))
+  participant.model <- cbind(participant.model, model.logP$model[temp])
+  temp=c()
+}
+RL.mods <- participant.fit[participant.model=='RL'] 
+LTM.mods <- participant.fit[participant.model=='LTM'] - 25
+pipe.mods <-  participant.fit[participant.model=='pipe'] - 150
+str.mods <-  participant.fit[participant.model=='str'] - 3275
+
+
+
+
+```
+
+```{r join model and behav data}
+
+build_df <- function(model) {
+  
+  mod.fit = eval(parse(text=paste0(model, '.mods')))
+  
+  if (model == 'str' | model == 'pipe') {
+      model.dat = eval(parse(text=paste0('RL_LTM',model,'.sim.dat')))
+    
+  } else {
+       model.dat = eval(parse(text=paste0(model,'.sim.dat')))
+  }
+  
+
+  if(length(mod.fit)==1){
+    
+    d.f <- data.frame(subjects[participant.model==model],model,mod.fit, model.dat[mod.fit, ] %>% t())
+  } else{
+    
+      if(length(mod.fit)==0){
+     d.f <-rep(NA,29) %>% data.frame() %>% t() 
+     
+      }else{
+          d.f <- data.frame(subjects[participant.model==model],
+                      model, 
+                      mod.fit,
+                      model.dat[mod.fit, ])
+        }
+  } 
+  names_col <- c('subjects','model','model.id',
+                 str_c(c('s3.'),c(1:12)), #generate accuracy column labels
+                 str_c(c('s6.'),c(1:12)),
+                 's3.13','s6.13'
+                 )
+  
+  colnames(d.f) <- names_col
+   return(d.f) 
+}
+
+str.p.model = build_df('str')
+LTM.p.model = build_df('LTM')
+RL.p.model = build_df('RL')  
+pipe.p.model= build_df('pipe')
+
+join.model.dat <- rbind(RL.p.model, LTM.p.model,str.p.model, pipe.p.model) 
+colnames(sdat) <- c(colnames(join.model.dat[4:29]))
+
+p.behav.model  = merge(cbind(subjects, sdat), 
+                join.model.dat, by = c("subjects"), 
+                 suffixes = c('.behav', '.model'), sort=FALSE)
+ 
+melted.p.behav.model <- p.behav.model %>% 
+  select(-model.id) %>% 
+  reshape2::melt(id.vars = c("subjects", "model"), value.name="accuracy", variable.name="condition") %>%
+     separate("condition", into = c('setSize', "iteration","type"), remove = FALSE, convert = TRUE) %>% 
+  unite("cond.model", c(setSize,type), remove = FALSE)
+
+melted.p.behav.model.id <- p.behav.model %>% 
+  select(-model) %>% 
+  reshape2::melt(id.vars = c("subjects", "model.id"), value.name="accuracy", variable.name="condition") %>%
+     separate("condition", into = c('setSize', "iteration","type"), remove = FALSE, convert = TRUE) %>% 
+  unite("cond.model", c(setSize,type), remove = FALSE)
+
+```
+
+
+```{r models+ people:learning, fig.width=12}
+melted.p.behav.model %>% 
+   filter(iteration != 13) %>% 
+  summarySE( measurevar = "accuracy", groupvars = c("iteration", "condition", "cond.model", "model")) %>% 
+  ggplot(aes( as.factor(iteration), accuracy, color=cond.model, group=cond.model)) +
+  geom_point() +
+  geom_line(size=1) +
+  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.35, size=1) +
+  facet_wrap(vars(model)) +
+  scale_color_brewer(palette = "Paired") +
+  xlab('stimulus iteration') +
+ theme_pubclean(base_size = 20)
+```
+
+
+```{r models+ people:test, fig.width=12}
+
+melted.p.behav.model %>% 
+   filter(iteration > 11) %>% 
+  summarySE( measurevar = "accuracy", groupvars = c("iteration", "condition", "cond.model", "model")) %>% 
+  ggplot(aes( as.factor(iteration), accuracy, color=cond.model, group=cond.model)) +
+  geom_point() +
+  geom_line(size=1) +
+  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.35, size=1) +
+  facet_wrap(vars(model)) +
+  scale_color_brewer(palette = "Paired") +
+  xlab('stimulus iteration') +
+   scale_x_discrete(labels=c("learn","test")) +
+ theme_pubclean(base_size = 20)
+```
+
+```{r counts of fits}
+models.name=c( 'LTM', 'meta_RL', 'biased')
+
+data.frame('model'= participant.model %>% t())  %>% 
+ggplot(aes(factor(model), fill=factor(model))) + 
+  geom_bar() +
+   ggtitle('Counts of participants by model') +
+ # theme_minimal(base_size = 20)+
+  scale_x_discrete(labels=models.name )+
+  xlab("Models")+
+   scale_fill_brewer( palette = "Paired")+
+
+  theme_pubclean(base_size = 24) +
+  theme(legend.position='none') 
+
+
+```
+
+### Mean differences of the curves between behavioral data and two model fitting procedures. 
+GREEN :RMSE method
+RED :Log-Likelihood method
+```{r compare RMSE with LL}
+rmse.fit=read.csv('model_fit_by_RMSE042021.csv')
+comp.fits = merge(rmse.fit, p.behav.model, by=c('subjects'))
+
+rmse.diff = (comp.fits %>% select(contains('behav'))) - (comp.fits %>% select(contains('.model')))
+
+LL.diff = (comp.fits %>% select(contains('behav'))) - (comp.fits %>% select(-contains('model'), -contains('behav'), -contains('a'), -contains('e'), -'bll' )) 
+
+rmse.diff$method=rep(0,83)
+LL.diff$method=rep(1,83)
+
+LL.diff %>% 
+  select(contains('s'))  %>% 
+  rowMeans() %>% 
+  plot(pch=15, col='red', xlab = 'Subjects', ylab = 'mean difference from behavioral curve')
+  
+rmse.diff %>% 
+  select(contains('s'))  %>% 
+  rowMeans() %>% 
+  points(pch=16, col='green')
+
+#points(pch=8, x=c(1:83), y = rep(0, 83))
+```
+
+
+```{r individual plots}
+plot.indiv <- function(this.model, title, columns) {
+ 
+  melted.p.behav.model %>% 
+   # filter(iteration != 13) %>% 
+    filter(model == this.model) %>% 
+    ggplot(aes(as.numeric(iteration), accuracy, color=cond.model, group=cond.model)) + 
+    geom_point() +
+    geom_line(size=1) +
+    facet_wrap(vars(subjects), ncol = columns, scales = 'free')+
+    scale_color_brewer(palette = "Paired")+
+    theme_pubr(base_size = 16) +
+    ggtitle(title)
+  
+}
+```
+
+```{r str plots, fig.width=24, fig.height=72}
+plot.indiv('str', 'biased Only Model', 4)
+```
+
+```{r LTM plots, fig.width=24, fig.height=18}
+plot.indiv('LTM','LTM only models', 4)
+```
+
+
+```{r meta_RL plots, fig.width=6, fig.height=4}
+plot.indiv('pipe','meta-RL only models', 1)
+# melted.p.behav.model %>% 
+ #    filter(iteration != 13) %>% 
+ #   # filter(model == 'LTM') %>% 
+ #   #filter(subjects < 15000) %>% 
+ #    ggplot(aes(as.numeric(iteration), accuracy, color=cond.model, group=cond.model)) + 
+ #    geom_point() +
+ #    geom_line(size=1) +
+ #    facet_wrap(vars(subjects), ncol = 6, scales = 'free')+
+ #    scale_color_brewer(palette = "Paired")+
+ #    theme_pubr(base_size = 16) +
+ #    ggtitle('LTM Only Model')
+
+```
+
+```{r recycling}
+# 'subjects' = subjects[participant.model==model],
+#                             'model' = model,
+#                             'model.id' =mod.fit,
+#                             's3'= model.dat[mod.fit,1:12],
+#                            's6'=  model.dat[mod.fit,13:24],
+#                            # 'bll' = model.dat[ind.temp.LTM[participants.fit==2],49],
+#                            # 'alpha' = rep(NA, sum(participants.fit==2)) %>% as.double(),
+#                            # 'egs' = rep(NA, sum(participants.fit==2)) %>% as.double(),
+#                            # 'imag' = LTM.sim.dat[ind.temp.LTM[participants.fit==2],52],
+#                            # 'ans' = LTM.sim.dat[ind.temp.LTM[participants.fit==2],53],
+#                            # 'bias'= rep(NA, sum(participants.fit==2)) %>% as.double(),
+#                            's3test' = model.dat[mod.fit,25],
+#                            's6test' = model.dat[mod.fit,26])
+
+```
+
+
