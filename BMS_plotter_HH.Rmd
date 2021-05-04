@@ -1,0 +1,60 @@
+---
+title: "BMS_analysis"
+author: "Theodros H."
+date: "4/15/2021"
+output: 
+  html_document:
+    code_folding: show
+         
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# ALL of this come with the Tidyverse package so just install that by running instal.packages('tidyverse')
+
+library(ggplot2)
+library(ggpubr)
+library(tidyr)
+library(dplyr)
+library(reshape2)
+library(stringr)
+
+```
+
+## 
+
+```{r}
+# import the file. I saved it in the same folder as this scrip. 
+BMS_data <- read.csv('BMS analysis Ses-01_HH - Sheet1.csv', header = F)
+  
+#I then added column titles 
+colnames(BMS_data) <- c('direct', 'modulatory', 'mixed')
+
+head(BMS_data) # just so you can see what the outcome is. 
+
+#Find the max (or min) in each column so that we can find out if the specific subject belongs to the direct, modulatory or mixed category. 
+#There are a number of ways of doing this, the base r way of doing it is by using apply() - which applies another function to all rows or columns of a matrix and by using which.max() - which returns the index of where a maximum value occurs, in our case 1 for direct, 2 for modulatory or 3 for mixed. 
+max_index <- apply(X = BMS_data, # the data
+                   MARGIN =  1,  # use rows (1) or columns (2)
+                   FUN = which.max) #function to apply
+head(max_index)
+
+# Label the max_index so we can easily tell what they are. I just nested to ifelse() statements to label
+BMS_ID <- ifelse(max_index==1,'direct',
+                 ifelse(max_index==2,'modulatory','mixed')
+                 )
+
+# plot
+#ggplot requires that everything be in a data frame
+BMS_df <- data.frame('ID' = BMS_ID)
+
+BMS_df %>% # this is pipe, %>% just passes the table or results from a function on to the next function! 
+  ggplot(aes(x=ID, fill=ID )) +
+  geom_bar() + # this plots bar graphs
+  theme_classic2() + #this uses a theme
+  scale_fill_brewer(palette = 'Set1') +  # this applies a color pallete from the Brewer set: colorbrewer2.org. 
+  ggtitle('my BMS stuff')#In ggplot you can just  use '+' and keep adding modifications or other plots on to your figure
+  
+
+```
+

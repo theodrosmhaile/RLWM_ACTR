@@ -1152,15 +1152,15 @@ library(ggridges)
   
 ##
   
- 
-  p.behav.model %>% 
-  select('model','bias') %>% 
-    filter(model=='metaRL' | model=='biased' ) %>% 
-  reshape2::melt(id.vars='model', value.name = 'unscaled.vals')  %>%
-    group_by(model) %>% 
-    summarise('mean'=mean(unscaled.vals), 'median'=median(unscaled.vals))
-    ggplot(aes(y=unscaled.vals, group=model, fill=model))+
-    geom_boxplot()
+  # 
+  # p.behav.model %>% 
+  # select('model','bias') %>% 
+  #   filter(model=='metaRL' | model=='biased' ) %>% 
+  # reshape2::melt(id.vars='model', value.name = 'unscaled.vals')  %>%
+  #   group_by(model) %>% 
+  #   summarise('mean'=mean(unscaled.vals), 'median'=median(unscaled.vals)) %>% 
+  #   ggplot(aes(y=unscaled.vals, group=model, fill=model))+
+  #   geom_boxplot()
   
   
 ```
@@ -1356,39 +1356,39 @@ molt.param.out %>%
 
 ```{r bias parameter in metaRL model}
 #Differences in RL use in s3 and s6
-simsRL_LTMpipe$data %>%
-  select(strtg3,strtg6) %>%
-  melt() %>%
-  ggplot(aes(x=value,group=variable, fill=variable)) +
-  geom_histogram() +
-  theme_pubclean() +
+# simsRL_LTMpipe$data %>%
+#   select(strtg3,strtg6) %>%
+#   melt() %>%
+#   ggplot(aes(x=value,group=variable, fill=variable)) +
+#   geom_histogram() +
+#   theme_pubclean() 
   
-
-simsRL_LTMpipe$data %>%
-  select(strtg3,strtg6) %>%
-  melt() %>%
-  lm(value ~ variable, data = .) %>% summary()
-
-str_temp = simsRL_LTMpipe$data %>%
-  select(strtg3,strtg6)
-wilcox.test(str_temp$strtg3,str_temp$strtg6)
-t.test(str_temp$strtg3,str_temp$strtg6)
-
-
-sortbys3 = simsRL_LTMpipe$data %>%
-  select(alpha) %>% 
-  scale(center = F) %>% 
-  order()
-
-simsRL_LTMpipe$data %>%
-  select(strtg3, alpha, bll, egs, ans, imag) %>%   #strtg6,
-#  melt()  %>%
-  scale(center = F) %>% data.frame() %$% 
-  order(strtg3) %>% 
-  ggplot(aes(strtg6,x=factor(imag) )) +
-  geom_boxplot() +
-  #geom_smooth(method = 'lm')
-  theme_pubclean()
+# 
+# simsRL_LTMpipe$data %>%
+#   select(strtg3,strtg6) %>%
+#   melt() %>%
+#   lm(value ~ variable, data = .) %>% summary()
+# 
+# str_temp = simsRL_LTMpipe$data %>%
+#   select(strtg3,strtg6)
+# wilcox.test(str_temp$strtg3,str_temp$strtg6)
+# t.test(str_temp$strtg3,str_temp$strtg6)
+# 
+# 
+# sortbys3 = simsRL_LTMpipe$data %>%
+#   select(alpha) %>% 
+#   scale(center = F) %>% 
+#   order()
+# 
+# simsRL_LTMpipe$data %>%
+#   select(strtg3, alpha, bll, egs, ans, imag) %>%   #strtg6,
+# #  melt()  %>%
+#   scale(center = F) %>% data.frame() %$% 
+#   order(strtg3) %>% 
+#   ggplot(aes(strtg6,x=factor(imag) )) +
+#   geom_boxplot() +
+#   #geom_smooth(method = 'lm')
+#   theme_pubclean()
 
 ###### Sort plots 
 simsRL_LTMpipe$data %>% 
@@ -1414,8 +1414,7 @@ simsRL_LTMpipe$data %>%
   facet_wrap(vars(parameter))
   
 ```
-
-
+<!-- 
 
 
 ```{r parameters:biased model}
@@ -1506,7 +1505,7 @@ p.behav.model  %>%
   geom_errorbar( aes(y=value, ymin=value-se, ymax=value+se), position = position_dodge(width = .75))
 
 ```
-<!-- 
+
 Some specific plans are to estimate the three LTM parameters for all 83 participants and see if they are related to WM, PSS measures. Also, how are the parameters related to the "separation" between s3 and s6? 
 
 Some more specific things to test might be effect of delay between stimulus presentations. 
@@ -1712,7 +1711,8 @@ Chantel's request: combine language and programming measures and compare groups.
 ```
 
 
--->
+--> 
+
 ## Individual plots:
 
 ```{r show individual plots RL, fig.width=6, fig.height=4}

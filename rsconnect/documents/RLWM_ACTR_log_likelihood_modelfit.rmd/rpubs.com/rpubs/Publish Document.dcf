@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/750058/294c3997453341718d36e89fa0d777cd
+bundleId: https://api.rpubs.com/api/v1/document/750058/294c3997453341718d36e89fa0d777cd
+url: http://rpubs.com/theodros_h/750058
+when: 1620097649.41883
