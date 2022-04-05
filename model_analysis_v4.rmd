@@ -1505,6 +1505,7 @@ p.behav.model  %>%
   geom_errorbar( aes(y=value, ymin=value-se, ymax=value+se), position = position_dodge(width = .75))
 
 ```
+--> 
 
 Some specific plans are to estimate the three LTM parameters for all 83 participants and see if they are related to WM, PSS measures. Also, how are the parameters related to the "separation" between s3 and s6? 
 
@@ -1711,7 +1712,7 @@ Chantel's request: combine language and programming measures and compare groups.
 ```
 
 
---> 
+
 
 ## Individual plots:
 

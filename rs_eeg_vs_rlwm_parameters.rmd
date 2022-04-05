@@ -1,0 +1,106 @@
+---
+title: "RSeeg vs RLWM paramters"
+author: "Theodros H."
+date: "01/2022"
+output:
+  html_document:
+    code_folding: hide
+    toc: no
+editor_options:
+  chunk_output_type: console
+---
+
+```{r, warning=F,message = FALSE }
+library(tidyverse)
+library(ggpubr)
+library(gradDescent)
+library(GGally)
+knitr::opts_chunk$set(
+  comment = "#>", echo = FALSE, warning = FALSE, 
+  message = FALSE 
+ 
+)
+theme_set(theme_pubclean(base_size = 12)) 
+
+```
+
+
+```{r data}
+EEG.dat <- read_csv('./RLWM_data/EEG_data_UClimb_and_REALM.csv')
+RMSE.fit <- read_csv('model_fit_by_RMSE_012022.csv')
+```
+
+
+```{r join data}
+RMSE.EEG.dat <- RMSE.fit %>% 
+  select(subjects, bll,model) %>% 
+  filter(subjects>=15000, model!='RL') %>% 
+  inner_join(EEG.dat, by='subjects')
+
+```
+
+```{r correlation beta}
+
+beta.data <- RMSE.EEG.dat %>% 
+  select(contains('upper'), -Age, bll, subjects, model) %>% 
+ pivot_longer(cols = contains('upper'), names_to = 'e_type',values_to = 'value') %>% 
+  separate(col=e_type, into = c('electrode','band','study'), remove = T) %>% 
+na.omit() 
+scaled.vals.temp <- beta.data %>% select(value) %>% minmaxScaling() %>% as.data.frame()
+scaled.bll.temp <- beta.data %>% select(bll) %>% minmaxScaling() %>% as.data.frame()
+beta.data$scaled_vals <- scaled.vals.temp$value
+beta.data$scaled_bll <- scaled.bll.temp$bll
+  
+
+  
+  beta.data %>% 
+    ggplot(aes(scaled_bll,scaled_vals, color=electrode)) +
+    geom_point() +
+    geom_smooth(method = 'lm')+
+    facet_wrap(vars(electrode)) +
+    ylim(0,.6)+
+    # scale_color_brewer(palette = "Set1") +
+ theme_pubclean(base_size = 20)
+
+ 
+
+```
+
+```{r corrs of parameters}
+#RMSE.fit %>% 
+ # filter(model!='RL') 
+  #pivot_longer(cols = c(-subjects, -model), values_to = 'value', names_to = 'parameter') %>% 
+  #filter(parameter!='egs') %>% 
+  #filter(parameter!='alpha') %>% 
+  #filter(parameter!='bias') %>% 
+RMSE.fit %>% 
+  filter(model!='RL') %>%
+  select(imag,bll,ans) %>% 
+  ggpairs()
+  
+RMSE.fit %>% 
+  filter(model!='RL') %>%
+  select(imag,bll,ans) %>% 
+  cor(method = 'spearman') %>% 
+  kableExtra::kable(caption = 'Spearman')
+
+RMSE.fit %>% 
+  filter(model!='RL') %>%
+  select(imag,bll,ans) %>% 
+  cor(method = 'pearson') %>% 
+  kableExtra::kable(caption = 'Pearson')
+
+```
+
+It seems like only one of them seems to be correlated! Imaginal activation and activation noise. 
+```{r}
+cor.test(RMSE.fit$imag,RMSE.fit$ans)
+RMSE.fit %>% 
+  filter(model!='RL') %>%
+  select(imag,bll,ans) %>% 
+  ggplot(aes(ans,imag)) +
+  geom_point()+
+  geom_smooth(method = 'lm')
+```
+
+

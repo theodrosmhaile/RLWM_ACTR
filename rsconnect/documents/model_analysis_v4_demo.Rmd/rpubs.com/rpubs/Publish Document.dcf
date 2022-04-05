@@ -1,0 +1,11 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/866116/a72fb92aaa1141c6a0d731b79d0d9106
+bundleId: https://api.rpubs.com/api/v1/document/866116/a72fb92aaa1141c6a0d731b79d0d9106
+url: http://rpubs.com/theodros_h/866116
+when: 1644948554.19876
+lastSyncTime: 1644948554.19878
