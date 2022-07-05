@@ -21,7 +21,7 @@ p {
 
 ```{r set up, echo=FALSE, warning=FALSE, message=FALSE}
 rm(list = ls())
-library(MASS)
+#library(MASS)
 library(ggpubr)
 library(matlab)
 library(broom)
@@ -55,6 +55,7 @@ theme_set(theme_pubclean(base_size = 12))
 subjects = read.csv("./RLWM_data/wmo_subjects_across_studies_031820.csv", header = F)
 colnames(subjects)='subjects'
 sdat = fread('./RLWM_data/all_subject_n83_learn_test_data.csv', header = T) %>% t()
+
 
 
 
@@ -178,7 +179,7 @@ if(0){
   RL_LTMstr.sim.std[RL_LTMstr.sim.std <1e-10] <- 1e-10
   
   
-  #zscore and log-likelihood fun
+  #z-score and log-likelihood fun
   
   log.likelihood  <- function(subj, means, st.dev) {
     ret.sum=c()
@@ -518,6 +519,15 @@ geom_jitter(height = 0,width = 0.2, alpha=.3) +
  
 ```
 
+```{r model type membership by method}
+comp.fits %>% 
+  select(subjects, contains('model.'), -model.id) %>% 
+  mutate(comparison= model.x==model.y) %>% 
+  select(comparison) %>% unlist() %>%
+  mean(na.rm=T)
+```
+It seems like only 34% of participants fit the same model as the RMSE method 
+
 ```{r t-test}
 sq.rmse %>% 
   select(-subjects) %>% 
@@ -830,6 +840,19 @@ pairwise.t.test(diffs3s6,model, p.adjust.method = 'bonferroni', exact=FALSE) %>%
 
 ```{r parameter spread}
 
+p.behav.model %>% 
+  #filt
+  select('alpha','egs','bll','imag','ans','strtg') %>% 
+  mutate('learning.rate'=alpha,
+         'RL.noise'=egs, 
+         'LTM.decay'=bll,
+         'attention.WM' =imag,
+         'LTM.noise'=ans,
+         'bias'=strtg,.keep='none' ) %>% GGally::ggpairs() +
+  theme_bw()
+
+
+
 param.spread <- 
   p.behav.model %>% 
   select('alpha','egs','bll','imag','ans','strtg') %>% 
@@ -866,6 +889,132 @@ param.spread <-
     kable(caption='mean and medians of parameter values')
   
 
+```
+
+```{r were the same parameters estimated for both methods?}
+comp.fit.params.scaled = merge(rmse.fit %>% 
+                           select(-contains('s3'), -contains('s6'), -subjects, -model) %>% 
+                      scale() %>% 
+                    cbind( subjects = rmse.fit$subjects), 
+                  p.behav.model %>% 
+                    select("bll","alpha","egs","imag","ans",strtg) %>% 
+                    scale() %>% 
+                    cbind( subjects = p.behav.model$subjects),
+                  by=c('subjects'))
+
+comp.fit.params = merge(rmse.fit %>% 
+                           select(-contains('s3'), -contains('s6'),-model), 
+                  p.behav.model %>% 
+                    select(subjects,"bll","alpha","egs","imag","ans",strtg),
+                  by=c('subjects'))
+
+comp.fit.params %>% select(strtg) %>% summarise(mean=mean(strtg,na.rm=T),
+                                                sd= sd(strtg,na.rm=T))
+
+param_diffs <- comp.fit.params %>%
+  mutate(bias.x=bias, bias.y=strtg, .keep='unused') %>% 
+ pivot_longer(cols = c(-subjects), names_to = 'parameter', values_to = 'value') %>% 
+  separate(parameter, into = c('parameter', 'fit_method'), remove = T) %>% 
+  mutate(fit_method = ifelse(fit_method=="x",'RMSE',"LL"),.keep='unused') %>% 
+  pivot_wider(names_from = fit_method, values_from = value ) %>% 
+  mutate(param_diff = RMSE-LL) 
+
+param_diffs %>% 
+  group_by(parameter) %>% 
+  summarise(mean = mean(param_diff, na.rm = T), 
+           identical=mean(param_diff==0, na.rm=T) )
+  
+
+param_diffs %>% 
+  ggplot(aes(x=param_diff)) +
+  geom_histogram() +
+  facet_wrap(vars(parameter))
+ 
+
+
+param_diffs.scaled <- comp.fit.params.scaled %>%
+  mutate(bias.x=bias, bias.y=strtg, .keep='unused') %>% 
+ pivot_longer(cols = c(-subjects), names_to = 'parameter', values_to = 'value') %>% 
+  separate(parameter, into = c('parameter', 'fit_method'), remove = T) %>% 
+  mutate(fit_method = ifelse(fit_method=="x",'RMSE',"LL"),.keep='unused') %>% 
+  pivot_wider(names_from = fit_method, values_from = value ) %>% 
+  mutate(param_diff = RMSE-LL) 
+
+
+
+param_diffs.scaled %>%  
+ggplot(aes(x =factor(subjects), y = param_diff)) +
+  geom_bar(stat = "identity",
+           show.legend = FALSE) +
+  xlab("subjects") +
+  ylab("differences in parameter values") +
+  coord_flip() + 
+  #scale_y_continuous(breaks= seq(-2, 2, by = 1),
+   #                             limits = c(min(df$value) - 0.5,
+    #                                       max(df$value) + 0.5)) +
+  facet_wrap(vars(parameter)) +
+  theme_pubclean()
+
+comp.fit.params.scaled %>%
+  mutate(bias.x=bias, bias.y=strtg, .keep='unused') %>% 
+ pivot_longer(cols = c(-subjects,-contains('model')), names_to = 'parameter', values_to = 'value') %>% 
+  separate(parameter, into = c('parameter', 'fit_method'), remove = T) %>% 
+  mutate(fit_method = ifelse(fit_method=="x",'RMSE',"LL"),.keep='unused') %>% 
+  filter(parameter=='bll'| parameter=='imag' | parameter == 'ans') %>% 
+  ggplot(aes(x=value,fill=fit_method)) +
+  geom_density(aes(alpha=.4))+
+  facet_wrap(vars(parameter))
+
+#bll_difs_plot <- 
+  
+   #filter(subjects=='6205') %>% 
+ 
+    plot_diffs <- function(param) {
+      param.diffs.long <- param_diffs %>% 
+    pivot_longer(cols = c(-subjects,-parameter, -param_diff), values_to = 'value', names_to = 'model_fitting') 
+      
+   param.diffs.long %>% 
+        filter(parameter==param) %>%     
+        na.omit() %>% 
+         dplyr::mutate('scaled_diffs' = minmaxScaling(param.diffs.long %>%
+                                               filter(parameter==param) %>%
+                                               na.omit() %>%
+                                               select(param_diff))$scaledDataSet
+                ) %>%
+#filter(subjects<6300) %>%
+        ggplot(aes(y =  reorder(factor(subjects),param_diff, order = T),
+             x=value,
+             group= reorder(factor(subjects),param_diff, order = T),#factor(subjects),
+             #color=factor(model_fitting)
+             )
+         ) +
+  geom_line( aes(color=param_diff), size=2  ) + #
+scale_color_continuous(low='#2b83ba',
+                           high = '#d7191c') +
+  geom_point(aes(color=param_diff,shape=model_fitting), size=3) +
+    scale_fill_brewer(palette = 'Set1')+
+     ylab('Subjects') +
+     ggtitle(param) +
+  theme(legend.position='none')
+        
+        
+    }
+    
+  
+ ggarrange(plot_diffs('bll'),
+                    plot_diffs('ans'),
+                    plot_diffs('imag'),plot_diffs('alpha'),
+           plot_diffs('egs'),
+                    ncol = 5 )
+  
+#title = c('bll','ans','imag','alpha','egs')   
+
+#   
+# param_diffs %>% filter(parameter=='bll') %>% na.omit() %>% select(param_diff)
+# what percentage was declarative?
+ p.behav.model %>% filter(model=='biased') %>% select('strtg') %>% mean
+#across participants the average rl use was around 57.4 percent. 
+ 
 ```
 
 
