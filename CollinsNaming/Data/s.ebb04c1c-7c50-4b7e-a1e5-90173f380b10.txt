@@ -1,0 +1,28 @@
+version: 3.0.0
+server-time: 2020-06-03-08-37
+user_agent: mozilla/5.0 (macintosh; intel mac os x 10_15_4) applewebkit/605.1.15 (khtml, like gecko) version/13.1 safari/605.1.15
+screen_width: 834
+screen_height: 1194
+html_width: 834
+html_height: 2782
+user_time: Wed, 03 Jun 2020 06:37:47 GMT
+T: 5169
+l: Intromessage
+stime: 2020-06-03-08-37
+T: 1337
+t: info
+l: initials
+stime: 2020-06-03-08-37
+T: 8289
+t: textline
+a: YYZ
+l: birthdate
+stime: 2020-06-03-08-38
+T: 8893
+t: textline
+a: 09/05/2000
+l: age
+stime: 2020-06-03-08-38
+T: 2858
+t: textline
+a: 19

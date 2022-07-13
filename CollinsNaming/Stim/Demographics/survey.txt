@@ -1,0 +1,143 @@
+l: Intromessage
+t: info
+q: Hello,<br>
+Thank you for participating in this experiment. Please make sure you are in a quiet place where you will not be disturbed for the duration of this experiment. <b> To receive credit for participating in this experiment you must complete the entire questionnaire and email the code at the end to ccdlinfo@uw.edu. Include "NAMING" in the subject line of the email.</b>
+
+l: initials
+t: textline
+q: Please enter your initials
+- {require}
+
+l: birthdate
+t: textline
+q: What is your birthdate?
+<ul>
+<li>Enter date in this format:
+<li>MM/DD/YYYY
+</ul>
+- {require}
+
+l: age
+t: textline
+q: How old are you?
+- {min=18,max=100}{require} 
+
+l: sex
+t: radio
+q: What is your biological sex?
+- Male
+- Female
+- Other
+- Prefer Not To Answer
+
+l: gender
+t: radio
+q: What gender do you identify with?
+- Male
+- Female
+- Other
+- Prefer Not To Answer
+
+l: ethnicity
+t: radio
+q: What is your ethnicity?
+- Hispanic or Latino
+- Not Hispanic or Latino
+- Prefer Not To Answer
+
+l: race
+t: radio
+q: What is your race?
+- American Indian/ Alaska Native
+- Asian
+- Black / African American
+- Native Hawaiian / Other Pacific Islander
+- White
+- MultiRacial
+- Other
+- Prefer Not to Answer
+
+l: education
+t: radio
+q: How many years of school have you <b>completed</b>?
+- 12 (Completed Highschool)
+- 13 (College Freshman)
+- 14 (College Sophmore)
+- 15 (College Junior)
+- 16 (Completed College)
+- 17
+- 18 (Completed Masters)
+- 19
+- 20
+- 21
+- 22 (Completed PhD)
+- 22+
+
+l: handedness
+t: radio
+q: What is your preferred hand?
+- Left
+- Right
+- No Preference
+
+l: nativeenglish
+t: radio
+q: Do you speak <b>English</b> natively?
+- Yes
+- No
+
+l: secondlang
+t: radio
+q: Do you have a <b>second</b> native language?
+- Yes
+- No
+
+l: jump1
+t: jump
+- if $secondlang == 2 then goto LangClassification
+
+l: whatseclang
+t: textline
+q: What is your <b>second</b> native language?
+- {require} Second Language: 
+
+l: LangClassification
+t: radio
+q: We would like you to decide how to best classify your language abilities. Read the explanation of each language classification below and choose which best represents your language abilities.
+<ul>
+<li><i>Monolingual</i>: Highly proficient in speaking and understanding in <b>only one</b> language with no other language exposure <b>before 10 years old</b>.                                                                                                       
+<li><i>Early Bilingual</i>: Highly proficient in speaking and understanding in <b>two or more</b> languages with exposure to both at <b><font color='red'>7 years old or earlier</font></b>.                                                         
+<li><i>Late Bilingual</i>: Highly proficient in speaking and understanding in <b>two or more</b> languages with exposure to both <b><font color='red'>after 7</font> years old</b>.
+</ul>
+- Monolingual
+- Early Bilingual
+- Late Bilingual
+- None of the above
+
+l: colorblind
+t: radio
+q: Are you colorblind?
+- Yes
+- No
+
+l: jump2
+t: jump
+- if $colorblind == 2 then goto outromessage
+
+l: whatcolorblind
+t: radio
+q: What spectrum of colorblindness?
+- Green (Deuteran)
+- Red (Protan)
+- Blue (Tritan)
+- Other
+
+l: outromessage
+t: info
+q: Thank you!<br>
+You have now finished the Demographics Questionnaire. You will now perform the Picture Naming task. Press the button below to proceed.
+
+l: CollinsNaming
+t: experiment
+- CollinsNaming_V2
+

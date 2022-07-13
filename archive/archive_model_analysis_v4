@@ -1,0 +1,61 @@
+
+```{r parameters:biased model}
+
+
+melted.p.behav.model %>%
+  filter(model=='biased' | model=='metaRL') %>%
+  filter(setSize=='s3')%>%
+  filter(type== 'behav') %>%
+  filter(iteration==12) %>% 
+  summarySE(groupvars =c('model',"type") , measurevar = "bias") %>%
+  ggplot(aes(x=model,y=bias, group=model,fill=model)) +
+  geom_bar(stat = 'identity') +
+  geom_errorbar(aes(ymin=bias-se, ymax=bias+se)) 
+
+melted.p.behav.model %>%
+  filter(model=='metaRL' ) %>%
+  filter(setSize=='s3')%>%
+  filter(type== 'behav') %>%
+  filter(iteration==12) %>% View
+  ggplot(aes(x=bias, group=model,fill=model)) +
+  geom_histogram()
+
+
+melted.p.behav.model %>%
+  filter(model=='biased') %>%
+  filter(iteration==13)%>%
+  filter(type== 'behav') %>%
+  summarySE(groupvars =c("bias","type", "setSize") , measurevar = "accuracy") %>%
+  ggplot(aes(as.factor(bias), accuracy, group=setSize,color=setSize)) +
+  geom_point() +
+  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se))
+
+
+melted.p.behav.model %>%
+  filter(model=='biased' | model=='metaRL', iteration==12, type== 'behav') %>%
+  select(subjects, model,bias, alpha, egs)%>%
+  merge(s3s6Diff %>%
+          filter(model=='biased' | model=='metaRL') %>%
+          select(subjects,learnDiff), by='subjects') %>%
+ lm(learnDiff ~  egs + alpha, data=.)%>%
+  #plot(which=4)
+ summary()
+
+ggplot(aes(bias,learnDiff)) +
+  geom_point(alpha=.4, size=2) +
+  geom_smooth()
+
+ data.frame(
+  'bias'  =  RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],54] %>%  unlist() %>% as.numeric(),
+  'bias3' =  RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],55] %>%  unlist() %>% as.numeric(),
+  'bias6' =  RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],56] %>%  unlist() %>% as.numeric()
+  ) %>% 
+     melt() %>% 
+     summarySE(groupvars = 'variable', measurevar = 'value' ) %>% 
+   ggplot(aes(y=value,x=variable, fill=variable)) +
+   geom_bar(stat = 'identity') + 
+   geom_errorbar(aes(ymin=value-se, ymax=value+se))
+   
+    
+
+```

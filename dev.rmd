@@ -1,0 +1,77 @@
+
+```{r}
+h=bind_rows(c('set3_learn','set6_learn') %>% 
+  map(~ simsRL$data %>% 
+        .[[.x]] %>% 
+        reduce(rbind) %>% 
+        data.frame() %>% 
+        mutate(condition =.x)
+        
+  ) %>% 
+  reduce(bind_rows) %>% 
+  pivot_longer(cols = starts_with('x')),
+
+
+
+c('set3_test', 'set6_test') %>% 
+
+map (~ {temp <- simsRL$data %>% 
+  .[[.x]]
+
+data.frame(
+  condition=.x, 
+  name=paste0('x', rep(c(1:12), 25)), 
+  value=rep(temp, 12)
+)
+  
+  }
+))
+```
+
+
+```{r}
+
+
+map( ~ {
+  tmp_list = read.csv(.x)
+  
+  
+  
+  
+  
+  bind_rows(c('set3_learn','set6_learn') %>% 
+              map(~ tmp_list$data %>% 
+                    .[[.x]] %>% 
+                    reduce(rbind) %>% 
+                    data.frame() %>% 
+                    mutate(condition =.x)
+                  
+              ) %>% 
+              reduce(bind_rows) %>% 
+              pivot_longer(cols = starts_with('x')),
+            
+            
+            
+            c('set3_test', 'set6_test') %>% 
+              
+              map (~ {temp <- tmp_list$data %>% 
+                .[[.x]]
+              
+              data.frame(
+                condition=.x, 
+                name=paste0('x', rep(c(1:12), 25)), 
+                value=rep(temp, 12)
+              )
+              
+              }
+              )
+            )%>%
+    mutate(data = .x)  
+    
+}
+) %>% 
+  reduce(bind_rows)
+
+
+```
+

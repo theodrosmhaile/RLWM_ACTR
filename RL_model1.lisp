@@ -2,7 +2,7 @@
 ;; Model 1
 ;;------------------------------------
 ;;
-;; This is a 'pure' reinforcement learning model of the RLWM task (COllins, 2018). This model has only two parameters: alpha(learning 
+;; This is a 'pure' reinforcement learning model of the RLWM task (COllins, 2018). This model has only two parameters: alpha(learning
 ;;rate) and temperature(softmax function)
 
 ;; Stimulus is displayed --> processed --> disapears --> a response is selected --> feedback is given --> feedback is processed
@@ -13,84 +13,84 @@
 
 ;; parameters - learning rate and temperature (expected gain s: amount of noise added to *utility*/selection), enable randomness (er)
     ;; ul: utility learning, *bll for the memory model*
-    
+
 (sgp :alpha 0.2
      :egs 0
      :er t
      :ul t
      :esc t
-     :v nil
-     ) 
-;;--------------------------------------------------------  
-;;----------------Chunk types----------------------------- 
-(chunk-type goal 
+     :v t
+     )
+;;--------------------------------------------------------
+;;----------------Chunk types-----------------------------
+(chunk-type goal
             fproc) ;; fproc= feedback processed
-    
+
 (chunk-type stimulus
             picture)
-    
+
 (chunk-type feedback
             feedback)
-    
+
 ;;---------------------------------------
 ;; Chunks
 ;;---------------------------------------
-  
+
     ;; Stimulus chunks
-    
+
 ;; **add chunks for all images? These are added in the python interface**
 ;;(add-dm (cup-stimulus
      ;;   isa stimulus
       ;; picture cup)
        ;; )
-    
+
 ;;(add-dm (bowl-stimulus
   ;;      isa stimulus
     ;;    picture bowl)
-      ;;  ) 
-    
- 
-    ;; Goal chunk    
+      ;;  )
+
+
+    ;; Goal chunk
 (add-dm (make-response
         isa goal
         fproc yes)
         )
 
 
-    
-;;-------------------------------------------------      
+
+;;-------------------------------------------------
 ;; Productions: 1 for each image : 2 conditions (ns 6 & ns 3) * 3 response keys
-;;-------------------------------------------------      
-    
-    
-;;- visual, encode stimulus, check visual to see if its free,  make response (j, k or l)based on Q value, updates goal?. 
+;;-------------------------------------------------
+
+
+;;- visual, encode stimulus, check visual to see if its free,  make response (j, k or l)based on Q value, updates goal?.
 ;;  If never encountered, select arbitrarily
 
 ;;-------------object 1: cup-----------------------
 (p cup-j
    =visual>
-       picture cup 
+       picture cup
    ?visual>
        state free
     =goal>
    fproc yes
-   
+
    ?manual>
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger index 
+       finger index
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p cup-k
    =visual>
-       picture cup 
+       picture cup
    ?visual>
        state free
  =goal>
@@ -99,18 +99,18 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger middle 
+       finger middle
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p cup-l
    =visual>
-       picture cup 
+       picture cup
    ?visual>
        state free
   =goal>
@@ -119,40 +119,40 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
    cmd punch
        hand right
-       finger ring 
+       finger ring
    *goal>
-       fproc no    
+       fproc no
    )
-    
- ;;--------object 2: bowl--------------------------- 
+
+ ;;--------object 2: bowl---------------------------
 (p bowl-j
    =visual>
-       picture bowl 
+       picture bowl
    ?visual>
        state free
     =goal>
    fproc yes
-   
+
    ?manual>
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger index 
+       finger index
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p bowl-k
    =visual>
-       picture bowl 
+       picture bowl
    ?visual>
        state free
  =goal>
@@ -161,18 +161,18 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger middle 
+       finger middle
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p bowl-l
    =visual>
-       picture bowl 
+       picture bowl
    ?visual>
        state free
   =goal>
@@ -181,42 +181,42 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
    cmd punch
        hand right
-       finger ring 
+       finger ring
    *goal>
-       fproc no    
+       fproc no
    )
-    
-    
-    
-;;---------object 3: plate-------------------------- 
+
+
+
+;;---------object 3: plate--------------------------
 (p plate-j
    =visual>
-       picture plate 
+       picture plate
    ?visual>
        state free
     =goal>
    fproc yes
-   
+
    ?manual>
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger index 
+       finger index
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p plate-k
    =visual>
-       picture plate 
+       picture plate
    ?visual>
        state free
  =goal>
@@ -225,18 +225,18 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger middle 
+       finger middle
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p plate-l
    =visual>
-       picture plate 
+       picture plate
    ?visual>
        state free
   =goal>
@@ -245,39 +245,39 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
    cmd punch
        hand right
-       finger ring 
+       finger ring
    *goal>
-       fproc no    
+       fproc no
    )
 ;;--------------- object 4: hat------------------
 (p hat-j
    =visual>
-       picture hat 
+       picture hat
    ?visual>
        state free
     =goal>
    fproc yes
-   
+
    ?manual>
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger index 
+       finger index
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p hat-k
    =visual>
-       picture hat 
+       picture hat
    ?visual>
        state free
  =goal>
@@ -286,18 +286,18 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger middle 
+       finger middle
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p hat-l
    =visual>
-       picture hat 
+       picture hat
    ?visual>
        state free
   =goal>
@@ -306,40 +306,40 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
    cmd punch
        hand right
-       finger ring 
+       finger ring
    *goal>
-       fproc no    
+       fproc no
    )
 ;;--------------object 5: gloves------------------
 
 (p gloves-j
    =visual>
-       picture gloves 
+       picture gloves
    ?visual>
        state free
     =goal>
    fproc yes
-   
+
    ?manual>
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger index 
+       finger index
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p gloves-k
    =visual>
-       picture gloves 
+       picture gloves
    ?visual>
        state free
  =goal>
@@ -348,18 +348,18 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger middle 
+       finger middle
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p gloves-l
    =visual>
-       picture gloves 
+       picture gloves
    ?visual>
        state free
   =goal>
@@ -368,39 +368,39 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
    cmd punch
        hand right
-       finger ring 
+       finger ring
    *goal>
-       fproc no    
+       fproc no
    )
  ;;--------------- object 6: shoes-----------------------
 (p shoes-j
    =visual>
-       picture shoes 
+       picture shoes
    ?visual>
        state free
     =goal>
    fproc yes
-   
+
    ?manual>
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger index 
+       finger index
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p shoes-k
    =visual>
-       picture shoes 
+       picture shoes
    ?visual>
        state free
  =goal>
@@ -409,18 +409,18 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger middle 
+       finger middle
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p shoes-l
    =visual>
-       picture shoes 
+       picture shoes
    ?visual>
        state free
   =goal>
@@ -429,40 +429,40 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
    cmd punch
        hand right
-       finger ring 
+       finger ring
    *goal>
-       fproc no    
+       fproc no
    )
-    
+
 ;;--------------- object 7: shirt ------------------------
 (p shirt-j
    =visual>
-       picture shirt 
+       picture shirt
    ?visual>
        state free
     =goal>
    fproc yes
-   
+
    ?manual>
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger index 
+       finger index
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p shirt-k
    =visual>
-       picture shirt 
+       picture shirt
    ?visual>
        state free
  =goal>
@@ -471,18 +471,18 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger middle 
+       finger middle
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p shirt-l
    =visual>
-       picture shirt 
+       picture shirt
    ?visual>
        state free
   =goal>
@@ -491,41 +491,41 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
    cmd punch
        hand right
-       finger ring 
+       finger ring
    *goal>
-       fproc no    
+       fproc no
    )
-    
-;;--------------- object 8: jacket ------------------------    
-    
+
+;;--------------- object 8: jacket ------------------------
+
 (p jacket-j
    =visual>
-       picture jacket 
+       picture jacket
    ?visual>
        state free
     =goal>
    fproc yes
-   
+
    ?manual>
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger index 
+       finger index
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p jacket-k
    =visual>
-       picture jacket 
+       picture jacket
    ?visual>
        state free
  =goal>
@@ -534,18 +534,18 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger middle 
+       finger middle
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p jacket-l
    =visual>
-       picture jacket 
+       picture jacket
    ?visual>
        state free
   =goal>
@@ -554,41 +554,41 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
    cmd punch
        hand right
-       finger ring 
+       finger ring
    *goal>
-       fproc no    
-   )   
-    
-;;--------------- object 9: jeans ------------------------ 
+       fproc no
+   )
+
+;;--------------- object 9: jeans ------------------------
 
 (p jeans-j
    =visual>
-       picture jeans 
+       picture jeans
    ?visual>
        state free
     =goal>
    fproc yes
-   
+
    ?manual>
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger index 
+       finger index
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p jeans-k
    =visual>
-       picture jeans 
+       picture jeans
    ?visual>
        state free
  =goal>
@@ -597,18 +597,18 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
        cmd punch
        hand right
-       finger middle 
+       finger middle
    *goal>
-       fproc no    
+       fproc no
    )
 
 (p jeans-l
    =visual>
-       picture jeans 
+       picture jeans
    ?visual>
        state free
   =goal>
@@ -617,20 +617,20 @@
    preparation free
      processor free
      execution free
-   ==> 
+   ==>
    +manual>
    cmd punch
        hand right
-       finger ring 
+       finger ring
    *goal>
-       fproc no    
+       fproc no
    )
-    
-    
-;;--------------------------------------------------------    
+
+
+;;--------------------------------------------------------
 ;; Productions: processing feedback
-;;--------------------------------------------------------    
-    
+;;--------------------------------------------------------
+
 (p parse-feedback-yes
    =visual>
        feedback yes
@@ -642,7 +642,7 @@
    *goal>
        fproc yes
    )
-    
+
  (p parse-feedback-no
    =visual>
        feedback no
@@ -654,13 +654,13 @@
    *goal>
        fproc yes
    )
-      
+
 (goal-focus
  make-response)
- 
+
  (spp parse-feedback-yes :reward +1)
  (spp parse-feedback-no :reward -1)
-;;(set-buffer-chunk 'visual 'cup-stimulus)    
-    
-    
+;;(set-buffer-chunk 'visual 'cup-stimulus)
+
+
     )

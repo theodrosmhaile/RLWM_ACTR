@@ -1,0 +1,18 @@
+version: 3.0.0
+server-time: 2020-06-03-21-44
+user_agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/83.0.4103.61 safari/537.36
+screen_width: 1280
+screen_height: 720
+html_width: 1263
+html_height: 2511
+user_time: Wed, 03 Jun 2020 19:44:50 GMT
+T: 8692
+l: Intromessage
+stime: 2020-06-03-21-45
+T: 16474
+t: info
+l: initials
+stime: 2020-06-03-21-45
+T: 12526
+t: textline
+a: SP

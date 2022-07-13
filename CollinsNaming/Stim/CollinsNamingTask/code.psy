@@ -1,0 +1,267 @@
+fonts
+  arial 24
+
+bitmaps
+  fixation
+  correct
+  incorrect
+  ready1
+  ready2
+  ready3
+  inst1
+  inst2
+  inst3
+  ready
+end
+G10_Camel	G10_Camel.bmp
+G10_Cat	        G10_Cat.bmp
+G10_Cow	        G10_Cow.bmp
+G10_Elephant	G10_Elephant.bmp
+G10_Gorilla	G10_Gorilla.bmp
+G10_Tiger	G10_Tiger.bmp
+G11_Drums	G11_Drums.bmp
+G11_Guitar	G11_Guitar.bmp
+G11_Harp	G11_Harp.bmp
+G11_Piano	G11_Piano.bmp
+G11_Trumpet	G11_Trumpet.bmp
+G11_Violin	G11_Violin.bmp
+G12_Airplane	G12_Airplane.bmp
+G12_Bicycle	G12_Bicycle.bmp
+G12_Boat	G12_Boat.bmp
+G12_Car	        G12_Car.bmp
+G12_Motorcycle	G12_Motorcycle.bmp
+G12_Train	G12_Train.bmp
+G13_Apple	G13_Apple.bmp
+G13_Cherry	G13_Cherry.bmp
+G13_Grapes	G13_Grapes.bmp
+G13_Orange	G13_Orange.bmp
+G13_Pineapple	G13_Pineapple.bmp
+G13_Strawberry	G13_Strawberry.bmp
+G14_Desert	G14_Desert.bmp
+G14_Flowers	G14_Flowers.bmp
+G14_Forest	G14_Forest.bmp
+G14_Meadow	G14_Meadow.bmp
+G14_Mountain	G14_Mountain.bmp
+G14_Ocean	G14_Ocean.bmp
+G15_Gloves	G15_Gloves.bmp
+G15_Hat	        G15_Hat.bmp
+G15_Jacket	G15_Jacket.bmp
+G15_Jeans	G15_Jeans.bmp
+G15_Shirt	G15_Shirt.bmp
+G15_Shoes	G15_Shoes.bmp
+G17_Bathroom	G17_Bathroom.bmp
+G17_Bedroom	G17_Bedroom.bmp
+G17_Kitchen	G17_Kitchen.bmp
+G17_Laundry	G17_Laundry.bmp
+G17_Living	G17_Living.bmp
+G17_Porch	G17_Porch.bmp
+G18_Cactus	G18_Cactus.bmp
+G18_Flower	G18_Flower.bmp
+G18_Grass	G18_Grass.bmp
+G18_Mushroom	G18_Mushroom.bmp
+G18_Palm	G18_Palm.bmp
+G18_Tree	G18_Tree.bmp
+G2_Cabbage	G2_Cabbage.bmp
+G2_Carrots	G2_Carrots.bmp
+G2_GBeans	G2_GBeans.bmp
+G2_Onions	G2_Onions.bmp
+G2_Potatoes	G2_Potatoes.bmp
+G2_Pumpkin	G2_Pumpkin.bmp
+G3_Bowl	        G3_Bowl.bmp
+G3_Chopsticks	G3_Chopsticks.bmp
+G3_Cup	        G3_Cup.bmp
+G3_Glass	G3_Glass.bmp
+G3_Knife	G3_Knife.bmp
+G3_Plate	G3_Plate.bmp
+G5_Circle	G5_Circle.bmp
+G5_Diamond	G5_Diamond.bmp
+G5_Heart	G5_Heart.bmp
+G5_Plus	        G5_Plus.bmp
+G5_Square	G5_Square.bmp
+G5_Triangle	G5_Triangle.bmp
+G6_Blue	        G6_Blue.bmp
+G6_Brown	G6_Brown.bmp
+G6_Green	G6_Green.bmp
+G6_Purple	G6_Purple.bmp
+G6_Red	        G6_Red.bmp
+G6_Yellow	G6_Yellow.bmp
+G7_Diving	G7_Diving.bmp
+G7_Hurdles	G7_Hurdles.bmp
+G7_Karate	G7_Karate.bmp
+G7_Lifting	G7_Lifting.bmp
+G7_Skiing	G7_Skiing.bmp
+G7_Tennis	G7_Tennis.bmp
+G9_Hammer	G9_Hammer.bmp
+G9_Roller	G9_Roller.bmp
+G9_Saw	        G9_Saw.bmp
+G9_Screwdriver	G9_Screwdriver.bmp
+G9_Shovel	G9_Shovel.bmp
+G9_Wrench	G9_Wrench.bmp
+  Prac_Bee      Prac_Bee.bmp
+  Prac_Hat      Prac_Hat.bmp
+  Prac_Pyramid  Prac_Pyramid.bmp
+
+table namingpractable
+  Prac_Bee      "Insects"       "bee"
+  Prac_Hat      "Clothing"      "hat"
+  Prac_Pyramid  "Landmarks"     "pyramid"
+
+table namingtasktable
+  G10_Camel	"Animals"	"camel"
+  G10_Cat	"Animals"	"cat"
+  G10_Cow	"Animals"	"cow"
+  G10_Elephant	"Animals"	"elephant"
+  G10_Gorilla	"Animals"	"gorilla"
+  G10_Tiger	"Animals"	"tiger"
+  G11_Drums	"Instruments"	"drums"
+  G11_Guitar	"Instruments"	"guitar"
+  G11_Harp	"Instruments"	"harp"
+  G11_Piano	"Instruments"	"piano"
+  G11_Trumpet	"Instruments"	"trumpet"
+  G11_Violin	"Instruments"	"violin"
+  G12_Airplane	"Vehicles"	"airplane"
+  G12_Bicycle	"Vehicles"	"bicycle"
+  G12_Boat	"Vehicles"	"boat"
+  G12_Car	"Vehicles"	"car"
+  G12_Motorcycle	"Vehicles"	"motorcycle"
+  G12_Train	"Vehicles"	"train"
+  G13_Apple	"Fruit"	"apple"
+  G13_Cherry	"Fruit"	"cherry"
+  G13_Grapes	"Fruit"	"grapes"
+  G13_Orange	"Fruit"	"orange"
+  G13_Pineapple	"Fruit"	"pineapple"
+  G13_Strawberry	"Fruit"	"strawberry"
+  G14_Desert	"Places"	"desert"
+  G14_Flowers	"Places"	"flowers"
+  G14_Forest	"Places"	"forest"
+  G14_Meadow	"Places"	"meadow"
+  G14_Mountain	"Places"	"mountain"
+  G14_Ocean	"Places"	"ocean"
+  G15_Gloves	"Clothing"	"gloves"
+  G15_Hat	"Clothing"	"hat"
+  G15_Jacket	"Clothing"	"jacket"
+  G15_Jeans	"Clothing"	"jeans"
+  G15_Shirt	"Clothing"	"shirt"
+  G15_Shoes	"Clothing"	"shoes"
+  G17_Bathroom	"Rooms"	"bathroom"
+  G17_Bedroom	"Rooms"	"bedroom"
+  G17_Kitchen	"Rooms"	"kitchen"
+  G17_Laundry	"Rooms"	"laundry"
+  G17_Living	"Rooms"	"living"
+  G17_Porch	"Rooms"	"porch"
+  G18_Cactus	"Plants"	"cactus"
+  G18_Flower	"Plants"	"flower"
+  G18_Grass	"Plants"	"grass"
+  G18_Mushroom	"Plants"	"mushroom"
+  G18_Palm	"Plants"	"palm"
+  G18_Tree	"Plants"	"tree"
+  G2_Cabbage	"Vegetables"	"cabbage"
+  G2_Carrots	"Vegetables"	"carrots"
+  G2_GBeans	"Vegetables"	"beans"
+  G2_Onions	"Vegetables"	"onions"
+  G2_Potatoes	"Vegetables"	"potatoes"
+  G2_Pumpkin	"Vegetables"	"pumpkin"
+  G3_Bowl	"Kitchenware"	"bowl"
+  G3_Chopsticks	"Kitchenware"	"chopsticks"
+  G3_Cup	"Kitchenware"	"cup"
+  G3_Glass	"Kitchenware"	"glass"
+  G3_Knife	"Kitchenware"	"knife"
+  G3_Plate	"Kitchenware"	"plate"
+  G5_Circle	"Shapes"	"circle"
+  G5_Diamond	"Shapes"	"diamond"
+  G5_Heart	"Shapes"	"heart"
+  G5_Plus	"Shapes"	"plus"
+  G5_Square	"Shapes"	"square"
+  G5_Triangle	"Shapes"	"triangle"
+  G6_Blue	"Colors"	"blue"
+  G6_Brown	"Colors"	"brown"
+  G6_Green	"Colors"	"green"
+  G6_Purple	"Colors"	"purple"
+  G6_Red	"Colors"	"red"
+  G6_Yellow	"Colors"	"yellow"
+  G7_Diving	"Sports"	"diving"
+  G7_Hurdles	"Sports"	"hurdles"
+  G7_Karate	"Sports"	"karate"
+  G7_Lifting	"Sports"	"lifting"
+  G7_Skiing	"Sports"	"skiing"
+  G7_Tennis	"Sports"	"tennis"
+  G9_Hammer	"Tools"	"hammer"
+  G9_Roller	"Tools"	"roller"
+  G9_Saw	"Tools"	"saw"
+  G9_Screwdriver	"Tools"	"screwdriver"
+  G9_Shovel	"Tools"	"shovel"
+  G9_Wrench	"Tools"	"wrench"
+
+task namingprac
+  table namingpractable
+  keys space
+  show bitmap @1 0 -50
+  readkey @1 100000
+  save BLOCKNAME @2 @3 RT
+  show bitmap @1 0 -50
+  text color yellow
+  readkeys option size 15
+  readkeys option placeholders 30 30
+  readkeys option show -205 150
+  readkeys @3 100000
+  save BLOCKNAME @2 @3 RT WORD STATUS
+  clear screen
+  show bitmap fixation
+  readkey @1 100000
+
+task namingtask
+  table namingtasktable
+  keys space
+  show bitmap @1 0 -50
+  readkey @1 100000
+  save BLOCKNAME @2 @3 RT
+  show bitmap @1 0 -50
+  text color yellow
+  readkeys option size 15
+  readkeys option placeholders 30 30
+  readkeys option show -205 150
+  readkeys @3 100000
+  save BLOCKNAME @2 @3 RT WORD STATUS
+  clear screen
+  show bitmap fixation
+  readkey @1 10000
+
+block namingprac
+  message inst1
+  bitmap ready3
+  delay 1000
+  bitmap ready2
+  delay 1000
+  bitmap ready1
+  delay 1000
+  tasklist
+    namingprac 3 all_before_repeat
+  end
+
+block namingblock1
+  message inst2
+  bitmap ready3
+  delay 1000
+  bitmap ready2
+  delay 1000
+  bitmap ready1
+  delay 1000
+  tasklist
+    namingtask 84 all_before_repeat
+  end
+
+block namingblock2
+  message inst3
+  bitmap ready3
+  delay 1000
+  bitmap ready2
+  delay 1000
+  bitmap ready1
+  delay 1000
+  tasklist
+    namingtask 84 all_before_repeat
+  end
+
+block end
+  message end
+end

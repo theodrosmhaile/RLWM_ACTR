@@ -1,0 +1,527 @@
+---
+title: "WMO Analysis"
+author: "Theodros H."
+date: "3/6/2019"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+---
+EXCLUDED 625
+WMO Analysis
+There are 8 blocks of set size 3 trials and 6 blocks of set size 6 trials per participant for a total of 14 blocks
+```{r start up, echo=FALSE, message=FALSE, warning=FALSE}
+#
+rm(list = ls())
+library(matlab)
+library(tidyverse)
+#library(DescTools)
+```
+Import data and set variables
+```{r}
+
+#Import data
+wmodata     <- read.csv('./RLWM_data/processed/wmo_subjects_across_studies_learn_031820.csv') 
+wmotestdata <- read.csv('./RLWM_data/processed/wmo_subjects_across_studies_test_031820.csv') 
+
+
+Training.blocks <- c(3,6,3,3,6,3,6,6,3,3,6,3,6,3) #from data
+block.3 <- which(Training.blocks==3)
+block.6 <- which(Training.blocks==6)
+#logical indices
+ns3 <- wmodata$trial==39
+ns6 <- wmodata$trial==78
+#variable declaration as determined by saved data
+wmo.N.trials <- 780 
+ns3.blks <- 8 
+ns6.blks <- 6
+ns3.n <- 3
+ns6.n <- 6
+#maintain a universal list of participants
+#Subs <- unique(wmodata$subject)#this will change
+
+Subjects <- as.matrix(read.csv('./RLWM_data/wmo_subjects_across_studies_031820.csv',header = FALSE))
+```
+ 
+This block performs the learning/acuracy curve: acc by item`r ns6` iteration  
+
+#### NOTE: plot titles are: ID number / fit coefficient for set 3 / fit coefficient for set 6 
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+i=1
+mean.acc.3 <- c()
+mean.acc.6 <- c() 
+wmo.s <- c()
+Missing.p <- c()
+learningRate.3 <- c()
+learningRate.6 <- c()
+wmo.AUC.3 <- c()
+wmo.AUC.6 <- c()
+r.sq.3 <- c()
+r.sq.6 <- c()
+
+mean.acc.3.1 <- c()
+mean.acc.3.2 <- c()
+mean.acc.6.1 <- c()
+mean.acc.6.2 <- c()
+
+behav.dat.half1 <- c()
+behav.dat.half2 <- c()
+
+ns3.test.half1 <- c()
+ns6.test.half1 <- c()
+ns3.test.half2 <- c()
+ns6.test.half2 <- c()
+
+#iterate through each subject here:
+for (s in Subjects) {
+  OneSub <- wmodata$subject==s  
+    OneSub.test <- wmotestdata$subject==s  
+  if(any(OneSub)){
+    
+    #rehsape script here: this reshapes response vector in to trial x block
+    #use these to find the trials
+    temp.sort.3 <- reshape(as.matrix(wmodata$seq[OneSub & ns3]),39, ns3.blks)
+    temp.sort.6 <- reshape(as.matrix(wmodata$seq[OneSub & ns6]),78, ns6.blks)
+    #these are the actual data. 
+    temp.dat.3 <- reshape(as.matrix(wmodata$acc[OneSub & ns3]),39, ns3.blks)
+    temp.dat.6 <- reshape(as.matrix(wmodata$acc[OneSub & ns6]),78, ns6.blks)
+    #iterate through blocks here:
+    temp.cat.3 <- c()
+    temp.cat.6 <- c()
+    
+      for (n in 1:ns3.blks) {
+        #iterate through items here
+        #temp.cat.3<- cbind(temp.cat.3,reshape(as.matrix(sort(temp.sort.3[,n])),13,3)) #accumulates across blocks
+        
+        temp.cat.3<-cbind(temp.cat.3,cbind(as.matrix(temp.dat.3[temp.sort.3[,n]==1,n][1:12]),
+                                           as.matrix(temp.dat.3[temp.sort.3[,n]==2,n][1:12]),
+                                           as.matrix(temp.dat.3[temp.sort.3[,n]==3,n][1:12])
+        )
+        )
+        if(TRUE){ 
+          if (n <= ns6.blks) {
+            temp.cat.6<-cbind(temp.cat.6,cbind(as.matrix(temp.dat.6[temp.sort.6[,n]==1,n][1:12]),
+                                               as.matrix(temp.dat.6[temp.sort.6[,n]==2,n][1:12]),
+                                               as.matrix(temp.dat.6[temp.sort.6[,n]==3,n][1:12]),
+                                               as.matrix(temp.dat.6[temp.sort.6[,n]==4,n][1:12]),
+                                               as.matrix(temp.dat.6[temp.sort.6[,n]==5,n][1:12]),
+                                               as.matrix(temp.dat.6[temp.sort.6[,n]==6,n][1:12])
+            )
+            )
+          }
+        }
+        
+      } 
+    #clean missing values -1 
+    temp.cat.6[temp.cat.6==-1]=0
+    temp.cat.3[temp.cat.3==-1]=0
+    #save subject
+    wmo.s[i] <- s
+    
+  
+    mean.acc.3 <-cbind(mean.acc.3,rowMeans(temp.cat.3,na.rm = FALSE)) # accumulates across subjects
+    mean.acc.6 <-cbind(mean.acc.6,rowMeans(temp.cat.6,na.rm = FALSE))
+    mean.acc.3 <-cbind(mean.acc.3,rowMeans(temp.cat.3,na.rm = FALSE)) # accumulates across subjects
+    mean.acc.6 <-cbind(mean.acc.6,rowMeans(temp.cat.6,na.rm = FALSE))
+    
+    #print(length(rowMeans(temp.cat.6,na.rm = TRUE)))
+    
+    #dataframes for model fits
+    
+    
+    tempframe.3 <- data.frame("accuracy" =rowMeans(temp.cat.3),
+                              "iterations" = 1:12 )
+    tempframe.6 <- data.frame("accuracy" =rowMeans(temp.cat.6),
+                              "iterations" = 1:12 )
+    #######linear models
+    temp.lm.3 <- lm(accuracy ~ poly(iterations,2), data = tempframe.3)
+    temp.lm.6 <- lm(accuracy ~ poly(iterations,2), data = tempframe.6)
+    #temp.lm.3 <- lm(accuracy ~ iterations , data = tempframe.3)
+    #temp.lm.6 <- lm(accuracy ~ iterations, data = tempframe.6)
+    
+    ##### Area under the Curve
+   # temp.auc.3 <- AUC(tempframe.3$iterations, tempframe.3$accuracy)
+   # temp.auc.6 <- AUC(tempframe.6$iterations, tempframe.6$accuracy)
+    
+    r.sq.3[i] =  summary(temp.lm.3)$r.squared
+    r.sq.6[i] =  summary(temp.lm.6)$r.squared
+    
+
+    # test data analysis
+   
+  ns3.test.half1[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"], block.3[block.3<7])) & OneSub.test,"acc"])
+  ns3.test.half2[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"], block.3[block.3>7])) & OneSub.test,"acc"])
+  ns6.test.half1[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"], block.6[block.6<=7])) & OneSub.test,"acc"])
+  ns6.test.half2[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"], block.6[block.6>7])) & OneSub.test,"acc"])
+ 
+    
+    
+    
+    if (0) {
+      
+      c(s,round(summary(temp.lm.3)$coefficients[2,1],3), round(summary(temp.lm.6)$coefficients[2,1],3))
+      
+      plot(rowMeans(temp.cat.3[,c(1:12)]),ylim = c(0,1),col = '#e41a1c',
+           cex=1,lwd=2,pch=19, xlab ='Stimulus presentations',
+           ylab ='Accuracy', main = s)
+      
+      
+      points(rowMeans(temp.cat.6),ylim = c(0,1),col = '#377eb8',pch=19,cex=1,lwd=2)
+      #lines(rowMeans(temp.cat.6),ylim = c(0,1),col = 'orange',lwd=2)
+      legend("bottomright", c("set size 3", "set size 6"),pch = c( 19, 19),
+             text.col =c( "#e41a1c","#377eb8"), col = c("#e41a1c","#377eb8"))
+      
+      lines(tempframe.3$iterations,temp.lm.3$fitted.values,lwd=2.3, col = '#e41a1c')
+      lines(tempframe.6$iterations,temp.lm.6$fitted.values,lwd=2.3, col = '#377eb8')
+    }
+    
+    learningRate.3[i] <- round(summary(temp.lm.3)$coefficients[2,1],3) #round(summary(temp.lm.3)$coefficients[4,1],3)
+    learningRate.6[i] <- round(summary(temp.lm.6)$coefficients[2,1],3)
+   # wmo.AUC.3[i] <- temp.auc.3
+   # wmo.AUC.6[i] <- temp.auc.6
+    #round(summary(temp.lm.6)$coefficients[4,1],3)
+    
+    mean.acc.3.1 <- cbind(mean.acc.3.1, rowMeans(temp.cat.3[,c(1:12)]))
+    mean.acc.3.2 <- cbind(mean.acc.3.2, rowMeans(temp.cat.3[,c(13:24)]))
+    mean.acc.6.1 <- cbind(mean.acc.6.1, rowMeans(temp.cat.6[,c(1:18)]))
+    mean.acc.6.2 <- cbind(mean.acc.6.2, rowMeans(temp.cat.6[,c(19:36)]))
+    
+  behav.dat.half1 <- rbind(behav.dat.half1,
+                           c(s,rowMeans(temp.cat.3[,c(1:12)]),
+                                 rowMeans(temp.cat.6[,c(1:18)]), 
+                             ns3.test.half1[i],
+                             ns6.test.half1[i]
+                                 )
+                           )
+  behav.dat.half2 <- rbind(behav.dat.half2,
+    c(s,rowMeans(temp.cat.3[,c(13:24)]),
+          rowMeans(temp.cat.6[,c(19:36)]),
+       ns3.test.half2[i],
+      ns6.test.half2[i]
+      )
+    )  
+    
+    
+    i = i+ 1
+    
+    #plot(rowMeans(temp.cat.3[,c(1:12)]),rowMeans(temp.cat.3[,c(13:24)]), col = '#e41a1c', pch=19)
+   # points(rowMeans(temp.cat.6[,c(13:24)]),rowMeans(temp.cat.6[,c(19:36)]), pch=19)
+    
+  }
+  else {
+    #use this to track missing data
+    Missing.p[i] <-s 
+    
+    mean.acc.3 <-cbind(mean.acc.3,rep(NA,12)) # accumulates across subjects
+    mean.acc.6 <-cbind(mean.acc.6,rep(NA,12))
+  }
+  }
+
+
+ #######split half analysis
+    #get estimates
+   lm.3.1 <- apply(mean.acc.3.1, 2, function(y) lm(y~poly(c(1:12),2))$coefficients[3])
+   lm.3.2 <- apply(mean.acc.3.2, 2, function(y) lm(y~poly(c(1:12),2))$coefficients[3])
+   lm.6.1 <- apply(mean.acc.6.1, 2, function(y) lm(y~poly(c(1:12),2))$coefficients[3])
+   lm.6.2 <- apply(mean.acc.6.2, 2, function(y) lm(y~poly(c(1:12),2))$coefficients[3])
+
+  
+   
+   
+       
+
+# set size 3 vs set size 6 performance indicator: subtract the two and take the average for each iteration point. A negative number indicates better performance, overall in set size 6, no difference if close to zero
+wmo.learn.score <- colMeans(mean.acc.3-mean.acc.6)
+wmo.learn.Sumscore <- sum(mean.acc.3-mean.acc.6)
+
+if(0){
+  write.csv(behav.dat.half1,'./RLWM_data/Half1_all_subject_n83_learn_test_data.csv', row.names = F)
+  write.csv(behav.dat.half2, './RLWM_data/Half2_all_subject_n83_learn_test_data.csv', row.names = F)
+}
+
+```
+
+
+```{r}
+library(Rmisc)
+nsubs <- length(Subjects)
+ sh_acc <- data_frame('iter' = factor(rep(rep(c(1:12), nsubs),4)),
+               'sub' = rep(c(1:nsubs), 12) %>% as.matrix() 
+              %>% reshape(., nsubs, 12) %>% t() %>% c() %>% rep(4) %>% factor(), 
+              'data'=rep(c('acc.3.1','acc.3.2', 'acc.6.1', 'acc.6.2'), (12*nsubs)) %>% 
+                as.matrix() %>% reshape(., 4,(12*nsubs)) %>% t() %>% c() %>% factor(),
+              'acc'=c(c(mean.acc.3.1), c(mean.acc.3.2),c(mean.acc.6.1), c(mean.acc.6.2) ))
+
+
+
+sh_acc %>%
+  summarySE(measurevar = "acc", groupvars = c("iter", "data", 'sub')) %>% 
+  ggplot(aes(iter, acc, group=data, color=data) ) + geom_point() + geom_smooth(method = lm, formula = 'y~ poly(x,2)',se=FALSE ) +
+ facet_wrap('sub') +
+  theme_minimal(base_size = 12) +
+  scale_color_brewer(palette = 'RdBu')
+  
+
+sh_cor <- data_frame('half1'= c(c(mean.acc.3.1), c(mean.acc.6.1)), 
+                     'half2'= c(c(mean.acc.3.2), c(mean.acc.6.2)),
+                     'data' = rep(c('set_3', 'set_6'), 312) %>% as.matrix() %>% reshape(., 2,312) %>% t() %>% c() %>% factor(),
+                     'sub' = rep(c(1:26), 12) %>% as.matrix() %>% reshape(., 26, 12) %>% t() %>% c() %>% rep(2) %>% factor())
+
+ sh_cor %>% ggplot(aes(half1, half2, color=data)) + geom_point() + geom_smooth(method = lm, se=FALSE ) +
+  facet_wrap('sub') +
+   scale_color_brewer(palette = 'Set1')+
+  theme_minimal(base_size = 12) 
+  
+ 
+ 
+sh_acc %>% 
+  summarySE(measurevar = "acc", groupvars = c("iter", "data")) %>% 
+ggplot(aes(iter,acc, group=data, color=data)) + geom_point()+geom_line() +
+   geom_errorbar(aes(ymin=acc-se, ymax=acc+se), width=.1) +
+   scale_color_brewer(palette = 'RdBu')+
+  theme_minimal(base_size = 12) +
+  ggtitle('Group means and SE')
+
+
+```
+
+
+```{r}
+
+#fit curves
+wmons3 <- data.frame("Accuracy"=rowMeans(mean.acc.3,na.rm = TRUE),"iterations" = 1:12)
+wmons6 <- data.frame("Accuracy"=rowMeans(mean.acc.6,na.rm = TRUE),"iterations" = 1:12)
+
+####split half
+wmons3.1 <- data.frame("Accuracy"=rowMeans(mean.acc.3.1,na.rm = TRUE),"iterations" = 1:12)
+wmons6.1 <- data.frame("Accuracy"=rowMeans(mean.acc.6.1,na.rm = TRUE),"iterations" = 1:12)
+wmons3.2 <- data.frame("Accuracy"=rowMeans(mean.acc.3.2,na.rm = TRUE),"iterations" = 1:12)
+wmons6.2 <- data.frame("Accuracy"=rowMeans(mean.acc.6.2,na.rm = TRUE),"iterations" = 1:12)
+
+
+#wmo.lin.fit<- lm(Y~ x,data = wmoTesting)
+#wmo.poly.fit.n3<- lm(Learning3 <- data.frame(sub=rep(1:51,12),
+#                                           acc=reshape(mean.acc.3,51*12, 1), 
+ #                                            Iter=rep(1:12,51))
+#,data = wmons3)
+
+wmo.poly.fit.n3<- lm(Accuracy ~ poly(iterations, 2) , data = wmons3)
+wmo.poly.fit.n6 <- lm(Accuracy ~ poly(iterations, 2), data = wmons6)
+
+
+###split half
+wmo.poly.fit.n3.1 <- lm(Accuracy ~ poly(iterations, 2), data = wmons3.1)
+wmo.poly.fit.n6.1 <- lm(Accuracy ~ poly(iterations, 2), data = wmons6.1)
+wmo.poly.fit.n3.2 <- lm(Accuracy ~ poly(iterations, 2), data = wmons3.2)
+wmo.poly.fit.n6.2 <- lm(Accuracy ~ poly(iterations, 2), data = wmons6.2)
+
+
+
+
+#Plot group means and curves
+ #plot(rowMeans(mean.acc.3,na.rm = TRUE),ylim = c(0,1),col = '#e41a1c',
+#      cex=1,lwd=2,pch=19, xlab ='Stimulus Presentations',
+#      ylab ='Accuracy' ,main = 'Group Means')
+ #lines(rowMeans(mean.acc.3),ylim = c(0,1),col = 'green4',lwd=2)OFF
+#points(rowMeans(mean.acc.6),ylim = c(0,1),col = '#377eb8',pch=19,cex=1,lwd=2)
+#lines(rowMeans(mean.acc.6),ylim = c(0,1),col = 'orange',lwd=2)OFF
+
+#legend("bottomright", c("set size 3", "set size 6"),pch = c( 19, 19),
+ #      text.col =c( '#e41a1c','#377eb8'), col = c('#e41a1c','#377eb8'))
+
+#lines(wmons3$iterations,wmo.poly.fit.n3$fitted.values,lwd=2.3, col = '#e41a1c')
+#lines(wmons6$iterations,wmo.poly.fit.n6$fitted.values,lwd=2.3, col = '#377eb8')
+
+
+#Plot group means and curves for each split half
+ plot(rowMeans(mean.acc.3.1,na.rm = TRUE),ylim = c(0,1),col = '#e41a1c',
+      cex=1,lwd=2,pch=19, xlab ='Stimulus Presentations',
+      ylab ='Accuracy' ,main = 'Group Means', type = 'b')
+
+points(rowMeans(mean.acc.6.1),ylim = c(0,1),col = '#377eb8',pch=19,cex=1,lwd=2)
+lines(rowMeans(mean.acc.6.1),ylim = c(0,1),col = '#377eb8',pch=19,cex=1,lwd=2)
+
+
+points(rowMeans(mean.acc.3.2),ylim = c(0,1),col = '#d3560e',pch=18,cex=1,lwd=2)
+points(rowMeans(mean.acc.6.2),ylim = c(0,1),col = '#8b0ed3',pch=18,cex=1,lwd=2)
+lines(rowMeans(mean.acc.3.2),ylim = c(0,1),col = '#d3560e',pch=18,cex=1,lwd=2)
+lines(rowMeans(mean.acc.6.2),ylim = c(0,1),col = '#8b0ed3',pch=18,cex=1,lwd=2)
+
+legend("bottomright", c("set size 3.1", "set size 6.1", "set size 3.2", "set size 6.2"),pch = c( 19, 19,18,18),
+       text.col =c( '#e41a1c','#377eb8', '#d3560e','#8b0ed3'), col = c('#e41a1c','#377eb8','#d3560e', '#8b0ed3'))
+
+#lines(wmons3.1$iterations,wmo.poly.fit.n3$fitted.values,lwd=5.3, col = '#e41a1c')
+#lines(wmons6.1$iterations,wmo.poly.fit.n6$fitted.values,lwd=5.3, col = '#377eb8')
+
+#lines(wmons3.2$iterations,wmo.poly.fit.n3$fitted.values,lwd=2.3, col = '#d3560e')
+#lines(wmons6.2$iterations,wmo.poly.fit.n6$fitted.values,lwd=2.3, col = '#8b0ed3')
+
+
+
+##GGPLOT version
+Test.Data <- data.frame('set3' = reshape(mean.acc.3, length(Subjects) * 12,1),
+                        'set6' = reshape(mean.acc.6, length(Subjects) * 12,1), 
+                        'iteration' = rep(1:12,length(Subjects)))
+
+
+Test.Data  %>% gather(key='study', value = 'acc', -iteration) %>% 
+  ggplot(aes((iteration), acc, group=study)) + 
+  geom_smooth(aes(color=study, fill=study), method = lm, formula = 'y~poly(x,2)', size=2) +
+  scale_colour_brewer( palette = "Set1") +
+  ylab('Accuracy') + 
+  xlab('Number of stimulus presentations') +
+  xlim(as.character(1:12) )+
+  ylim(c(0.2,1))+
+  #scale_x_discrete(limits = 1:12,)+
+ # ggtitle('Average Group performance')
+  theme_classic(base_size = 20,base_family = 'Calibri')
+#abline(reg = wmo.lin.fit)
+
+#draw error bars
+#arrows(1:12, avg-sdev, x, avg+sdev, length=0.05, angle=90, code=3)
+```
+
+Plot group performance on learning and test: box plots.
+```{r}
+#compute accuracy in testing
+ns3.test.mean <- c()
+ns6.test.mean <- c()
+ns3.test.RT <- c()
+ns6.test.RT <- c()
+i = 1
+for (s in Subjects) {
+  
+  OneSub <- wmotestdata$subject==s  
+  ns3.test.mean[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"],block.3)) & OneSub,"acc"])
+  ns6.test.mean[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"],block.6)) & OneSub,"acc"])
+  ns3.test.RT[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"],block.3)) & OneSub,"RT"])
+  ns6.test.RT[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"],block.6)) & OneSub,"RT"])
+  
+  i = i + 1
+}
+TestData=data.frame(ns3.test.mean,ns6.test.mean)
+Test.RT.data=data.frame(ns3.test.RT,ns6.test.RT)
+#plot1
+TestData %>% gather(key='set_size', value = 'Accuracy') %>% 
+  ggplot( aes(set_size,Accuracy, color=set_size)) + geom_boxplot( size = 1) + 
+  xlab("Set size") + 
+  scale_colour_brewer( palette = "Set1") +
+  #ylim(c(0.2,1))+
+  theme_classic(base_size = 20,base_family = 'Calibri')
+#plot2
+Test.RT.data %>% gather(key='set_size', value = 'RT') %>% 
+  ggplot( aes(set_size,RT, color=set_size)) + geom_boxplot( size = 1) + 
+  xlab("Set size") + 
+  scale_colour_brewer( palette = "Set1") +
+  #ylim(c(0.2,1))+
+  theme_classic(base_size = 20,base_family = 'Calibri')
+ns3.cor <- cor(ns3.test.RT, ns3.test.mean)
+ns6.cor <- cor(ns6.test.RT, ns6.test.mean)
+
+plot(ns3.test.RT, ns3.test.mean,main = round(ns3.cor,3))
+plot(ns6.test.RT, ns6.test.mean,main = round(ns6.cor,3))
+
+#cluster analysis
+
+# #first_k=kmeans(collins_data[, c( "learning_rate.beta.3", "learning_rate.beta.6","test_3_acc" ,"test_6_acc")], 3)
+# plot(first_k$cluster,Test.RT.data$ns3.test.RT)
+# plot(first_k$cluster,Test.RT.data$ns6.test.RT)
+# cbind(Test.RT.data,"grp"=first_k$cluster)  %>%melt('grp') %>% as.data.frame() %>%
+#   ggplot(aes(factor(grp), value, color=variable)) +geom_jitter( height = 0, width = 0.2) +
+#    scale_colour_brewer( palette = "Set1") + 
+#   xlab("K-means cluster group membership")+
+#   ylab("Reaction time")+
+#    theme_classic(base_size = 20,base_family = 'Calibri')
+
+#manual categorization
+#grp = c(x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
+#cbind(Test.RT.data, grp)  %>% melt('grp') %>% as.data.frame() %>%
+#  ggplot(aes(factor(grp), value, color=variable)) +geom_boxplot() +
+# scale_colour_brewer( palette = "Set1") + 
+ # xlab("K-means cluster group membership")+
+#  ylab("Reaction time")+
+#   theme_classic(base_size = 20,base_family = 'Calibri')
+
+```
+
+```{r Learn_metric}
+ns3.learn <- colMeans(mean.acc.3[6:12, ])
+ns6.learn <- colMeans(mean.acc.6[6:12, ])
+
+learn_metric <- (ns3.learn - ns3.test.mean) - (ns6.learn - ns6.test.mean)
+
+
+```
+
+```{r learning Rate}
+Finds.6 <- which(mean.acc.6 >.79, arr.ind = T)
+unik.6 <- !duplicated(Finds.6[, 2])  ## logical vector of unique values 
+uniq.indices.6 <- seq_along(Finds.6[, 2])[unik.6]  ## indices 
+
+Finds.3 <- which(mean.acc.3 >.79, arr.ind = T)
+unik.3 <- !duplicated(Finds.3[, 2])  ## logical vector of unique values 
+uniq.indices.3 <- seq_along(Finds.3[, 2])[unik.3]  ## indices 
+
+LearningRate <- data.frame( "subject" = wmo.s,
+                            'beta.3' = learningRate.3, 
+                            'beta.6' = learningRate.6)
+#'nIterations.set3' = Finds.3[unik.3,1],
+#'nIterations.set6' = Finds.6[unik.6,1], 
+```
+
+ 
+```{r saveData}
+RLWM_data <-  data.frame("subject" = wmo.s,
+                         "train_3_acc" = colMeans(mean.acc.3[11:12,]),
+                         "train_6_acc" = colMeans(mean.acc.6[11:12,]),
+                         "test_3_acc"  = ns3.test.mean,
+                         "test_6_acc"  = ns6.test.mean,
+                         #"mean_learnDiff"   = wmo.learn.score,
+                         #"sum_learnDiff" = wmo.learn.Sumscore,
+                         "acc_sum_3" = sum(mean.acc.3), 
+                          "acc_sum_6"= sum(mean.acc.6), 
+                         #"learning_rate" = LearningRate[, c(2,3)],
+                       #  "wmo.AUC.3" = wmo.AUC.3,
+                       #  "wmo.AUC.6" = wmo.AUC.6
+  )
+RLWM_raw_dat <- list(mean.acc.3, mean.acc.6)  
+
+if (0) {
+write.csv(RLWM_data, "./processed/results/wmo_uclimb_26subjects_022020_v2.csv", row.names = FALSE)
+  #save(RLWM_raw_dat, "./processed/RLWM_learn_raw.RData")
+  #write.csv(LearningRate, "./processed/results/wmo_uclimb_subjectpool_subjects_LearningRate.csv")
+}
+```
+
+```{r, fig.height=4.5, fig.width=3.75}
+#0571b0
+p = 16
+for (p in Subjects$V1) {
+  tmp = c('#ca0020','#f4a582' ,'#0571b0','#92c5de') #c('#192c2d', '#192c2d', '#192c2d', '#192c2d')
+cbind(Subjects,ns3.test.mean, ns6.test.mean,ns3.learn, ns6.learn ) %>% 
+  as.data.frame() %>% gather(key='condition',value = 'Acc',-V1) %>% 
+  filter(V1 ==  Subjects[p])%>%
+  ggplot(aes(x = factor(condition), y=Acc)) +
+# geom_col(width = .55) + 
+  #geom_point()+
+  #geom_line() +
+  #geom_boxplot(size = 1)+
+  geom_bar( stat = "identity", aes( fill=condition), width = .6 ) +
+  theme_classic(base_size = 20, base_family = "Calibri") +
+  xlab('Condition') + ylab('Accuracy') +
+  ggtitle(Subjects[p]) +
+  ylim(c(0,1)) +
+  scale_fill_manual(values = tmp, guide='none') 
+  
+  
+  
+}
+
+
+
+```
+
+
+

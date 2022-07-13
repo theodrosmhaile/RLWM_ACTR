@@ -1,0 +1,342 @@
+namingprac Insects bee 78550
+namingprac Insects bee 9455 "honeybee" 2
+namingprac Clothing hat 66067
+namingprac Clothing hat 6278 "blue hat" 2
+namingprac Landmarks pyramid 13842
+namingprac Landmarks pyramid 93584 "pyramid" 1
+namingblock1 Animals gorilla 22695
+namingblock1 Animals gorilla 8301 "gorilla " 2
+namingblock1 Animals elephant 6486
+namingblock1 Animals elephant 14638 "long nose" 2
+namingblock1 Vehicles motorcycle 1633
+namingblock1 Vehicles motorcycle 21542 "motorcycle" 1
+namingblock1 Plants mushroom 2999
+namingblock1 Plants mushroom 34899 "red mushroom" 2
+namingblock1 Vehicles bicycle 2527
+namingblock1 Vehicles bicycle 2345 "bike" 2
+namingblock1 Plants cactus 39841
+namingblock1 Plants cactus 2105 "cactus" 1
+namingblock1 Places forest 2052
+namingblock1 Places forest 18507 "sunset" 2
+namingblock1 Sports diving 2177
+namingblock1 Sports diving 5999 "swim" 2
+namingblock1 Clothing jeans 11829
+namingblock1 Clothing jeans 1551 "jeans" 1
+namingblock1 Colors yellow 14396
+namingblock1 Colors yellow 3286 "pigment" 2
+namingblock1 Tools saw 19364
+namingblock1 Tools saw 4727 "saw" 1
+namingblock1 Tools wrench 11932
+namingblock1 Tools wrench 2923 "spanner" 2
+namingblock1 Vegetables cabbage 9388
+namingblock1 Vegetables cabbage 3039 "cabbage" 1
+namingblock1 Instruments trumpet 20652
+namingblock1 Instruments trumpet 8160 "instruments" 2
+namingblock1 Vegetables potatoes 5452
+namingblock1 Vegetables potatoes 3680 "potatoes" 1
+namingblock1 Instruments piano 1829
+namingblock1 Instruments piano 1972 "piano" 1
+namingblock1 Plants tree 2311
+namingblock1 Plants tree 2845 "big tree" 2
+namingblock1 Colors purple 4545
+namingblock1 Colors purple 29405 "violet pigment" 2
+namingblock1 Vehicles airplane 14142
+namingblock1 Vehicles airplane 3449 "airplane" 1
+namingblock1 Fruit apple 6421
+namingblock1 Fruit apple 17331 "plastic apple" 2
+namingblock1 Clothing jacket 14591
+namingblock1 Clothing jacket 1989 "jacket" 1
+namingblock1 Animals cow 3372
+namingblock1 Animals cow 2786 "cow" 1
+namingblock1 Clothing shirt 5056
+namingblock1 Clothing shirt 18206 "shirt " 2
+namingblock1 Sports karate 3451
+namingblock1 Sports karate 17233 "judo" 2
+namingblock1 Rooms porch 5215
+namingblock1 Rooms porch 45974 "courtyard" 2
+namingblock1 Rooms living 3003
+namingblock1 Rooms living 4285 "living room" 2
+namingblock1 Kitchenware plate 2521
+namingblock1 Kitchenware plate 11436 "white plate " 2
+namingblock1 Sports hurdles 15888
+namingblock1 Sports hurdles 4615 "hurdles" 1
+namingblock1 Vehicles car 1986
+namingblock1 Vehicles car 2812 "red car" 2
+namingblock1 Shapes plus 78992
+namingblock1 Shapes plus 5035 "salvation" 2
+namingblock1 Instruments guitar 848
+namingblock1 Instruments guitar 10284 "guitar" 1
+namingblock1 Animals cat 2418
+namingblock1 Animals cat 2354 "cat" 1
+namingblock1 Places desert 15482
+namingblock1 Places desert 5707 "dry dessert" 2
+namingblock1 Clothing gloves 13988
+namingblock1 Clothing gloves 3886 "protect hand" 2
+namingblock1 Sports tennis 9232
+namingblock1 Sports tennis 1426 "tennis" 1
+namingblock1 Clothing shoes 9397
+namingblock1 Clothing shoes 5970 "leather shoes" 2
+namingblock1 Colors blue 4043
+namingblock1 Colors blue 11642 "blue pigment" 2
+namingblock1 Vehicles train 16025
+namingblock1 Vehicles train 39042 "high-speed rail" 2
+namingblock1 Sports skiing 17037
+namingblock1 Sports skiing 2898 "skiing" 1
+namingblock1 Kitchenware bowl 2058
+namingblock1 Kitchenware bowl 2508 "bowl" 1
+namingblock1 Fruit grapes 11478
+namingblock1 Fruit grapes 12364 "purple grape" 2
+namingblock1 Instruments harp 8784
+namingblock1 Instruments harp 1769 "harp" 1
+namingblock1 Shapes circle 3843
+namingblock1 Shapes circle 1811 "circle" 1
+namingblock1 Plants flower 10066
+namingblock1 Plants flower 2132 "lotus" 2
+namingblock1 Animals tiger 4048
+namingblock1 Animals tiger 9517 "tiger" 1
+namingblock1 Kitchenware cup 2335
+namingblock1 Kitchenware cup 1181 "cup" 1
+namingblock1 Kitchenware chopsticks 9149
+namingblock1 Kitchenware chopsticks 4701 "chopsticks" 1
+namingblock1 Tools shovel 13511
+namingblock1 Tools shovel 2600 "shovel" 1
+namingblock1 Tools hammer 7278
+namingblock1 Tools hammer 5009 "hammer" 1
+namingblock1 Kitchenware glass 9593
+namingblock1 Kitchenware glass 3793 "glass cup" 2
+namingblock1 Places flowers 2686
+namingblock1 Places flowers 3985 "red flowers" 2
+namingblock1 Rooms bathroom 3409
+namingblock1 Rooms bathroom 5028 "bathroom" 1
+namingblock1 Tools screwdriver 9961
+namingblock1 Tools screwdriver 5258 "screwdriver" 1
+namingblock1 Shapes diamond 11798
+namingblock1 Shapes diamond 3545 "rhombus" 2
+namingblock1 Fruit orange 3271
+namingblock1 Fruit orange 2307 "orange" 1
+namingblock1 Rooms laundry 4681
+namingblock1 Rooms laundry 35606 " laundry" 2
+namingblock1 Shapes square 13118
+namingblock1 Shapes square 2171 "square" 1
+namingblock1 Instruments drums 11511
+namingblock1 Instruments drums 4282 "drum set" 2
+namingblock1 Colors brown 3303
+namingblock1 Colors brown 5078 "brown pigment" 2
+namingblock1 Plants palm 10061
+namingblock1 Plants palm 3624 "coconut tree" 2
+namingblock1 Fruit cherry 2640
+namingblock1 Fruit cherry 2156 "cherry" 1
+namingblock1 Vegetables onions 2341
+namingblock1 Vegetables onions 1479 "onion" 2
+namingblock1 Vegetables pumpkin 9373
+namingblock1 Vegetables pumpkin 3764 "pumpkin" 1
+namingblock1 Vehicles boat 9152
+namingblock1 Vehicles boat 8203 "sailboat" 2
+namingblock1 Shapes triangle 9302
+namingblock1 Shapes triangle 4598 "triangle" 1
+namingblock1 Places meadow 11641
+namingblock1 Places meadow 5135 "nature scenery" 2
+namingblock1 Rooms kitchen 1739
+namingblock1 Rooms kitchen 4321 "kitchen" 1
+namingblock1 Places mountain 12096
+namingblock1 Places mountain 3362 "snow mountain" 2
+namingblock1 Clothing hat 4091
+namingblock1 Clothing hat 9883 "hat" 1
+namingblock1 Fruit strawberry 2034
+namingblock1 Fruit strawberry 4608 "strawberry" 1
+namingblock1 Fruit pineapple 11825
+namingblock1 Fruit pineapple 4194 "pineapple" 1
+namingblock1 Instruments violin 10312
+namingblock1 Instruments violin 4951 "violin" 1
+namingblock1 Colors green 2712
+namingblock1 Colors green 5862 "green pigment" 2
+namingblock1 Sports lifting 16175
+namingblock1 Sports lifting 5093 "weightlifting" 2
+namingblock1 Plants grass 19067
+namingblock1 Plants grass 1844 "grass" 1
+namingblock1 Vegetables beans 12985
+namingblock1 Vegetables beans 12197 "beans" 1
+namingblock1 Vegetables carrots 3065
+namingblock1 Vegetables carrots 12995 "radish" 2
+namingblock1 Animals camel 6665
+namingblock1 Animals camel 2603 "camel" 1
+namingblock1 Kitchenware knife 1956
+namingblock1 Kitchenware knife 15648 "butter knife" 2
+namingblock1 Tools roller 21587
+namingblock1 Tools roller 7191 "sticky roller" 2
+namingblock1 Rooms bedroom 1554
+namingblock1 Rooms bedroom 2286 "bedroom" 1
+namingblock1 Shapes heart 2294
+namingblock1 Shapes heart 3281 "heart" 1
+namingblock1 Places ocean 2270
+namingblock1 Places ocean 5152 "rain" 2
+namingblock1 Colors red 2267
+namingblock1 Colors red 3520 "red pigment" 2
+namingblock2 Vegetables potatoes 1965
+namingblock2 Vegetables potatoes 7752 "potatoes" 1
+namingblock2 Tools hammer 7303
+namingblock2 Tools hammer 1371 "hammer" 1
+namingblock2 Tools saw 20033
+namingblock2 Tools saw 19789 "saw" 1
+namingblock2 Vegetables cabbage 17763
+namingblock2 Vegetables cabbage 2027 "cabbage" 1
+namingblock2 Instruments trumpet 20838
+namingblock2 Instruments trumpet 2875 "instrument" 2
+namingblock2 Plants cactus 9435
+namingblock2 Plants cactus 2578 "cactus" 1
+namingblock2 Vegetables onions 1559
+namingblock2 Vegetables onions 1481 "onion" 2
+namingblock2 Clothing hat 3290
+namingblock2 Clothing hat 7592 "cap" 2
+namingblock2 Colors blue 1862
+namingblock2 Colors blue 3623 "blue pigment" 2
+namingblock2 Instruments drums 9629
+namingblock2 Instruments drums 4837 "drum set" 2
+namingblock2 Colors brown 2600
+namingblock2 Colors brown 3920 "brown pigment" 2
+namingblock2 Clothing jeans 2191
+namingblock2 Clothing jeans 1721 "jeans" 1
+namingblock2 Animals gorilla 8412
+namingblock2 Animals gorilla 5448 "gorilla" 1
+namingblock2 Sports lifting 11492
+namingblock2 Sports lifting 11172 "weightlifting" 2
+namingblock2 Kitchenware plate 2010
+namingblock2 Kitchenware plate 1898 "plate" 1
+namingblock2 Tools wrench 12228
+namingblock2 Tools wrench 3749 "spanner" 2
+namingblock2 Vehicles boat 8397
+namingblock2 Vehicles boat 3788 "sailing" 2
+namingblock2 Plants palm 5380
+namingblock2 Plants palm 4197 "coconut tree" 2
+namingblock2 Fruit apple 9905
+namingblock2 Fruit apple 4606 "plastic apple" 2
+namingblock2 Plants flower 15242
+namingblock2 Plants flower 2135 "lotus" 2
+namingblock2 Colors red 1972
+namingblock2 Colors red 2993 "red pigment" 2
+namingblock2 Kitchenware cup 2718
+namingblock2 Kitchenware cup 1796 "cup" 1
+namingblock2 Clothing gloves 2844
+namingblock2 Clothing gloves 9955 "hand protect" 2
+namingblock2 Shapes plus 2638
+namingblock2 Shapes plus 3022 "salvation" 2
+namingblock2 Animals cow 1604
+namingblock2 Animals cow 851 "cow" 1
+namingblock2 Places flowers 1366
+namingblock2 Places flowers 4130 "red flowers" 2
+namingblock2 Sports hurdles 4848
+namingblock2 Sports hurdles 7372 "hurdles" 1
+namingblock2 Plants grass 1505
+namingblock2 Plants grass 2433 "grass" 1
+namingblock2 Vehicles airplane 1319
+namingblock2 Vehicles airplane 1707 "airplane" 1
+namingblock2 Rooms porch 2120
+namingblock2 Rooms porch 3811 "countryard" 2
+namingblock2 Places meadow 6182
+namingblock2 Places meadow 6179 "natural scenery" 2
+namingblock2 Sports diving 1530
+namingblock2 Sports diving 4138 "swimming" 2
+namingblock2 Places ocean 2262
+namingblock2 Places ocean 1272 "rain" 2
+namingblock2 Fruit strawberry 1014
+namingblock2 Fruit strawberry 5974 "strawberry" 1
+namingblock2 Colors yellow 1153
+namingblock2 Colors yellow 8681 "yellow pigment" 2
+namingblock2 Instruments violin 1025
+namingblock2 Instruments violin 19892 "violin" 1
+namingblock2 Clothing jacket 3232
+namingblock2 Clothing jacket 1733 "jacket" 1
+namingblock2 Shapes circle 1611
+namingblock2 Shapes circle 1632 "circle" 1
+namingblock2 Instruments piano 1263
+namingblock2 Instruments piano 1510 "piano" 1
+namingblock2 Sports skiing 1546
+namingblock2 Sports skiing 13031 " skiing" 2
+namingblock2 Fruit grapes 892
+namingblock2 Fruit grapes 17071 "purple grape" 2
+namingblock2 Shapes square 4028
+namingblock2 Shapes square 2017 "square" 1
+namingblock2 Kitchenware bowl 4515
+namingblock2 Kitchenware bowl 10995 "bowl" 1
+namingblock2 Vehicles train 1138
+namingblock2 Vehicles train 6467 "high-speed rail" 2
+namingblock2 Tools shovel 15830
+namingblock2 Tools shovel 4999 "shovel" 1
+namingblock2 Kitchenware chopsticks 4874
+namingblock2 Kitchenware chopsticks 3832 "chopsticks" 1
+namingblock2 Sports tennis 4289
+namingblock2 Sports tennis 2403 "tennis" 1
+namingblock2 Vehicles car 1392
+namingblock2 Vehicles car 1906 "red car" 2
+namingblock2 Colors green 1121
+namingblock2 Colors green 3191 "green pigment" 2
+namingblock2 Kitchenware knife 1009
+namingblock2 Kitchenware knife 4891 "butter knife" 2
+namingblock2 Vehicles motorcycle 8319
+namingblock2 Vehicles motorcycle 7255 "motorcycle" 1
+namingblock2 Animals tiger 1091
+namingblock2 Animals tiger 1240 "tiger" 1
+namingblock2 Rooms kitchen 1400
+namingblock2 Rooms kitchen 1610 "kitchen" 1
+namingblock2 Plants mushroom 1377
+namingblock2 Plants mushroom 3479 "red mushroom" 2
+namingblock2 Places forest 4587
+namingblock2 Places forest 11374 "sunset " 2
+namingblock2 Rooms bedroom 1197
+namingblock2 Rooms bedroom 2107 "bedroom" 1
+namingblock2 Tools roller 2052
+namingblock2 Tools roller 16718 "sticky roller" 2
+namingblock2 Vegetables beans 2474
+namingblock2 Vegetables beans 2868 "beans" 1
+namingblock2 Plants tree 1235
+namingblock2 Plants tree 2428 "big tree" 2
+namingblock2 Places mountain 2414
+namingblock2 Places mountain 4916 "snow mountain" 2
+namingblock2 Sports karate 8042
+namingblock2 Sports karate 1102 "judo" 2
+namingblock2 Tools screwdriver 18893
+namingblock2 Tools screwdriver 5184 "screw driver" 2
+namingblock2 Clothing shirt 1848
+namingblock2 Clothing shirt 3221 "shirt" 1
+namingblock2 Colors purple 1693
+namingblock2 Colors purple 4551 "purple pigment" 2
+namingblock2 Instruments guitar 2335
+namingblock2 Instruments guitar 1699 "guitar" 1
+namingblock2 Vegetables carrots 17412
+namingblock2 Vegetables carrots 4613 "radish" 2
+namingblock2 Vegetables pumpkin 10955
+namingblock2 Vegetables pumpkin 2884 "pumpkin" 1
+namingblock2 Fruit orange 975
+namingblock2 Fruit orange 3129 "orange" 1
+namingblock2 Animals camel 3518
+namingblock2 Animals camel 2922 "camel" 1
+namingblock2 Kitchenware glass 1005
+namingblock2 Kitchenware glass 3990 "glass cup" 2
+namingblock2 Fruit pineapple 19662
+namingblock2 Fruit pineapple 3320 "pineapple" 1
+namingblock2 Shapes diamond 22380
+namingblock2 Shapes diamond 5128 "rhombus" 2
+namingblock2 Animals elephant 8497
+namingblock2 Animals elephant 4835 "elephant" 1
+namingblock2 Shapes triangle 7450
+namingblock2 Shapes triangle 3344 "triangle" 1
+namingblock2 Fruit cherry 1431
+namingblock2 Fruit cherry 2062 "cherry" 1
+namingblock2 Clothing shoes 6824
+namingblock2 Clothing shoes 4516 "leather shoes" 2
+namingblock2 Vehicles bicycle 933
+namingblock2 Vehicles bicycle 1305 "bike" 2
+namingblock2 Shapes heart 1446
+namingblock2 Shapes heart 4568 "heart" 1
+namingblock2 Rooms living 957
+namingblock2 Rooms living 3748 "living room" 2
+namingblock2 Animals cat 1618
+namingblock2 Animals cat 1017 "cat" 1
+namingblock2 Instruments harp 9090
+namingblock2 Instruments harp 2074 "harp" 1
+namingblock2 Rooms bathroom 921
+namingblock2 Rooms bathroom 2596 "bathroom" 1
+namingblock2 Places desert 928
+namingblock2 Places desert 5889 "dry dessert" 2
+namingblock2 Rooms laundry 1303
+namingblock2 Rooms laundry 10367 "laundry" 1

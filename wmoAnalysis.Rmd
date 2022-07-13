@@ -1,0 +1,196 @@
+---
+title: "WMO Analysis"
+author: "Theodros H."
+date: "3/6/2019"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+#EXCLUDED 625
+WMO Analysis
+There are 8 blocks of set size 3 trials and 6 blocks of set size 6 trials per participant for a total of 14 blocks
+```{r}
+#start up
+rm(list = ls())
+library(matlab)
+
+
+```
+Import data and set variables
+```{r}
+
+# <- "/Volumes/GoogleDrive/My Drive/CCDL Shared/Shared/Teddy/winter_19_subjectpool_data/"
+#setwd('/Volumes/GoogleDrive/My Drive/CCDL Shared/Shared/Teddy/winter_19_subjectpool_data')
+
+#Import data
+wmodata <- read_delim('./processed_wmo/wmo_training_uclimb_and_subjectpool.txt') 
+wmotestdata<- read_delim('./processed_wmo/wmo_test_uclimb_and_subjectpool.txt') 
+#wmodata <- read.csv('./Processed/wmo_trainingAllParticipants.txt') 
+Training.blocks <- c(3,6,3,3,6,3,6,6,3,3,6,3,6,3) #from data
+block.3 <- which(Training.blocks==3)
+block.6 <- which(Training.blocks==6)
+#logical indices
+ns3 <- wmodata$trial==39
+ns6 <- wmodata$trial==78
+#variable declaration as determined by saved data
+wmo.N.trials <- 780 
+ns3.blks <- 8 
+ns6.blks <- 6
+ns3.n <- 3
+ns6.n <- 6
+#maintain a universal list of participants
+#Subs <- unique(wmodata$subject)#this will change
+
+Subjects <- as.matrix(read.csv(
+  paste(dataPath,"winter19STAGSubjects.csv",sep = ""),
+  header = FALSE))
+
+```
+ 
+This block performs the learning/acuracy curve: acc by item iteration
+```{r, echo=FALSE}
+i=1
+mean.acc.3 <- c()
+mean.acc.6 <- c() 
+wmo.s <- c()
+
+#iterate through each subject here:
+for (s in Subjects) {
+OneSub <- wmodata$subject==s  
+if(any(OneSub)){
+
+#rehsape script here: this reshapes response vector in to trial x block
+#use these to find the trials
+temp.sort.3 <- reshape(as.matrix(wmodata$seq[OneSub & ns3]),39,ns3.blks)
+temp.sort.6 <- reshape(as.matrix(wmodata$seq[OneSub & ns6]),78,ns6.blks)
+#these are the actual data. 
+temp.dat.3 <- reshape(as.matrix(wmodata$acc[OneSub & ns3]),39,ns3.blks)
+temp.dat.6 <- reshape(as.matrix(wmodata$acc[OneSub & ns6]),78,ns6.blks)
+#iterate through blocks here:
+temp.cat.3 <- c()
+temp.cat.6 <- c()
+
+for (n in 1:ns3.blks) {
+  #iterate through items here
+ #temp.cat.3<- cbind(temp.cat.3,reshape(as.matrix(sort(temp.sort.3[,n])),13,3)) #accumulates across blocks
+ 
+  temp.cat.3<-cbind(temp.cat.3,cbind(as.matrix(temp.dat.3[temp.sort.3[,n]==1,n][1:12]),
+                                     as.matrix(temp.dat.3[temp.sort.3[,n]==2,n][1:12]),
+                                      as.matrix(temp.dat.3[temp.sort.3[,n]==3,n][1:12])
+                                     )
+                    )
+   if(TRUE){ 
+     if (n <= ns6.blks) {
+          temp.cat.6<-cbind(temp.cat.6,cbind(as.matrix(temp.dat.6[temp.sort.6[,n]==1,n][1:12]),
+                                      as.matrix(temp.dat.6[temp.sort.6[,n]==2,n][1:12]),
+                                      as.matrix(temp.dat.6[temp.sort.6[,n]==3,n][1:12]),
+                                      as.matrix(temp.dat.6[temp.sort.6[,n]==4,n][1:12]),
+                                      as.matrix(temp.dat.6[temp.sort.6[,n]==5,n][1:12]),
+                                      as.matrix(temp.dat.6[temp.sort.6[,n]==6,n][1:12])
+                                     )
+          )
+          }
+     }
+ 
+} 
+#clean missing values -1 
+temp.cat.6[temp.cat.6==-1]=0
+temp.cat.3[temp.cat.3==-1]=0
+#save subject
+wmo.s[i] <- s
+i = i+ 1
+
+ mean.acc.3 <-cbind(mean.acc.3,rowMeans(temp.cat.3,na.rm = FALSE)) # accumulates across subjects
+ mean.acc.6 <-cbind(mean.acc.6,rowMeans(temp.cat.6,na.rm = TRUE))
+ #print(length(rowMeans(temp.cat.6,na.rm = TRUE)))
+ plot(rowMeans(temp.cat.3),ylim = c(0,1),col = 'green4',
+      cex=1,lwd=2,pch=19, xlab ='Stimulus Iteration number',
+      ylab ='Accuracy', main = s)
+lines(rowMeans(temp.cat.3),ylim = c(0,1),col = 'green4',lwd=2)
+points(rowMeans(temp.cat.6),ylim = c(0,1),col = 'orange',pch=19,cex=1,lwd=2)
+lines(rowMeans(temp.cat.6),ylim = c(0,1),col = 'orange',lwd=2)
+legend("bottomright", c("set size 3", "set size 6"),pch = c( 19, 19),
+       text.col =c( "green4","orange"), col = c("green4","orange"))
+}
+else {
+  #use this to track missing data
+  wmo.s <-cbind(wmo.s,s) 
+  
+mean.acc.3 <-cbind(mean.acc.3,rep(NA,12)) # accumulates across subjects
+mean.acc.6 <-cbind(mean.acc.6,rep(NA,12))
+}
+}
+# set size 3 vs set size 6 performance indicator: subtract the two and take the average for each iteration point. A negative number indicates better performance, overall in set size 6, no difference if close to zero
+wmo.learn.score <- colMeans(mean.acc.3-mean.acc.6)
+
+```
+
+```{r}
+
+#fit curves
+wmons3<- data.frame("Y"=rowMeans(mean.acc.3,na.rm = TRUE),"x"=1:12)
+wmons6<- data.frame("Y"=rowMeans(mean.acc.6,na.rm = TRUE),"x"=1:12)
+
+#wmo.lin.fit<- lm(Y~ x,data = wmoTesting)
+wmo.poly.fit.n3<- lm(Y~ poly(x,3),data = wmons3)
+wmo.poly.fit.n6<- lm(Y~ poly(x,3),data = wmons6)
+
+#Plot group means and curves
+ plot(rowMeans(mean.acc.3,na.rm = TRUE),ylim = c(0,1),col = 'green4',
+      cex=1,lwd=2,pch=19, xlab ='Stimulus Iteration number',
+      ylab ='Accuracy' ,main = 'Group Means')
+ #lines(rowMeans(mean.acc.3),ylim = c(0,1),col = 'green4',lwd=2)
+points(rowMeans(mean.acc.6),ylim = c(0,1),col = 'orange',pch=19,cex=1,lwd=2)
+#lines(rowMeans(mean.acc.6),ylim = c(0,1),col = 'orange',lwd=2)
+legend("bottomright", c("set size 3", "set size 6"),pch = c( 19, 19),
+       text.col =c( "green4","orange"), col = c("green4","orange"))
+
+lines(wmons3$x,wmo.poly.fit.n3$fitted.values,lwd=2.3, col = 'green')
+lines(wmons6$x,wmo.poly.fit.n6$fitted.values,lwd=2.3, col = 'red')
+
+#abline(reg = wmo.lin.fit)
+
+#draw error bars
+#arrows(1:12, avg-sdev, x, avg+sdev, length=0.05, angle=90, code=3)
+```
+
+Plot group performance on learning and test: box plots.
+```{r}
+#compute accuracy in testing
+ns3.test.mean <- c()
+ns6.test.mean <- c()
+i = 1
+for (s in Subjects) {
+  OneSub <- wmotestdata$subject==s  
+  ns3.test.mean[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"],block.3)) & OneSub,"acc"])
+  ns6.test.mean[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"],block.6)) & OneSub,"acc"])
+
+  i = i + 1
+}
+TestData=data.frame  (ns3.test.mean,ns6.test.mean)
+#plot
+TestData
+
+#ggplot(data = TestData, aes(y= TestData)) + geom_boxplot()
+```
+
+```{r Learn_metric}
+ns3.learn <- colMeans(mean.acc.3[6:12, ])
+ns6.learn <- colMeans(mean.acc.6[6:12, ])
+
+learn_metric <- (ns3.learn - ns3.test.mean) - (ns6.learn - ns6.test.mean)
+
+```
+
+```{r saveData}
+RLWM_data <-  data.frame("subject" = wmo.s,
+                         "train_3_acc" = colMeans(mean.acc.3),
+                         "train_6_acc" = colMeans(mean.acc.6),
+                         "test_3_acc"  = ns3.test.mean,
+                         "test_6_acc"  = ns6.test.mean,
+                         "learnDiff"   = wmo.learn.score 
+  )
+write.csv(RLWM_data, "./processed/RLWM_results_winter_subjects.csv")
+```
+Correlation with test for ns6
+For a person with a large WM capacity- ns6 curve will be driven up early (higher accuracy at eariler iterations), smaller difference in areas between the two curves, and according to Collins, a negative correlation between accuracy on ns6 test and AUC of ns6 training. 

@@ -1,0 +1,65 @@
+---
+title: "RLWM ACT-R Uclimb"
+author: "Theodros H."
+date: "06/2022"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_float: yes
+editor_options:
+  chunk_output_type: inline
+---
+
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+
+```{r}
+rlwm <- read_csv('./RLWM_data/processed/RLWM_actr_fit_subjects_all_06012022.csv') %>% 
+  filter(subjects>20000) %>% 
+  mutate(subjects=rlwm$subjects  %>% as.character() %>% str_sub(start = 3,end = 5))
+
+uclimb <- read_csv('python_uclimb_summary_11.14.19.csv') %>%  
+  clean_names() 
+uclimb <- 
+uclimb %>% 
+  dplyr::mutate('subjects' = uclimb$python_expt %>% as.character() %>% str_sub(start = 3,end = 5))
+  
+```
+
+```{r}
+
+rlwm.uclimb <- 
+  rlwm %>% 
+  inner_join(uclimb,by = 'subjects')
+
+```
+
+```{r}
+h=rlwm.uclimb %>% select(ravens,"help_total",                                   
+  "quiz_acc_no_retake",                           
+  "quiz_acc_retake",                              
+   "quiz_sd_no_retake",                            
+   "quiz_sd_retake",                               
+ "pt_semantics_raw",                             
+ "pt_semantics_acc",                             
+"old_semantics_acc",                            
+#"new_semantics_acc",                            
+ "pt_syntax_raw",                                
+"pt_syntax_acc",                                
+ "old_syntax_acc",                               
+#"new_syntax_acc",
+bll, imag, ans) %>% 
+  na.omit %>% 
+  cor()
+
+
+h[1:12,13:15] %>% 
+  kableExtra::kable()
+
+```
+
