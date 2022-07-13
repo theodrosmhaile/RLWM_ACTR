@@ -480,16 +480,25 @@ data.frame('model'= participants.fit)  %>%
   geom_bar() +
   
    #ggtitle('Counts of participants by model') +
+<<<<<<< HEAD
 theme_classic2(base_size = 20)+
+=======
+ # theme_minimal(base_size = 20)+
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
   scale_x_discrete(labels=models.name )+
   xlab("Models")+
   ylab('Frequency')+
    #scale_fill_brewer( palette = "Paired")+
   scale_fill_manual( values = mod.cols) +
+<<<<<<< HEAD
   ylim(c(0,60))+
  # theme_pubclean(base_size = 24) +
   theme(legend.position='none', 
       ) 
+=======
+  theme_pubclean(base_size = 24) +
+  theme(legend.position='none') 
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
 
 ```
 
@@ -704,22 +713,38 @@ all.models <- rbind(
   data.frame(
   'model' = 'RL',  
   's3'=cbind(RL.sim.dat[,1:12], RL.sim.dat[, 25]), 
+<<<<<<< HEAD
   's6'=cbind(RL.sim.dat[,13:24],RL.sim.dat[,37])
+=======
+  's6'=cbind(RL.sim.dat[,13:24],RL.sim.dat[,26])
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
              ),
   data.frame(
       'model' = 'LTM',
       's3'=cbind(LTM.sim.dat[, 1:12],LTM.sim.dat[, 25]), 
+<<<<<<< HEAD
       's6'=cbind(LTM.sim.dat[, 13:24],LTM.sim.dat[, 37])
+=======
+      's6'=cbind(LTM.sim.dat[, 13:24],LTM.sim.dat[, 26])
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
       ), 
   data.frame(
       'model'='Meta-RL',
       's3'=cbind(RL_LTMpipe.sim.dat[,1:12],RL_LTMpipe.sim.dat[,25]), 
+<<<<<<< HEAD
       's6'=cbind(RL_LTMpipe.sim.dat[,13:24],RL_LTMpipe.sim.dat[,37])
+=======
+      's6'=cbind(RL_LTMpipe.sim.dat[,13:24],RL_LTMpipe.sim.dat[,26])
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
       ),
   data.frame(
       'model'='Biased',
       's3'=cbind(RL_LTMstr.sim.dat[,1:12],RL_LTMstr.sim.dat[,25]),  
+<<<<<<< HEAD
       's6'=cbind(RL_LTMstr.sim.dat[,13:24],RL_LTMstr.sim.dat[,37])  
+=======
+      's6'=cbind(RL_LTMstr.sim.dat[,13:24],RL_LTMstr.sim.dat[,26])  
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
       )
   ) 
 colnames(all.models) <- fix_cols
@@ -727,9 +752,15 @@ all.models.long <-
 all.models %>% 
   cbind(model.ID) %>% 
   pivot_longer(cols = c(-"model.ID",-"model"), values_to = 'accuracy', names_to = 'condition')
+<<<<<<< HEAD
  
  
  
+=======
+ 
+ 
+ 
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
 all.models.long.plt <- 
   all.models.long %>% 
     separate("condition", into = c( 'setSize','iteration'), convert = T) %>%   
@@ -748,6 +779,22 @@ filter(iteration<13) %>%
   theme_pubclean(base_size = 20) +
    theme(legend.position = 'none')+
     xlab('stimulus iteration')
+test.mod.plt <- 
+all.models.long.plt %>% 
+  filter(iteration >=12) %>% 
+  summarySE(measurevar = 'accuracy', groupvars = c('model','setSize','iteration', 'cond.model')) %>% 
+  ggplot(aes(as.factor(iteration),accuracy, group=cond.model,color=cond.model)) +
+  geom_point(size=1.5) +
+   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.15, size=.75) +
+  geom_line(size=1) +
+  facet_grid(vars(model),switch = 'both') +
+  scale_color_brewer(palette = "Paired") +
+  theme_pubclean(base_size = 20) +
+  scale_x_discrete(labels=c("end of learning","test"))+
+  theme(legend.position = 'none')+
+    xlab('condition')
+
+ggarrange(learn.mod.plt, test.mod.plt, ncol = 2)   
 
 test.mod.plt <- 
 all.models.long.plt %>% 
@@ -1017,7 +1064,11 @@ fit.lr %>%
       #geom_density(alpha=.4)
       lm(estimate ~ type*model,data=.) %>% anova
     
+<<<<<<< HEAD
      
+=======
+     wilcox.test(estimate ~ type, data = .)
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
    
    
 ```
@@ -1559,6 +1610,7 @@ Some more specific things to test might be effect of delay between stimulus pres
 
 These plots show group effects for uCLIMB subjects only in python and OLCTS measures and behavioral predictors. 
 ```{r import uCLIMB data}
+<<<<<<< HEAD
 # uclimb <- read_csv("RLWM_data/python_olcts_uclimb_summary_noEEG_092320.csv")
 # uclimb.model.temp1 <- uclimb %>%  merge(p.behav.model, by = "subjects")
 # uclimb.model.dat <-  cbind(uclimb.model.temp1, 'wmComposite'= uclimb.model.temp1[,c("RspanScore", "SspanAbsoluteScore","OspanAbsoluteScore") ] %>% rowMeans()) %>% as_tibble()
@@ -1612,6 +1664,61 @@ These plots show group effects for uCLIMB subjects only in python and OLCTS meas
 # # "PT_Syntax_ACC_Python" and "GR_Total_OLCTS"
 # # vocab
 # #PT_Vocab_OLCTS and "PT_Semantics_ACC_Python"
+=======
+uclimb <- read_csv("RLWM_data/python_olcts_uclimb_summary_noEEG_092320.csv")
+uclimb.model.temp1 <- uclimb %>%  merge(p.behav.model, by = "subjects")
+uclimb.model.dat <-  cbind(uclimb.model.temp1, 'wmComposite'= uclimb.model.temp1[,c("RspanScore", "SspanAbsoluteScore","OspanAbsoluteScore") ] %>% rowMeans()) %>% as_tibble()
+
+#specific goals are to compare to:
+#1 learning rate in language
+#2 Learning rate in Python
+#3 Post-test Python
+#4 Post-test Language
+#5 WM composite score
+#6 RAvens
+#7 PSS measures
+uclimb.model.dat %>%
+  dplyr::select('MLAT_Total', `Ravens Score`,"NDV", "wmComposite","RspanTotal", "PSS_ChooseA.ACC" , "PSS_AvoidB.ACC", "PSS_All.ACC" ) %>%
+  scale(center = F)  %>%
+  data.frame('model'=uclimb.model.dat$model) %>%
+  reshape2::melt() %>%
+  summarySE(groupvars = c("model","variable" ), measurevar = "value") %>%
+  ggplot(aes(model, value, group=model,fill=model))+
+  geom_bar(stat = "identity", position = "dodge") +
+   geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.25, size=.75)+
+ theme_pubr(base_size = 16)+
+  facet_wrap(vars(variable))
+
+  # Python only
+uclimb.python <- read.csv("RLWM_data/python_uclimb_summary_noEEG_092320.csv", header = T)
+uclimb.python.temp1 <-  uclimb.python %>%  merge(p.behav.model, by = "subjects")
+
+python.LR <- read.delim("RLWM_data/SlopeCoefficients_UpTo10_python20181222.txt", sep="\t", header = T)
+
+uclimb.python.dat <- uclimb.python.temp1 %>%
+  merge(python.LR, by="subjects")
+
+uclimb.python.dat %>%
+  dplyr::select( "PostTest_Total_ACC","python.learning.coeff","PT_Syntax_ACC" ,"PT_Semantics_ACC","RPS.Code") %>%
+  scale(center = F)  %>%
+  data.frame('model'=uclimb.python.dat$model) %>%
+  reshape2::melt() %>%
+  summarySE(groupvars = c("model","variable" ), measurevar = "value") %>%
+  ggplot(aes(model, value, group=model,fill=model))+
+  geom_bar(stat = "identity", position = "dodge") +
+   geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.25, size=.75)+
+ theme_pubr(base_size = 16)+
+  facet_wrap(vars(variable))
+
+
+#combined Python and OLCTS measures
+#learning rate
+# "Slope_OLCTS" and python learning rate
+# syntax
+# "PT_Syntax_ACC_Python" and "GR_Total_OLCTS"
+# vocab
+#PT_Vocab_OLCTS and "PT_Semantics_ACC_Python"
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
 
 ```
 

@@ -58,17 +58,27 @@ sdat.repl.h1 <- cbind(sdat.h1[ ,1:12],
                    sdat.h1[ ,13:24],
                   matrix(sdat.h1[ ,26],nrow = numel(sdat.h1[ ,25]), ncol = 12) )
 
+<<<<<<< HEAD
 sdat.h2 = read.csv('./RLWM_data/Half2_all_subject_n83_learn_test_data.csv', header = T) 
+=======
+sdat.h2 = fread('./RLWM_data/Half2_all_subject_n83_learn_test_data.csv', header = T) 
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
 
 h2.subjects <-  sdat.h2$V1
 sdat.h2 <- sdat.h2[, 2:27] # exclude the subjects column
 #modify sdat to balance learn and test data points by replicating test datapoint into 12
 sdat.repl.h2 <- cbind(sdat.h2[ ,1:12],
+<<<<<<< HEAD
                    matrix(sdat.h2[ ,25],
                           nrow = numel(sdat.h2[ ,25]), ncol = 12),
                    sdat.h2[ ,13:24],
                   matrix(sdat.h2[ ,26],
                          nrow = numel(sdat.h2[ ,25]), ncol = 12) )
+=======
+                   matrix(sdat.h2[ ,25],nrow = numel(sdat.h2[ ,25]), ncol = 12),
+                   sdat.h2[ ,13:24],
+                  matrix(sdat.h2[ ,26],nrow = numel(sdat.h2[ ,25]), ncol = 12) )
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
 
 
 RL.sim <- fromJSON('./simulated_data/RL_model/RL_sim_dat_032021.JSON')$data
@@ -76,6 +86,7 @@ RL.sim <- fromJSON('./simulated_data/RL_model/RL_sim_dat_032021.JSON')$data
 #               RL.sim$set3_test,
 #               nrow = numel( RL.sim$set3_test),
 #               ncol = 12 )
+<<<<<<< HEAD
 # RL.sim$set6_test <- matrix(
 #               RL.sim$set6_test,
 #               nrow = numel( RL.sim$set6_test),
@@ -87,6 +98,17 @@ LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$dat
 #               ncol = 12 )
 
 
+=======
+RL.sim$set6_test <- matrix(
+              RL.sim$set6_test,
+              nrow = numel( RL.sim$set6_test),
+              ncol = 12 )
+LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$data
+LTM.sim$set3_test <- matrix(
+              LTM.sim$set3_test,
+              nrow = numel( LTM.sim$set3_test),
+              ncol = 12 )
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
 
 STR.sim <- fromJSON('./simulated_data/strategy_model/STR_sim_data_032021.JSON')$data
 
@@ -94,8 +116,28 @@ META.sim <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_032021.JSON')$da
 
 ```
 
+<<<<<<< HEAD
 
 ```{r fit subjects with models}
+=======
+```{r map experiment}
+
+sdat.list <- list('h1.n3' = sdat.repl.h1[,1:24], 
+                  'h1.n6' = sdat.repl.h1[,25:24],
+                  'h2.n3' = sdat.repl.h2[,1:24], 
+                  'h2.n6' = sdat.repl.h2[,25:24]
+                  
+  
+)
+RL.sim.list <- list('n3' = RL.sim$set3_learn, 
+                  'n6' = sdat.repl.h1[,25:24],
+               
+
+```
+
+
+```{r}
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
 
 #(1) Transform RMSE into residual sum of squares by doing RSS = RMSE^2 * n
 #11:34
@@ -117,7 +159,11 @@ Andys_BIC <- function(rmse, k, n) {
 
 fit.subject <- function(behav.dat, model.dat){
 
+<<<<<<< HEAD
 apply(model.dat, 1, function(x,y) MSE(x, behav.dat)) %>% sqrt()
+=======
+  apply(model.dat, 1, function(x,y) MSE(x, behav.dat)) %>% sqrt()
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
    
 }
 
@@ -140,15 +186,23 @@ fit.models <- function(model, half, setsize, params) {
   # select subject data
   if (half == 1) {
     sdat = sdat.repl.h1
+<<<<<<< HEAD
   } 
   if(half ==2) {
     sdat = sdat.repl.h2
   }
  
+=======
+  } else {
+    sdat = sdat.repl.h2
+  }
+  
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
   # select setsize
   
   if (setsize == 3) {
     ns = 1:24
+<<<<<<< HEAD
     n_size = 'set3_'
   } 
   
@@ -180,13 +234,41 @@ fit.models <- function(model, half, setsize, params) {
                       (cbind(dat.learn, dat.test)
                        )
                       )) %>%
+=======
+    x = 'set3_'
+  } 
+  else{
+    ns = 25:48
+    x='set6_'
+  }
+  
+  
+  apply(sdat[, ns], 1,
+        function(x, y)
+          fit.subject(x, (cbind(
+            bind_cols(eval(parse(text=paste0(model,'.sim$',x, 'learn')
+                                 )
+                           )
+                      ) %>%
+              t(),
+            matrix(
+              eval(parse(text=paste0(model,'.sim$',x, 'test'))),
+              nrow = numel(eval(parse(text=paste0(model,'.sim$',x, 'test')))),
+              ncol = 12
+            )
+          )))) %>%
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
     Andys_BIC(k = params, n = 24)
   
 }
   
 ##########--------RL fits----------------############
 
+<<<<<<< HEAD
 RL.BIC.half1.N3 <-  fit.models(model = 'RL',half = 1, setsize = 3, 2)
+=======
+RL.BIC.half1.N3 <-  fit.models(model = 'RL',half = 1, setsize = 6, 2)
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
 RL.BIC.half1.N6 <- fit.models('RL',1,6,2)
 RL.BIC.half2.N3 <-  fit.models('RL',2,3,2)
 RL.BIC.half2.N6 <-  fit.models('RL',2,6,2)
@@ -200,6 +282,7 @@ LTM.BIC.half2.N6 <- fit.models('LTM',2,6,3)
 ##########---------RL-LTMstr FITS ----------------############
 
 STR.BIC.half1.N3.learn <- fit.models('STR',1,3,6)
+<<<<<<< HEAD
 
 
 STR.BIC.half1.N6.learn <- fit.models('STR',1,6,6)
@@ -212,10 +295,19 @@ toc()
 ##########---------RL-LTMmeta FITS ----------------############
 if(1){
   tic()
+=======
+STR.BIC.half1.N6.learn <- fit.models('STR',1,6,6)
+STR.BIC.half2.N3.learn <- fit.models('STR',2,3,6)
+STR.BIC.half2.N6.learn <- fit.models('STR',2,6,6)
+
+##########---------RL-LTMmeta FITS ----------------############
+
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
 META.BIC.half1.N3 <- fit.models('META',1,3,5)
 META.BIC.half1.N6 <- fit.models('META',1,6,5)
 META.BIC.half2.N3 <- fit.models('META',2,3,5)
 META.BIC.half2.N6 <- fit.models('META',2,6,5)
+<<<<<<< HEAD
 toc()}
 ```
 
@@ -314,11 +406,16 @@ p.behav.model <- inner_join(
 
 
 
+=======
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
 
 ```
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> b398e802a2367b69cf29620a9678d34ace7d7332
 ```{r fit model data to subject data, message=FALSE, warning=FALSE}
 
 
