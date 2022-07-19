@@ -26,19 +26,15 @@ library(ggpubr)
 library(matlab)
 library(broom)
 library(ggplot2)
-library(tidyr)
 library(MLmetrics)
-library(readr)
 library(data.table)
 library(jsonlite)
 library(data.table)
 library(knitr)
 source('param_influence.R')
 library(Rmisc)
-library(dplyr)
-library(reshape2)
 library(magrittr)
-library(stringr)
+library(tidyverse)
 
 knitr::opts_chunk$set(
   comment = "#>", echo = FALSE, warning = FALSE, 
@@ -69,7 +65,7 @@ extract.json <- function(dat.f) {
 }
 ######### RL ##########
 #----------Extract means data for RL models
-simsRL <- fromJSON('./simulated_data/RL_model/RL_sim_dat_032021.JSON') #%$% 
+simsRL <- fromJSON('./simulated_data/RL_model/RL_sim_data_07_12_2022.JSON') #%$% 
   
 RL.sim.dat <- cbind(extract.json(simsRL$data$set3_learn), 
                     extract.json(simsRL$data$set6_learn), 
@@ -77,7 +73,7 @@ RL.sim.dat <- cbind(extract.json(simsRL$data$set3_learn),
                     simsRL$data$set6_test) 
 
 #Extract standard deviations data for RL models
-simsRL_stdev <- fromJSON('./simulated_data/RL_model/RL_sim_std_date.JSON')
+simsRL_stdev <- fromJSON('./simulated_data/RL_model/RL_sim_std_07_2022.JSON')
 
 RL.sim.std <-   cbind(extract.json(simsRL_stdev$data$set3_learn),
                       extract.json(simsRL_stdev$data$set6_learn),
@@ -407,7 +403,7 @@ ggplot(aes(factor(model), fill=factor(model))) +
 
 
 ```{r join dat for the two methods}
-rmse_fit <- read.csv('model_fit_by_RMSE042021.csv') %>% 
+rmse_fit <- read.csv('rlwm_fit_data_072022.csv') %>% 
                     select(subjects,contains('.'))
                   
 colnames(rmse_fit) <- c('subjects', 
