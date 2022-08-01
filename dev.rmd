@@ -1,31 +1,42 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 
 ```{r}
+
 h=bind_rows(c('set3_learn','set6_learn') %>% 
-  map(~ simsRL$data %>% 
+  map(~ LTM.sim %>% 
         .[[.x]] %>% 
         reduce(rbind) %>% 
         data.frame() %>% 
-        mutate(condition =.x)
+        mutate(condition =.x, 
+               model= c(1:nrow(LTM.sim))
+               )
         
   ) %>% 
   reduce(bind_rows) %>% 
-  pivot_longer(cols = starts_with('x')),
+  pivot_longer(cols = starts_with('x'), values_to = 'accuracy', names_to = 'iteration'),
 
 
 
 c('set3_test', 'set6_test') %>% 
 
-map (~ {temp <- simsRL$data %>% 
+map (~ {temp <- LTM.sim %>% 
   .[[.x]]
 
-data.frame(
+data.frame( model=  c(1:nrow(LTM.sim)),
   condition=.x, 
-  name=paste0('x', rep(c(1:12), 25)), 
-  value=rep(temp, 12)
+  iteration=paste0('x', rep(c(1:12), nrow(LTM.sim))), 
+  accuracy=rep(temp, 12)
 )
   
   }
-))
+)
+)
+
+
 ```
 
 

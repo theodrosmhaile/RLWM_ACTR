@@ -1,0 +1,15 @@
+---
+title: "WMO Analysis"
+author: "Theodros H."
+date: "3/6/2019"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+## Communicaiton efficiency for images (color naming theory)
+
+```{r}
+sum()
+
+```
+

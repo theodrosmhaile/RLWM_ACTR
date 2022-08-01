@@ -13,8 +13,9 @@ There are 8 blocks of set size 3 trials and 6 blocks of set size 6 trials per pa
 #start up
 rm(list = ls())
 library(matlab)
-
-
+library(tidyverse)
+library(ggpubr)
+library(magrittr)
 ```
 Import data and set variables
 ```{r}
@@ -23,10 +24,19 @@ Import data and set variables
 #setwd('/Volumes/GoogleDrive/My Drive/CCDL Shared/Shared/Teddy/winter_19_subjectpool_data')
 
 #Import data
-wmodata <- read_delim('./processed_wmo/wmo_training_uclimb_and_subjectpool.txt') 
-wmotestdata<- read_delim('./processed_wmo/wmo_test_uclimb_and_subjectpool.txt') 
+wmodata <- read_delim('./processed_wmo/wmo_subjects_across_studies_learn_031820.csv') 
+wmotestdata<- read_delim('./processed_wmo/wmo_subjects_across_studies_test_031820.csv') 
+model.dat <- read_csv('RMSE_fit_model_dat_07_2022.csv')
+model.dat %<>% mutate(subject=subjects,.keep='unused') 
 #wmodata <- read.csv('./Processed/wmo_trainingAllParticipants.txt') 
 Training.blocks <- c(3,6,3,3,6,3,6,6,3,3,6,3,6,3) #from data
+
+## Stimuli sets for each block: 
+#[3 6 7 2 5 17 18 13 14 10 9 12 11 15]
+
+ stim.items =  c("utensils", "colors", "sports" , "veggies",
+                 "shapes","rooms", "plants", "fruits","landscapes","animals",
+                 "tools", 'vehicles', "instruments", "clothes")
 block.3 <- which(Training.blocks==3)
 block.6 <- which(Training.blocks==6)
 #logical indices
@@ -40,14 +50,65 @@ ns3.n <- 3
 ns6.n <- 6
 #maintain a universal list of participants
 #Subs <- unique(wmodata$subject)#this will change
-
-Subjects <- as.matrix(read.csv(
-  paste(dataPath,"winter19STAGSubjects.csv",sep = ""),
-  header = FALSE))
+Subjects <- unique(wmodata$subject)
+# Subjects <- as.matrix(read.csv(
+#   paste(dataPath,"winter19STAGSubjects.csv",sep = ""),
+#   header = FALSE))
 
 ```
+
+### Explanation of variables
+ - trial is set-size
+ - acc is accuracy
+ - seq is image identifier
+ - Code is correct response
  
-This block performs the learning/acuracy curve: acc by item iteration
+```{r block analysis}
+blk.order=c(1,9,2,3,10,4,11,12,5,6,13,7,14,8)
+
+wmo.mod <- 
+  wmodata %>% 
+  mutate('block' =  rep(
+    c(rep('s3_1_utensils', 13*3), rep('s6_1_colors', 13*6),rep('s3_2_sports', 13*3) ,rep('s3_3_veggies', 13*3),
+      rep('s6_2_shapes', 13*6),rep('s3_4_rooms', 13*3),rep('s6_3_plants', 13*6),rep('s6_4_fruits', 13*6),
+      rep('s3_5_landscapes', 13*3), rep('s3_6_animals', 13*3),rep('s6_5_tools', 13*6),rep('s3_7_vehicles', 13*3),rep('s6_6_instruments', 13*6),
+      rep('s3_8_clothes', 13*3)
+    ), length(unique(wmodata$subject))) 
+    
+  ) %>% 
+  arrange(subject, block, seq) %>% 
+  mutate('iteration' = rep(rep(1:13, 60),
+                       length(unique(wmodata$subject)))
+         )
+  
+wmo.mod %>% 
+ # filter(subject<1620) %>% 
+group_by( subject, block, iteration) %>% 
+  summarize(mean=mean(acc), 
+            se=sd(acc)/sqrt(length(acc))) %>%
+
+  ggplot(aes(x=iteration, y=mean, group=iteration)) +
+ geom_boxplot()+
+   #geom_point() +
+# geom_smooth(method  = 'lm',formula = 'y~poly(x,2)', se=F)+
+ # geom_line() +
+ # geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.35, size=1)+
+ ylim(c(0, 1.))+
+  #facet_wrap(vars(subject)) +
+  facet_wrap(vars(block 
+                  )
+             )+
+  theme_pubclean(base_size = 20) +
+theme(legend.position = 'none')
+  
+
+# 
+# 'iteration' = rep(rep(1:13, 60),
+#                       length(unique(wmodata$subject)))
+```
+ 
+ 
+This block performs the learning/accuracy curve: acc by item iteration
 ```{r, echo=FALSE}
 i=1
 mean.acc.3 <- c()

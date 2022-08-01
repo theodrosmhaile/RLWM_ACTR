@@ -547,7 +547,7 @@ Given a participants best fit how many of the next best fit parameter sets are i
 consist.check <- rbind(
   RL.bic %>% t() %>% data.frame(mod='RL'),
   LTM.bic %>% t() %>% data.frame(mod='LTM'),
-  RL_LTMpipe.bic %>% t() %>% data.frame(mod='Meta_RL'),
+  RL_LTMpipe.bic %>% t() %>% data.frame(mod='Meta.RL'),
   RL_LTMstr.bic %>% t() %>% data.frame(mod='Biased')
 )
 
@@ -607,7 +607,7 @@ Large differences in BIC values in the first 2 to 5 are critical to provide good
 
 
 BIC.diff <-  
-   apply(sorted.bic.dat %>%  data.frame(ind=c(1:15775)) %>% filter(ind<3),2,diff) %>% 
+   apply(sorted.bic.dat %>%  data.frame(ind=c(1:15775)) %>% filter(ind<101),2,diff) %>% 
   data.frame(ind2=c(1:99)) %>% 
    dplyr::select(-ind) %>%
    reshape2::melt(id.vars='ind2') 
@@ -699,30 +699,52 @@ facet_wrap(vars(model)) +
   
    
 
-mod.pref <- 
-  comp %>%  data.frame(ind=c(1:15775)) %>% 
-  filter(ind<11) %>% 
-  reshape2::melt(id.vars='ind') %>% 
-  group_by(variable)  %>% dplyr::count(value) %>% 
-  reshape2::dcast(variable ~ value, value.var = 'n') %>% 
-  data.frame(model=p.behav.model$model, subjects=p.behav.model$subjects) %>%   #added subjects
- # filter(model=='LTM' ) %>% #added filter by model
-   reshape2::melt(id.vars=c('variable','model', 'subjects'), variable.name='mod.type') %>% 
-  group_by(model,mod.type) %>% 
-  dplyr::summarise(mean=mean(value, na.rm = T),
-                   median=median(value,na.rm = T),
-                   n=sum(!is.na(value)),
-                   sem=sd(value,na.rm = T)/sqrt(sum(!is.na(value))),
-                   prop=mean(value, na.rm = T)/10) %>% 
-  mutate(prop2=case_when(is.nan(prop)==T ~ 0,
-                         is.nan(prop)==F ~ prop))
+mod.pref.temp <- 
+  comp %>% 
+    data.frame(ind=c(1:15775)) %>% 
+  filter(ind<11) %>%
+  pivot_longer(cols = c(-ind), names_to ='subjects', values_to = 'fit.models' ) %>% 
+  mutate(best.model = rep(comp[1,],10)
+         ) %>% 
+    group_by (best.model)  %>% 
+    dplyr::count(fit.models) %>% 
   
+    group_by(best.model, .drop = F) 
+
+mod.pref <- 
+  mod.pref.temp %>% 
+    summarise(totals=sum(n)) %>% 
+  inner_join( mod.pref.temp, by = 'best.model') %>% 
+    group_by(best.model, fit.models) %>% 
+    summarise(prop= n/totals) %>% 
+   ungroup() %>% 
+   add_row(best.model=c('Biased','Meta.RL','RL','RL' ), 
+           fit.models=c('RL','RL', 'Biased','Meta.RL'), 
+           prop=c(0,0,0,0)
+           )
+    
+  
+ #  
+ #  reshape2::dcast(variable ~ value, value.var = 'n') %>% 
+ #  data.frame(model=p.behav.model$model, subjects=p.behav.model$subjects) %>%   #added subjects
+ # # filter(model=='LTM' ) %>% #added filter by model
+ #   reshape2::melt(id.vars=c('variable','model', 'subjects'), variable.name='mod.type') %>% 
+ #  group_by(model,mod.type) %>% 
+ #  dplyr::summarise(mean=mean(value, na.rm = T),
+ #                   median=median(value,na.rm = T),
+ #                   n=sum(!is.na(value)),
+ #                   sem=sd(value,na.rm = T)/sqrt(sum(!is.na(value))),
+ #                   prop=mean(value, na.rm = T)/10) %>% 
+ #  mutate(prop2=case_when(is.nan(prop)==T ~ 0,
+ #                         is.nan(prop)==F ~ prop))
+ #  
 
 mod.pref %>% 
-  ggplot(aes(y=mod.type, x=model, fill=prop2))+
+  ggplot(aes(y=fit.models, x=best.model, fill=prop))+
   geom_tile()  +
-    geom_text(aes(label= paste0(round(prop2* 100 ,2),'%'), 
-                                size=.5),
+    geom_text(aes(label= paste0(round(prop* 100 ,2),'%') 
+                                ),
+              size=8,
                   show.legend = F) +
   scale_fill_gradient2(limits=c(0,1),
                           low='black',
@@ -736,8 +758,10 @@ mod.pref %>%
   xlab('Best fitting model') +
   ylab('Available models') +
  labs(fill='Percentage') +
- guides(fill = guide_colorbar(title.position = "top", barwidth = 12)) +
-  theme_pubclean(base_size = 20)
+ guides(fill = guide_colorbar(title.position = "top", barwidth = 18)) +
+  scale_x_discrete(labels=c('Biased', 'LTM', 'Meta-RL', 'RL'))+
+  scale_y_discrete(labels=c('Biased', 'LTM', 'Meta-RL', 'RL'))+
+  theme_pubclean(base_size = 28)
 
 mod.pref %>% mutate(pref=(model==mod.type)) %>% filter(pref)
 ##Chantel's request 
