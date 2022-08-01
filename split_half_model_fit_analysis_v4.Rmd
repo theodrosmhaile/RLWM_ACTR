@@ -53,7 +53,8 @@ sdat.h1 = read.csv('./RLWM_data/Half1_all_subject_n83_learn_test_data.csv',heade
 h1.subjects <-  sdat.h1$V1
 sdat.h1 <- sdat.h1[, 2:27] # exclude the subjects column
 #modify sdat to balance learn and test data points by replicating test datapoint into 12
-sdat.repl.h1 <- cbind(sdat.h1[ ,1:12],
+sdat.repl.h1 <- cbind(
+  sdat.h1[ ,1:12],
                    matrix(sdat.h1[ ,25],nrow = numel(sdat.h1[ ,25]), ncol = 12),
                    sdat.h1[ ,13:24],
                   matrix(sdat.h1[ ,26],nrow = numel(sdat.h1[ ,25]), ncol = 12) )
@@ -221,15 +222,19 @@ toc()}
 ```{r}
 # generate model id and parameter set ids and concat all sets
 
-half1.N3 <- rbind(RL.BIC.half1.N3 %>% as_tibble() %>% mutate(model='RL',
-                                                             model.id=c(1:nrow(RL.sim))) %>% View, 
-                  LTM.BIC.half1.N3 %>% as_tibble() %>% mutate(model='LTM',
-                                                             model.id=c(1:nrow(LTM.sim)) ),
-                  STR.BIC.half1.N3.learn %>% as_tibble() %>% mutate(model='STR',
-                                                                   model.id=c(1:nrow(STR.sim)) ),
-                  META.BIC.half1.N3 %>% as_tibble() %>% mutate(model='META',
-                                                              model.id=c(1:nrow(META.sim)) )
-                  )
+half1.N3 <- rbind(
+  RL.BIC.half1.N3 %>% 
+    as_tibble() %>% 
+    mutate(model='RL', model.id=c(1:nrow(RL.sim))), 
+  LTM.BIC.half1.N3 %>% 
+    as_tibble() %>% 
+    mutate(model='LTM',model.id=c(1:nrow(LTM.sim)) ),
+  STR.BIC.half1.N3.learn %>% 
+    as_tibble() %>% 
+    mutate(model='STR', model.id=c(1:nrow(STR.sim)) ),
+  META.BIC.half1.N3 %>% as_tibble() %>% mutate(model='META',
+                                               model.id=c(1:nrow(META.sim)) )
+)
 half1.N6 <- rbind(RL.BIC.half1.N6 %>% as_tibble() %>% mutate(model='RL',
                                                              model.id=c(1:nrow(RL.sim))), 
                   LTM.BIC.half1.N6 %>% as_tibble() %>% mutate(model='LTM',
@@ -308,9 +313,9 @@ best.fits %>%
  
 ```{r join model-behavioral data}
 this.model = RL.sim
-function(){
+get_data = function(data){
   bind_rows(c('set3_learn','set6_learn') %>% 
-  map(~ this.model %>% 
+  map(~ data %>% 
         .[[.x]] %>% 
         reduce(rbind) %>% 
         data.frame() %>% 
