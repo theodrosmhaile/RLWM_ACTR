@@ -206,11 +206,19 @@ current_response  = np.repeat('x', nTrials * 2).tolist() #multiply by 2 for numb
 lastLearnTrial = np.size(stims3 + stims6) -1
 
 #parameter ranges for simulation
-bll_param   = [0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,range around .5 actr rec val
-alpha_param = [0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection 0.2 rec val
-egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
-imag_param  = [0.1, 0.2, 0.3 , 0.4, 0.5] #simulates working memory as attentional focus 
-ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual.
+#bll_param   = [0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,range around .5 actr rec val
+#alpha_param = [0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection 0.2 rec val
+#egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
+#
+###########################################
+#----EXPANDED GRANULAR PARAMETER SPACE----
+
+alpha_param = [0.025, 0.050, 0.075, 0.100, 0.125, 0.150, 0.175, 0.200, 0.225, 0.250] # learning rate of the RL utility selection 0.2 rec val
+egs_param   = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50] # amount of noise added to the RL utility selection
+##########################################
+
+#imag_param  = [0.1, 0.2, 0.3 , 0.4, 0.5] #simulates working memory as attentional focus 
+#ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual.
 # [0.4, 0.5, 0.6]#
 # [0.1, 0.15, 0.2]#
 # [0.2, 0.3, 0.4]#
@@ -371,9 +379,9 @@ def execute_sim(n,fromI,toI, frac):
       
     sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans' ])
     sim_st = pd.DataFrame(sim_std, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test'])
-    sim_st.to_json('./simulated_data/RL_model/RL_sim_std_date.JSON',orient='table')
+    sim_st.to_json('./expanded_sims/RL_model/RL_sim_std_date.JSON',orient='table') # this saves files to the new expanded sims folder
 
-    sim.to_pickle('./simulated_data/RL_model/RL_sim_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI))  
+    sim.to_pickle('./expanded_sims/RL_model/RL_sim_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI))  # this saves files to the new expanded sims folder
 
 
 

@@ -149,27 +149,6 @@ index_search %>% sample_n(5) %>%
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 get_data(RL.sim)mod.idx <-  cbind('subject'=h1.subjects, best.fits, best.fit.idx) 
 
 c('half1_N3.mod', 'half1_N6.mod', 'half1_N3.idx') %>% 

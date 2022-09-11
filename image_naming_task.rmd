@@ -7,9 +7,76 @@ editor_options:
   chunk_output_type: console
 ---
 ## Communicaiton efficiency for images (color naming theory)
-
 ```{r}
-sum()
+library(tidyverse)
+library(matlab)
+```
+
+```{r import and clean up}
+
+dat.names <-  paste0('./CollinsNaming/Data/',dir('CollinsNaming/Data/', pattern = 'CollinsNaming'))
+subjects =
+  dat.names %>% 
+  str_extract(pattern = '.....txt') %>% 
+  str_remove_all(pattern = '.txt')
+  
+
+all_dat <- 
+  read_delim(dat.names, col_names = F) %>% 
+  set_names(c('condition','category', 'item','response')) %>% 
+  filter(condition!='namingprac') %>% 
+  dplyr::mutate(names= case_when(str_detect(response, pattern = "[:alpha:]") ~ 1,
+                         TRUE ~ 0
+                         )) %>% 
+    filter(names==1) %>% 
+    mutate(response = str_remove_all(response, pattern ="[0-9:\" ]"), 
+           .keep='unused') %>% 
+    select(-names)
+      
+    
+
+```
+
+```{r frequency of optimal response words}
+optimalresp_freq <- 
+  all_dat %>% 
+  group_by(category, item) %>% 
+  #filter(item=='camel')
+  count(response) %>% 
+  filter( response==item) %>%
+  
+  group_by(category, item) %>% 
+  summarize(proportion=n/(length(subjects)*2)) 
+
+optimalresp_freq %>% 
+  group_by(category) %>% 
+  summarise(m=mean(proportion))
+
+optimalresp_freq %>% 
+  ggplot(aes(y=proportion, x=category))+ 
+  geom_boxplot() +
+  theme_bw()
+  
+```
+
+```{r diversity of responses}
+response_diversity <- 
+all_dat %>% 
+  group_by(category, item) %>% 
+  count(response) %>% 
+  #filter(n>1) %>% 
+  group_by(category, item) %>% 
+  summarise(resp_unique = numel(unique(response)),
+            prop = resp_unique/(length(subjects)*2)
+            ) 
+
+response_diversity %>% 
+  group_by(category) %>% 
+  summarise(m=mean(scale(resp_unique)))
+
+response_diversity %>% 
+  ggplot(aes(y=resp_unique,x=item)) +
+  geom_boxplot()
 
 ```
 

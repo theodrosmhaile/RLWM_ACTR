@@ -11,12 +11,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{css, echo=FALSE}
-p {
-  font-size: 18px;
-}
-```
-
 # Results
 ### Model fits
 
@@ -31,6 +25,7 @@ library(knitr)
 library(Rmisc)
 library(magrittr)
 library(data.table)
+library(skimr)
 
 knitr::opts_chunk$set(
   comment = "#>", echo = FALSE, warning = FALSE, 
@@ -55,7 +50,8 @@ sdat.h1 <- sdat.h1[, 2:27] # exclude the subjects column
 #modify sdat to balance learn and test data points by replicating test datapoint into 12
 sdat.repl.h1 <- cbind(
   sdat.h1[ ,1:12],
-                   matrix(sdat.h1[ ,25],nrow = numel(sdat.h1[ ,25]), ncol = 12),
+                   matrix(sdat.h1[ ,25],
+                          nrow = numel(sdat.h1[ ,25]), ncol = 12),
                    sdat.h1[ ,13:24],
                   matrix(sdat.h1[ ,26],nrow = numel(sdat.h1[ ,25]), ncol = 12) )
 
@@ -72,7 +68,9 @@ sdat.repl.h2 <- cbind(sdat.h2[ ,1:12],
                          nrow = numel(sdat.h2[ ,25]), ncol = 12) )
 
 
-RL.sim <- fromJSON('./simulated_data/RL_model/RL_sim_data_07_12_2022.JSON')$data
+RL.sim <- fromJSON('./simulated_data/RL_model/RL_sim_data_07_12_2022.JSON')$data %>% 
+  dplyr::mutate(bias = 0)
+
 # RL.sim$set3_test <- matrix(
 #               RL.sim$set3_test,
 #               nrow = numel( RL.sim$set3_test),
@@ -81,7 +79,8 @@ RL.sim <- fromJSON('./simulated_data/RL_model/RL_sim_data_07_12_2022.JSON')$data
 #               RL.sim$set6_test,
 #               nrow = numel( RL.sim$set6_test),
 #               ncol = 12 )
-LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$data
+LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$data %>% 
+  dplyr::mutate(bias = 0 )
 # LTM.sim$set3_test <- matrix(
 #               LTM.sim$set3_test,
 #               nrow = numel( LTM.sim$set3_test),
@@ -89,9 +88,13 @@ LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$dat
 
 
 
-STR.sim <- fromJSON('./simulated_data/strategy_model/STR_sim_data_032021.JSON')$data
+STR.sim <- fromJSON('./simulated_data/strategy_model/STR_sim_data_032021.JSON')$data %>% 
+  dplyr::mutate(bias = str_remove_all(strtg, "[:alpha:]") %>% as.numeric()/100, .keep=c('unused'))
 
-META.sim <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_032021.JSON')$data
+META.sim <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_032021.JSON')$data %>% 
+   dplyr::mutate(bias = strtg,
+          bias3 = strtg3,
+          bias6 = strtg6, .keep='unused')
 
 ```
 
@@ -198,25 +201,24 @@ LTM.BIC.half2.N3 <- fit.models('LTM',2,3,3)
 LTM.BIC.half2.N6 <- fit.models('LTM',2,6,3)
 
 ##########---------RL-LTMstr FITS ----------------############
-
+if(0){
 STR.BIC.half1.N3.learn <- fit.models('STR',1,3,6)
 
 
 STR.BIC.half1.N6.learn <- fit.models('STR',1,6,6)
-if(1){
-  tic()
+
+ 
 STR.BIC.half2.N3.learn <- fit.models('STR',2,3,6)
 STR.BIC.half2.N6.learn <- fit.models('STR',2,6,6)
-toc()
-}
+
+
 ##########---------RL-LTMmeta FITS ----------------############
-if(1){
-  tic()
+
 META.BIC.half1.N3 <- fit.models('META',1,3,5)
 META.BIC.half1.N6 <- fit.models('META',1,6,5)
 META.BIC.half2.N3 <- fit.models('META',2,3,5)
 META.BIC.half2.N6 <- fit.models('META',2,6,5)
-toc()}
+}
 ```
 
 ```{r}
@@ -228,80 +230,82 @@ half1.N3 <- rbind(
     mutate(model='RL', model.id=c(1:nrow(RL.sim))), 
   LTM.BIC.half1.N3 %>% 
     as_tibble() %>% 
-    mutate(model='LTM',model.id=c(1:nrow(LTM.sim)) ),
-  STR.BIC.half1.N3.learn %>% 
-    as_tibble() %>% 
-    mutate(model='STR', model.id=c(1:nrow(STR.sim)) ),
-  META.BIC.half1.N3 %>% as_tibble() %>% mutate(model='META',
-                                               model.id=c(1:nrow(META.sim)) )
+    mutate(model='LTM',model.id=c(1:nrow(LTM.sim)) )
+  # ,STR.BIC.half1.N3.learn %>% 
+  #   as_tibble() %>% 
+  #   mutate(model='STR', model.id=c(1:nrow(STR.sim)) ),
+  # META.BIC.half1.N3 %>% as_tibble() %>% mutate(model='META',
+  #                                              model.id=c(1:nrow(META.sim)) )
 )
 half1.N6 <- rbind(RL.BIC.half1.N6 %>% as_tibble() %>% mutate(model='RL',
                                                              model.id=c(1:nrow(RL.sim))), 
                   LTM.BIC.half1.N6 %>% as_tibble() %>% mutate(model='LTM',
-                                                              model.id=c(1:nrow(LTM.sim))),
-                  STR.BIC.half1.N6.learn %>% as_tibble() %>% mutate(model='STR',
-                                                                    model.id=c(1:nrow(STR.sim))),
-                  META.BIC.half1.N6 %>% as_tibble() %>% mutate(model='META',
-                                                               model.id=c(1:nrow(META.sim)))
+                                                              model.id=c(1:nrow(LTM.sim)))
+                  # ,STR.BIC.half1.N6.learn %>% as_tibble() %>% mutate(model='STR',
+                  #                                                   model.id=c(1:nrow(STR.sim))),
+                  # META.BIC.half1.N6 %>% as_tibble() %>% mutate(model='META',
+                  #                                              model.id=c(1:nrow(META.sim)))
                   )
 half2.N3 <- rbind(RL.BIC.half2.N3 %>% as_tibble() %>% mutate(model='RL',
                                                              model.id=c(1:nrow(RL.sim))), 
                   LTM.BIC.half2.N3 %>% as_tibble() %>% mutate(model='LTM',
-                                                              model.id=c(1:nrow(LTM.sim))),
-                  STR.BIC.half2.N3.learn %>% as_tibble() %>% mutate(model='STR',
-                                                                    model.id=c(1:nrow(STR.sim))),
-                  META.BIC.half2.N3 %>% as_tibble() %>% mutate(model='META',
-                                                               model.id=c(1:nrow(META.sim)))
+                                                              model.id=c(1:nrow(LTM.sim)))
+                  # ,STR.BIC.half2.N3.learn %>% as_tibble() %>% mutate(model='STR',
+                  #                                                   model.id=c(1:nrow(STR.sim))),
+                  # META.BIC.half2.N3 %>% as_tibble() %>% mutate(model='META',
+                  #                                              model.id=c(1:nrow(META.sim)))
                   )
 half2.N6 <- rbind(RL.BIC.half2.N6 %>% as_tibble() %>% mutate(model='RL',
                                                              model.id=c(1:nrow(RL.sim))), 
                   LTM.BIC.half2.N6 %>% as_tibble() %>% mutate(model='LTM',
-                                                              model.id=c(1:nrow(LTM.sim))),
-                  STR.BIC.half2.N6.learn %>% as_tibble() %>% mutate(model='STR',
-                                                                    model.id=c(1:nrow(STR.sim))),
-                  META.BIC.half2.N6 %>% as_tibble() %>% mutate(model='META',
-                                                               model.id=c(1:nrow(META.sim)))
+                                                              model.id=c(1:nrow(LTM.sim)))
+                  # ,STR.BIC.half2.N6.learn %>% as_tibble() %>% mutate(model='STR',
+                  #                                                   model.id=c(1:nrow(STR.sim))),
+                  # META.BIC.half2.N6 %>% as_tibble() %>% mutate(model='META',
+                  #                                              model.id=c(1:nrow(META.sim)))
                   )
 
 
 
 
-best.fits <- tibble('half1_N3.mod' = half1.N3$model[half1.N3 %>% select(-contains('model')) %>% apply(., 2, which.min)],
-                                    
-                  'half1_N6.mod' = half1.N6$model[half1.N6 %>% select(-contains('model')) %>% apply(., 2, which.min)],
-                                
-                  'half2_N3.mod' = half2.N3$model[half2.N3 %>% select(-contains('model')) %>% apply(., 2, which.min)],
-                                   
-                  'half2_N6.mod' = half2.N6$model[half2.N3 %>% select(-contains('model')) %>% apply(., 2, which.min)],
-                                    
-                  
-                  )
+best.fits <- tibble('half1_N3' = half1.N3$model[half1.N3 %>% select(-contains('model')) %>% 
+                                                      apply(., 2, which.min)],
+                    'half1_N6' = half1.N6$model[half1.N6 %>% select(-contains('model')) %>% 
+                                                      apply(., 2, which.min)],
+                    'half2_N3' = half2.N3$model[half2.N3 %>% select(-contains('model')) %>% 
+                                                      apply(., 2, which.min)],
+                    'half2_N6' = half2.N6$model[half2.N6 %>% select(-contains('model')) %>% 
+                                                      apply(., 2, which.min)]) %>% 
+  data.frame() %>% 
+  mutate(type = "index", 
+         subjects = h1.subjects) %>%  
+  pivot_longer(cols = starts_with("half"), 
+               values_to = "model")
 
 
-best.fit.idx <- tibble('half1_N3.idx' = half1.N3$model.id[half1.N3 %>% select(-contains('model')) %>% apply(., 2, which.min)],
-                     'half1_N6.idx'=  half1.N6$model.id[half1.N6 %>% select(-contains('model')) %>% apply(., 2, which.min)], 
-                     'half2_N3.idx'= half2.N3$model.id[half2.N3 %>% select(-contains('model')) %>% apply(., 2, which.min)], 
-                     'half2_N6.idx'= half2.N6$model.id[half2.N6 %>% select(-contains('model')) %>% apply(., 2, which.min)]
-                     )
+best.fit.idx <- tibble('half1_N3' = half1.N3$model.id[half1.N3 %>% select(-contains('model')) %>% apply(., 2, which.min)],
+                       'half1_N6'=  half1.N6$model.id[half1.N6 %>% select(-contains('model')) %>% apply(., 2, which.min)], 
+                       'half2_N3'= half2.N3$model.id[half2.N3 %>% select(-contains('model')) %>% apply(., 2, which.min)], 
+                       'half2_N6'= half2.N6$model.id[half2.N6 %>% select(-contains('model')) %>% apply(., 2, which.min)]
+) %>%  
+  data.frame() %>%
+  mutate(type = "index", 
+         subjects = h1.subjects) %>%  
+  pivot_longer(cols = starts_with("half"), 
+               values_to = "index")
 
 ```
 
 ```{r}
 best.fits %>% 
-  count()
-best.fits %>% 
-  count('half1_N3.mod')
-best.fits %>% 
-  count('half1_N6.mod')
-best.fits %>% 
-  count('half2_N3.mod')
-best.fits %>% 
-  count('half2_N3.mod')
+  group_by(name, model) %>% 
+  count(c('model', 'name'))
+
 
 best.fits %>% 
-  pivot_longer(cols = contains('N')) %>%
-  count %>% 
-  ggplot(aes(y=freq, x=name,fill=value)) +
+  group_by(name, model) %>% 
+  count(c('model', 'name')) %>% 
+  ggplot(aes(y=freq, x=name,fill=model)) +
   geom_bar(stat = 'identity') +
  # facet_wrap(vars(name)) +
   scale_fill_brewer(palette = 'Reds')+
@@ -311,1617 +315,332 @@ best.fits %>%
 
 ```
  
-```{r join model-behavioral data}
-this.model = RL.sim
-get_data = function(data){
-  bind_rows(c('set3_learn','set6_learn') %>% 
-  map(~ data %>% 
-        .[[.x]] %>% 
-        reduce(rbind) %>% 
-        data.frame() %>% 
-        mutate(condition =.x, 
-               model= c(1:25)
-               )
-        
-  ) %>% 
-  reduce(bind_rows) %>% 
-  pivot_longer(cols = starts_with('x'), values_to = 'accuracy', names_to = 'iteration'),
-
-
-
-c('set3_test', 'set6_test') %>% 
-
-map (~ {temp <- this.model %>% 
-  .[[.x]]
-
-data.frame(
-  condition=.x, 
-  iteration=paste0('x', rep(c(1:12), 25)), 
-  accuracy=rep(temp, 12)
-)
-  
-  }
-)
-)
-}
-
-mod.idx <-  cbind('subject'=h1.subjects, best.fits, best.fit.idx) 
-
-c('half1_N3.mod', 'half1_N6.mod', 'half1_N3.idx') %>% 
-  map(~ mod.idx %>% 
-        .[[.x]] %>% 
-        filter(.[.x]=='LTM')  
-        
-    
-  )
-  
-
-h %>% 
-  slice(pmatch(model, 
-              (mod.idx %>% 
-                 filter(half1_N3.mod == 'LTM') %>%  
-                 select (subject, half1_N3.idx) %$% 
-# bind_rows(.['subject'], 
-  .['half1_N3.idx'] %>% reduce(unlist) %>% as.numeric()),
-duplicates.ok = T))
-           #LTM.sim[.['half1_N3.idx'] %>% reduce(unlist) %>% as.numeric(),]   
-        #   )
-
+```{r part 1 join model-behavioral data}
 #subjects model model_id half type setsize iteration accuracy parameter parameter value 
 
-
-
-
-p.behav.model <- inner_join(
-  rbind(
-    sdat.h1 %>% mutate('subject'= h1.subjects, 'half'='half1') %>% 
-      pivot_longer(cols = c(-half, -subject), names_to = 'iteration', values_to = 'accuracy')
+# Function reduces the lists of simulations to long-form dataframes.
+get_data = function(data, data_name){
+  bind_rows(
+    c('set3_learn','set6_learn') %>% 
+      map(~
+            #column is measurement at T, record is simulation
+            data %>% 
+            .[[.x]] %>% 
+            reduce(rbind) %>% 
+            data.frame() %>% 
+            mutate(condition = .x, 
+                   model_index= c(1:nrow(data))
+            )
+      ) %>% 
+      reduce(bind_rows) %>% 
+      pivot_longer(cols = starts_with('x')
+                   ,values_to = 'accuracy', names_to = 'iteration'),
     
-    
-    
-    
-    
-    ,
-    sdat.h2 %>% mutate('subject'= h1.subjects, 'half'='half2') %>% 
-      pivot_longer(cols = c(-half, -subject), names_to = 'iteration', values_to = 'accuracy')
-    ) %>% head()
+    c('set3_test', 'set6_test','alpha','egs', 'bll', 'imag','ans', 'bias') %>%
+      map (~
+             {
+               temp = data %>% 
+                 .[[.x]]
+               
+               data.frame(
+                  model_index= c(1:nrow(data)),
+                 condition=.x, 
+                 iteration=paste0('X', rep(c(1:12), nrow(data))), 
+                 accuracy=rep(temp, 12)
+               )
+               
+             }
+      )
   
-  
-  
-  
-  , 
-)
-
-
-
-
-
-```
-
-
-
-```{r fit model data to subject data, message=FALSE, warning=FALSE}
-
-
-
-
-#----- loop through subject data and check for fit against model data using mean squared error. 
-mseRL.temp         =c()
-mseLTM.temp        =c()
-mseRL_LTMorig.temp =c()
-mseRL_LTMpipe.temp =c()
-mseRL_LTMstr.temp  =c()
-
-for(s in c(1:nrow(sdat.mod))) { # for each subject
- # model 1 
- mseRL.temp     <- rbind(mseRL.temp, apply(RL.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ])) %>% sqrt()
-                         )
- # model 2
- mseLTM.temp    <- rbind(mseLTM.temp, apply(LTM.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ] )) %>% sqrt()
-                         )
- 
- # model 3.1
- mseRL_LTMpipe.temp <- rbind(mseRL_LTMpipe.temp, 
-                             apply(RL_LTMpipe.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ])) %>% sqrt()
-                             )
- # model 3.2
-mseRL_LTMstr.temp  <- rbind(mseRL_LTMstr.temp, 
-                            apply(RL_LTMstr.sim.dat[, 1:48], 1, function(x,y) MSE(x, sdat.mod[s, ])) %>% sqrt()
-                            )
-  
-}
-
-
-
-
-
-
-#------ Exrtact row indices to get parameter set of parameters for best fit model
-
-#------------first find the smallest BIC
-RL.bic = Andys_BIC(mseRL.temp, 2)
-LTM.bic = Andys_BIC(mseLTM.temp, 3)
-RL_LTMpipe.bic = Andys_BIC(mseRL_LTMpipe.temp, 5)
-RL_LTMstr.bic = Andys_BIC(mseRL_LTMstr.temp, 6)
-
-RL.fit     = as.matrix(apply(RL.bic , 1, min))   
-LTM.fit    = as.matrix(apply(LTM.bic , 1, min))  
-
-RL_LTMpipe.fit = as.matrix(apply(RL_LTMpipe.bic, 1, min)) 
-RL_LTMstr.fit = as.matrix(apply(RL_LTMstr.bic , 1, min))
-
-
-
-#-------------second, find actual row number using smallest value
-
-
-ind.temp.RL <- c()
-
-ind.temp.RL_LTMstr <- c()
-ind.temp.RL_LTMpipe <- c()
-ind.temp.LTM <- c()
-
-for ( i in 1:length(RL.fit)) {
-  ind.temp.RL <- rbind(ind.temp.RL, which(RL.bic[i,] %in% RL.fit[i]))
-  
-}
-
-for ( i in 1:length(LTM.fit)) {
-  ind.temp.LTM <- rbind(ind.temp.LTM, which(LTM.bic[i,] %in% LTM.fit[i]))
-  
-}
-
-for ( i in 1:length(RL_LTMpipe.fit)) {
-  ind.temp.RL_LTMpipe <- rbind(ind.temp.RL_LTMpipe, 
-                           which(RL_LTMpipe.bic[i,] %in% RL_LTMpipe.fit[i]))
-  
-}
-
-for ( i in 1:length(RL_LTMstr.fit)) {
-  ind.temp.RL_LTMstr <- rbind(ind.temp.RL_LTMstr, which(RL_LTMstr.bic[i,] %in% RL_LTMstr.fit[i]))
-  
-}
-
-
-#--------which model fits a participant most?
-#1= RL; 2= LTM; 3 = RL_LTMpipe; 4 = RL_LTMstr
-
-
-#--------------There are no min.col functions? Work around find the max after inverting:
-participants.fit = c()
-
-model.fits <- data.frame(RL.fit, LTM.fit, RL_LTMpipe.fit, RL_LTMstr.fit)#, fit.labels)
-participant.min <- apply(model.fits, 1, min)
-     
-for (s in 1:nrow(model.fits)){
-
-       participants.fit = rbind(participants.fit, which(participant.min[s] == model.fits[s,]))
-     }
-          
-```
-
-```{r attach model and behavioral data }
-
-
-#1= RL; 2= LTM; 3 = RL_LTMpipe; 4 = RL_LTMstr
-
-RL.p.model   <- data.frame('subjects' = subjects[participants.fit==1],
-                           'model' = rep('RL', sum(participants.fit==1)),
-                           's3'= RL.sim.dat[ind.temp.RL[participants.fit==1 ],1:12],
-                           's6'= RL.sim.dat[ind.temp.RL[participants.fit==1 ],13:24],
-                           'bll' = rep(NA, sum(participants.fit==1)) %>% as.double(),
-                           'alpha' = RL.sim.dat[ind.temp.RL[participants.fit==1],50],
-                           'egs' = RL.sim.dat[ind.temp.RL[participants.fit==1],51],
-                           'imag' = rep(NA, sum(participants.fit==1)) %>% as.double(),
-                           'ans' = rep(NA, sum(participants.fit==1)) %>% as.double(),
-                           'bias' = rep(NA, sum(participants.fit==1)) %>% as.double(),
-                           "s3test"=RL.sim.dat[ind.temp.RL[participants.fit==1 ],25],
-                           's6test' = RL.sim.dat[ind.temp.RL[participants.fit==1 ],37]
-                           ) 
-
-                          
-LTM.p.model  <- data.frame( 'subjects' = subjects[participants.fit==2],
-                            'model' = rep('LTM', sum(participants.fit==2)),
-                            's3'= LTM.sim.dat[ind.temp.LTM[participants.fit==2],1:12],
-                           's6'= LTM.sim.dat[ind.temp.LTM[participants.fit==2],13:24],
-                           'bll' = LTM.sim.dat[ind.temp.LTM[participants.fit==2],49],
-                           'alpha' = rep(NA, sum(participants.fit==2)) %>% as.double(),
-                           'egs' = rep(NA, sum(participants.fit==2)) %>% as.double(),
-                           'imag' = LTM.sim.dat[ind.temp.LTM[participants.fit==2],52],
-                           'ans' = LTM.sim.dat[ind.temp.LTM[participants.fit==2],53],
-                           'bias'= rep(NA, sum(participants.fit==2)) %>% as.double(),
-                           's3test' = LTM.sim.dat[ind.temp.LTM[participants.fit==2],25] %>% data.frame(),
-                           's6test' = LTM.sim.dat[ind.temp.LTM[participants.fit==2],37], fix.empty.names=T)
-
-pipe.p.model <- data.frame( 'subjects' = subjects[participants.fit==3],
-                            'model' = rep('metaRL', sum(participants.fit==3)),
-                           's3'= RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],1:12],
-                           's6'= RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],13:24],
-                            'bll' = RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],49],
-                           'alpha' = RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],50],
-                           'egs' = RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],51],
-                           'imag' = RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],52],
-                           'ans' = RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],53],
-                           'bias' =  RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],54] %>% 
-                             unlist() %>% 
-                             as.numeric(),
-                            's3test' = RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],25],
-                           's6test' = RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],37]
-                           )
-
-str.p.model  <- data.frame( 'subjects' = subjects[participants.fit==4],
-                            'model' = rep('biased', sum(participants.fit==4)),
-                           's3'= RL_LTMstr.sim.dat[ind.temp.RL_LTMstr[participants.fit==4],1:12],
-                           's6'= RL_LTMstr.sim.dat[ind.temp.RL_LTMstr[participants.fit==4],13:24],
-                            'bll' = RL_LTMstr.sim.dat[ind.temp.RL_LTMstr[participants.fit==4],49],
-                           'alpha' = RL_LTMstr.sim.dat[ind.temp.RL_LTMstr[participants.fit==4],50],
-                           'egs' = RL_LTMstr.sim.dat[ind.temp.RL_LTMstr[participants.fit==4],51],
-                           'imag' = RL_LTMstr.sim.dat[ind.temp.RL_LTMstr[participants.fit==4],52],
-                           'ans' = RL_LTMstr.sim.dat[ind.temp.RL_LTMstr[participants.fit==4],53],
-                           'bias' = RL_LTMstr.sim.dat[ind.temp.RL_LTMstr[participants.fit==4],54] %>%
-                             separate(col='strtg',sep="(?<=[A-Z])(?=[0-9])", into = c( NA,'bias'), convert = TRUE) %>% 
-                             c() %>%
-                             unlist() %>% 
-                             as.double()/100,
-                            's3test' = RL_LTMstr.sim.dat[ind.temp.RL_LTMstr[participants.fit==4],25],
-                           's6test' = RL_LTMstr.sim.dat[ind.temp.RL_LTMstr[participants.fit==4],37]
-                 ) 
-
-
-join.model.dat <- rbind(RL.p.model, LTM.p.model, pipe.p.model, str.p.model )
-
-colnames(sdat) <- c(colnames(RL.p.model[3:26]),'s3.13','s6.13')
-colnames(join.model.dat)[33:34]=c('s3.13','s6.13')
-
-p.behav.model  = merge(cbind(subjects, sdat), 
-                 join.model.dat, by = c("subjects"), 
-                 suffixes = c('.behav', '.model'), sort=FALSE)
- 
-
-melted.p.behav.model <- p.behav.model %>% 
-  reshape2::melt(id.vars = c("subjects", "model" ,'bll','alpha','egs','imag','ans', 'bias' ), value.name="accuracy", variable.name="condition") %>% 
-     separate("condition", into = c('setSize', "iteration","type"), remove = FALSE, convert = TRUE) %>% 
-  unite("cond.model", c(setSize,type), remove = FALSE)
-
-plot.indiv <- function(this.model, title, columns) {
- 
-  melted.p.behav.model %>% 
-    #filter(iteration != 13) %>% 
-    filter(model == this.model) %>% 
-    ggplot(aes(as.numeric(iteration), accuracy, color=cond.model, group=cond.model)) + 
-    geom_point() +
-    geom_line(size=1) +
-    facet_wrap(vars(subjects), ncol = columns, scales = 'free')+
-    scale_color_brewer(palette = "Paired")+
-    theme_pubr(base_size = 16) +
-    ggtitle(title)
-  
+  ) %>%  
+    mutate(data_source = data_name)
 }
 
 
 ```
 
- Of the four models compared, the LTM model fit the most number of participants (`r sum(participants.fit==2)`) followed by the biased version of the combined RL-LTM model (`r sum(participants.fit==4)`) and the meta-RL combined model in third place (`r sum(participants.fit==3)`). The RL only model had only one participant that fit it best (figure 1). This is a slight departure from out expectation that the combined RL-LTM models would fit the majority of participants. As observed, this suggests that most learners simply commit to memory the stimulus response associations. 
+```{r part 2 join model-behavioral data}
 
-```{r model fit plots:group fit bar plot, fig.cap = "Figure 1. Counts of fit subjects by model"}
 
-#fit plots
-#participants.fit %>% 
- # hist(main='Counts of participants by model', xlab = ("1= RL; 2= LTM; 3=RL_LTM"), #lwd=4.3)
+all_sims =list(list(RL.sim, LTM.sim), #, STR.sim, META.sim remvoed the two combined models
+     list("RL", "LTM")) %>%  #, "STR", "META" Removed the two combined models
+  pmap(get_data) %>%  
+  reduce(bind_rows) %>% 
+  mutate(iteration = str_remove_all(iteration, "[:alpha:]") %>%  
+           as.numeric(), 
+         type ='model' )
 
-fit.labels <- ifelse(participants.fit==2, 'LTM', 
-                     ifelse(participants.fit==3, 'meta_RL',
-                            ifelse(participants.fit==4,'biased','RL')
-                            )
-                     )
-models.name=c('RL', 'LTM', 'meta_RL', 'biased')
-data.frame('model'= participants.fit)  %>% 
-
-   ggplot(aes(factor(model), fill=factor(model))) + 
-  geom_bar() +
   
-   ggtitle('Counts of participants by model') +
- # theme_minimal(base_size = 20)+
-  scale_x_discrete(labels=models.name )+
-  xlab("Models")+
-   scale_fill_brewer( palette = "Paired")+
-
-  theme_pubclean(base_size = 24) +
-  theme(legend.position='none') 
-
-```
-
-```{r unique fitting model counts}
-nRL = ind.temp.RL[participants.fit==1 ] %>% unique() 
-nLTM  = ind.temp.LTM[participants.fit==2 ] %>% unique()
-nBias = ind.temp.RL_LTMstr[participants.fit==4 ] %>% unique()
-nMeta = ind.temp.RL_LTMpipe[participants.fit==3 ] %>% unique()
-
-```
- 
- Within each group (groups formed by preferred model types) of participants, there is only `r length(nRL)` RL best fitting combination of parameter values for the alpha and softmax parameters. For the most popular model, LTM, that fit  (`r sum(participants.fit==2)`) participants, surprisingly, there were only `r length(nLTM)` best fitting parameter-value sets for the spreading activation, retrieval noise and memory decay rate parameters. The biased model was the most diverse at `r length(nBias)` parameter sets for  (`r sum(participants.fit==4)`) participants. The meta-RL model closely followed the biased model in-terms of diversity of parameter-value sets at `r length(nMeta)` parameter-value sets for  (`r sum(participants.fit==3)`) subjects. 
- Figures 2 and 3 show the medians and ranges of the BIC values that determined that the LTM model is the best fitting model even when only comparing BIC values for the set of parameter-values that fit participants best in each category of models. 
-
-```{r  BOX PLOT 1, fig.cap = "Figure 2."}
-model.fits%>% 
-  reshape2::melt() %>% 
-  ggplot(aes(y=value,variable, group=variable)) +
-  geom_boxplot(size=1) + 
-  ggtitle('BIC: All participants')+
-  xlab('model')+
-  scale_x_discrete(labels=models.name )+
-  #theme_bw() +
- 
-  # scale_fill_brewer( palette = "Set2") +
- theme_pubclean(base_size = 24) 
-   
-```
-Figure 2 shows that the LTM model has the lowest BIC values. 
-
-```{r model fit plots: group fit BOXPLOT2, fig.cap = "Figure 3."}
-
-selector <- c(participants.fit==1,participants.fit==2,participants.fit==3,participants.fit==4)
-
-model.fits %>% 
-  reshape2::melt() %>% 
-  cbind(selector) %>% 
-  filter(selector==TRUE) %>% 
-  ggplot(aes(y=value,variable, group=variable)) +
-  scale_x_discrete(labels=models.name )+
-  geom_boxplot(size=1) + 
-  ggtitle('BIC: best fitting per model')+
-  xlab('model')+
-#  theme_bw() +
-   scale_colour_brewer( palette = "Set1") +
-  theme_pubclean(base_size = 24) 
-```
-How consistent are the fits observed above?
-Given a participants best fit how many of the next best fit parameter sets are in the same model category?
-
-```{r fit consitency 1}
-
-consist.check <- rbind(
-  RL.bic %>% t() %>% data.frame(mod='RL'),
-  LTM.bic %>% t() %>% data.frame(mod='LTM'),
-  RL_LTMpipe.bic %>% t() %>% data.frame(mod='metaRL'),
-  RL_LTMstr.bic %>% t() %>% data.frame(mod='biased')
-)
-
-ordered.dat=apply(consist.check[,1:83], 2, order)
-sorted.bic.dat <- apply(consist.check[,1:83], 2, sort)
-mod.list <- (rep(consist.check$mod,83))
-comp.temp <- mod.list %>% as.matrix() %>%  matlab::reshape(.,length(consist.check$mod),83)
-
-comp <- comp.temp[ordered.dat[,c(1:83)]] %>% 
-  as.matrix() %>% matlab::reshape(.,length(consist.check$mod),83)
+# separate out parameters and set them into their own long form column
+all_sims %<>% 
+  filter(!str_detect(condition, 'set')) %>% 
+  select(condition, accuracy, data_source, model_index) %>% 
+  unique %>% 
+  pivot_wider( values_from = accuracy, names_from = condition) %>% 
+  inner_join(all_sims %>% 
+               filter(str_detect(condition, 'set')),
+             by = c('data_source','model_index')) %>% 
+  pivot_longer(cols = c('alpha', 'egs', 'bll','imag','ans', 'bias'), names_to = 'parameter', values_to = 'param_vals') %>% 
+  unite(col = 'mod.id', c('data_source','model_index'), sep = '_', remove = F ) 
 
 
-n.to.diff.model <- c()
 
-for (s in 1:83) {
- n.to.diff.model[s] <-   match(TRUE,is.na(match(comp[,s],comp[1,s]))) 
+
   
-}
-
-data.frame(model=p.behav.model$model, participant.min, n.to.diff.model) %>% 
-  group_by(model) %>% dplyr::summarise(mean=mean(n.to.diff.model),
-                                                  median=median(n.to.diff.model),
-                                                  sd=sd(n.to.diff.model),
-                                                  min=min(n.to.diff.model),
-                                                  max=max(n.to.diff.model)) %>% 
-  knitr::kable(caption = "Statistics on where the next best fit occurs for each participant by model")
-
-p.s2nd.newmodel <- data.frame(subjects=p.behav.model$subjects,model=p.behav.model$model) %>% 
-  filter(n.to.diff.model==2) 
-
-  #data.frame(participants.fit, participant.min, n.to.diff.model) %>% 
-  #ggplot(aes(x=n.to.diff.model, group=participants.fit,fill=factor(participants.fit))) + geom_density(alpha=.4)
-
-#Test of stability for the first 100 models, how often is the best fitting model still th best fitting model? If it jumps around what's the deviation in the parameter-values?
-```
-
-```{r mean BIC for subsequent models,fig.cap = "Figure 4"}
-sorted.bic.dat %>%  data.frame(ind=c(1:15775)) %>% 
-  filter(ind<101) %>% 
-  reshape2::melt(id.vars='ind') %>% 
-  group_by(ind) %>% dplyr::summarise(mean=mean(value), 
-                                     sem=sd(value)/sqrt(83)) %>% 
-  ggplot(aes(y=mean, x=ind))+
-  #geom_ribbon(aes(ymin=mean-sem,ymax=mean+sem, fill='red', alpha=0.4))+
-   geom_errorbar(aes(ymin=mean-sem,ymax=mean+sem, color='red'))+
-geom_point() +
-  ggtitle("mean BIC for subsequent models") +
-  theme_pubclean() 
 
 
-```
-Large differences in BIC values in the first 2 to 5 are critical to provide good evidence against the second and higher best fit models. Figure 5 below shows the rank ordered differencs between consecutive BIC values. The difference is highest between the first two models but the difference falls short of providing strong evidence that the best fit model is preferred over the second best fit model. 
-```{r mean differences of consecutive BIC values, fig.cap = "Figure 5" }
-# The change in BIC matters: find the change in BIC for ranked models for each person and average for the 1st 100 models
- BIC.diff <-  
-   apply(sorted.bic.dat %>%  data.frame(ind=c(1:15775)) %>% filter(ind<101),2,diff) %>% 
-  data.frame(ind2=c(1:99)) %>% 
-   dplyr::select(-ind) %>%
-   reshape2::melt(id.vars='ind2') 
-BIC.diff %>% 
-  filter(ind2<11) %>% 
-   group_by(ind2) %>% 
-  dplyr::summarise('mean.diff'=mean(value),'sem'=sd(value)/sqrt(83)) %>% 
- ggplot(aes(x=factor(ind2), y=mean.diff)) + 
-  geom_point() +
-  geom_errorbar(aes(ymax=mean.diff+sem, ymin=mean.diff-sem)) +
-  ylab("mean differences of consecutive BIC values")+
-  xlab('index of rank ordered Ma-Mb model BICs differences') +
-  geom_hline(yintercept = c(0,2,6,10), color='red') +
-#  geom_label(y=c(2,5,10),x=c(8,8,8),label=c('weak', 'meaningful','strong') )+
-  theme_pubclean()
-```
-These differences might be slightly different when broken apart by model type. Figure 6 below shows that the LTM model has higher difference than the rest of the models meaning any participant that had fit the LTM model best had had more evidence against the second best model fit compared to best-fit models for other participants. 
-```{r BIC Diffs by model type,fig.cap = "Figure 6" }
-# stat test of the differences between the first and second differencs
-# BIC.diff %>% 
-#   filter(ind2 <3) %>% 
-#  t.test((value) ~ ind2, data = ., paired=T)
-#   
-# BIC.diff %>% 
-#   filter(ind2 <3) %>% 
-#   ggplot(aes((value), fill=factor(ind2), group=factor(ind2))) +
-#   geom_density()
 
-#What do the BIC diffs look like by model type?
-BIC.diff %>% 
-  filter(ind2<2) %>% 
-   reshape2::dcast(variable ~ ind2, value.var = 'value') %>% 
-  data.frame(model=p.behav.model$model, subjects=p.behav.model$subjects) %>%   
-  dplyr::select(-variable) %>% 
- # filter(model=='LTM') %>% 
-   reshape2::melt(id.vars=c('model','subjects'), variable.name='BIC.ind', value.name='BIC.diff') %>% 
-  group_by(model, BIC.ind) %>% 
-  dplyr::summarise(mean=mean(BIC.diff),SD=sd(BIC.diff), 'sem'=sd(BIC.diff)/sqrt(length(BIC.diff))) %>% 
-  ggplot(aes(x=model, y=mean)) +
-  geom_point()+
-  geom_errorbar(aes(ymin=mean-sem,ymax=mean+sem), width = .5) +
-  ylab("mean differences of BIC values for first 2 best fitting models")+
-  xlab( 'Model') +
-  ylim(c(0,10))+
-   geom_hline(yintercept = c(0,2,6,10), color='red') +
-  #facet_wrap(vars(model)) +
-  theme_pubclean()
-```
-Out of curiosity, how often is the best fit model selected for the same participant? This would tell us whether or not subsequent fits are only due to changes in parameter values.  
-```{r number of times the model was selected, fig.cap='figure 6'}
-#mean number of times the model was selected in the first 10
-comp %>%  data.frame(ind=c(1:15775)) %>% 
-  filter(ind<11) %>% 
-  reshape2::melt(id.vars='ind') %>% 
-  group_by(variable)  %>% dplyr::count(value) %>% 
-  reshape2::dcast(variable ~ value, value.var = 'n') %>% 
-  data.frame(model=p.behav.model$model, subjects=p.behav.model$subjects) %>%   #added subjects
- # filter(model=='LTM' ) %>% #added filter by model
-   reshape2::melt(id.vars=c('variable','model', 'subjects'), variable.name='mod.type') %>% 
-  group_by(model,mod.type) %>% 
-  dplyr::summarise(mean=mean(value, na.rm = T),
-                   median=median(value,na.rm = T),
-                   n=sum(!is.na(value)),
-                   sem=sd(value,na.rm = T)/sqrt(sum(!is.na(value)))) %>% 
+# join all sims with index for best fitting model - index search
+
+index_search = merge(
+  best.fits
+  ,best.fit.idx
+  ,by = c('subjects', 'name')
+) %>%  
+  select(!contains("type"))
+
+# This subset contains the best fit model data for all participants conditions
+#all.p.model.dat = 
+#trial 1-column multi index
+index_search %<>%
+  mutate(condition = case_when(str_detect(name,'N3') ~ 'set3_learn',
+                               TRUE ~ 'set6_learn' )
+         ) %>% 
+  rbind(index_search %>%
+          mutate(condition = case_when(str_detect(name,'N3') ~ 'set3_test',
+                               TRUE ~ 'set6_test' )
+                 )
+        ) %>% 
+  unite(col = 'mod.id', c('model','index'), sep = '_', remove = F ) 
+
+
+
+
+# hlp=  index_search %>% 
+#  # sample_n(2) %>% 
+#   base::merge(all_sims
+#      #   ,by.x = c("model", "index")
+#     #    ,by.y = c("data_source", "model")
+#     ,by ='mod.id'
+#       #  ,all.x = T
+#     )
+
+ p.model.dat <- 
+   all_sims %>% 
+ inner_join(index_search,  
+    by = c('condition','mod.id')
+    ) %>% 
+     dplyr::mutate('half' = name, .keep ='unused') %>%
+     select(-c(model, data_source, model_index, index, mod.id)) %>% 
+    mutate(half= str_remove_all(half, pattern = "_N."))
+ # arrange(condition) %>% 
   
-   ggplot(aes(x=mod.type,y=mean)) +
-  geom_point() +
-  geom_errorbar(aes(ymin=mean-sem,ymax=mean+sem)) +
-facet_wrap(vars(model)) +
-  ylab('mean number of times model was selected') +
-  xlab('model type selected') +
-  ggtitle('number of times the model was selected in ranked 1st 10')+
-  theme_pubclean()
+
+#  "model"     "index"     "subjects"  "name"      "condition" "iteration" "accuracy"  "type"     
+subject.dat <- 
+  sdat.repl.h1 %>% 
+  mutate(half='half1', 
+        subjects= h1.subjects) %>% 
+  rbind(sdat.repl.h2 %>% 
+          mutate(half='half2', 
+                 subjects= h1.subjects))
   
-   
-##Chantel's request 
-   BIC.diff %>% 
-  filter(ind2<4) %>% 
-   reshape2::dcast(variable ~ ind2, value.var = 'value') %>% 
-  data.frame( subjects=p.behav.model$subjects) %>%   
-  dplyr::select(-variable) %>% 
-     merge(p.s2nd.newmodel, by='subjects') %>% 
-     kable(caption = 'These subjects had second best fit models that came from a differnt model group. X1 to X3 are the BIC differences.')
-   
-   
-#as the number of fits examined goes up, what is the change in th preferred ftut
+colnames(subject.dat) = c(paste0('set3_learn.', c(1:12)),
+                          paste0('set3_test.', c(1:12)),
+                          paste0('set6_learn.', c(1:12)),
+                          paste0('set6_test.', c(1:12)), 
+                          'half',
+                          'subjects'
+                          )
+
+  subject.dat %<>%   
+  dplyr::mutate(
+         'type' = 'behavioral', 
+         'parameter' = NA, 
+         'param_vals'= NA) %>% 
+  pivot_longer(cols = -c(half,type, subjects, parameter, param_vals), names_to = 'temp_condition', values_to = 'accuracy') %>% 
+  separate(temp_condition, into = c('condition','iteration'), sep = '[/.]') 
+  
+  
+# last bit -  add model identity must join by half subject and condition
+  mod.id.temp <- 
+     all_sims %>% 
+ inner_join(index_search,  
+    by = c('condition','mod.id')
+    ) %>% 
+     dplyr::mutate('half' = name, .keep ='unused') %>%
+     select(c(subjects, condition, model, half)) %>% ## can add model_index here if that information is needed
+    mutate(half= str_remove_all(half, pattern = "_N."))
+  
+  melted.p.behav.model <- 
+  rbind(subject.dat, p.model.dat) %>% 
+  inner_join(mod.id.temp,
+ by=c('subjects', 'half', 'condition')
+ ) %>% 
+    separate(col = condition, into = c('condition', 'phase'), remove = T )
+
 ```
 
-### Assesments of Model fits 
-
-Looking at the learning curves for the four models in Figure 4, the differences in learning rates are apparent as are other features like the separation between the two set sizes. In the plot below each data point is the average accuracy, for that number of stimulus presentations, across all parameter combinations. The LTM and RL models predict that an increase in set-size does not diminish learning rate and accuracy. But this analysis washes out the individual differences that could be captured by the diverse set of parameter combinations.  
-
-```{r models only, fig.width=12, fig.height=12,fig.cap = "Figure 7."}
-model.ID =c(1:(nrow(RL.sim.dat) + nrow(LTM.sim.dat) +nrow(RL_LTMpipe.sim.dat) + nrow(RL_LTMstr.sim.dat)))
-
-all.models <- rbind( 
-  data.frame(
-  'model' = 'RL',  
-  's3'=RL.sim.dat[,1:12], 
-  's6'=RL.sim.dat[,13:24]),
-  data.frame(
-      'model' = 'LTM',
-      's3'=LTM.sim.dat[, 1:12], 
-      's6'=LTM.sim.dat[, 13:24]),
-  data.frame(
-      'model'='metaRL',
-      's3'=RL_LTMpipe.sim.dat[,1:12], 
-      's6'=RL_LTMpipe.sim.dat[,13:24]),
-  data.frame(
-      'model'='bias',
-      's3'=RL_LTMstr.sim.dat[,1:12],  
-      's6'=RL_LTMstr.sim.dat[,13:24])) %>% 
-  cbind(model.ID) %>% 
-  reshape2::melt(id.vars=c("model.ID","model"), value.name="accuracy", variable.name="condition") 
- 
-
- 
-models.only.plt <-   all.models %>% 
-    separate("condition", into = c( 'setSize','iteration'), convert = T) %>%   
-    unite("cond.model", c('model','setSize'), remove = FALSE) %>% 
-  summarySE(measurevar = 'accuracy', groupvars = c('model','setSize','iteration', 'cond.model')) %>% 
-  ggplot(aes(as.factor(iteration),accuracy, group=cond.model,color=cond.model)) +
+```{r model + behavior plot, fig.height=12, fig.width=12}
+melted.p.behav.model %>% 
+  filter(phase!='test') %>% 
+unite(col='cond.model', c( 'half','condition', 'type'),remove = F) %>% 
+  dplyr::group_by(type, half, condition, model,  iteration, cond.model) %>%  #,
+ dplyr::summarize (
+                    n_subjects = numel(accuracy)/12,
+                   acc=mean(accuracy),
+                   se = sd(accuracy, na.rm = T)/sqrt((n_subjects)) # divide by the number of iterations to get the correct number of samples
+ )%>%
+  
+  
+  ggplot(aes(as.numeric(iteration),acc, group=cond.model,color=cond.model)) +
   geom_point(size=1.5) +
   geom_line(size=1) +
-  #facet_wrap(vars(model)) +
-  scale_color_brewer(palette = "Paired") +
+  geom_errorbar(aes(ymin=acc-se,ymax=acc+se),width=.25, size=.75, width=.25, size=.75)+  
+  facet_wrap(vars( model), ncol = 2) +
+ # scale_color_viridis_d()+
+
+#virid
+ scale_color_brewer(palette = "Paired") +
   theme_pubclean(base_size = 24) +
     xlab('stimulus iteration')
 
-if(0){
-  
-    models.lr <-  all.models %>% 
-    filter(iteration<7 ) %>% # get the first 6 learning trials to model
-    dplyr::group_by(model,setSize, model.ID) %>% 
-    do( broom::tidy(lm(accuracy~iteration, data=.))[2] %>% 
-          as_data_frame()) %>% 
-   cbind('estimate.type'= rep(c('y-int','slope'), 31550))
-    write.csv(models.lr, 'learning_rate_estimate_all_models.csv',row.names = F)
+```
+
+```{r}
+melted.p.behav.model %>% 
+  filter(type=='model', phase=='learn', iteration==1) %>% 
+  select(subjects, half, model, condition) %>% 
+  unique() %>% 
+  dplyr::group_by(half, condition, model) %>% 
+  dplyr::summarise(length(subjects))
+
+```
+
+
+## Dynamics
+
+### Does the best fit model change from 1st half to second half and between the two set-sizes?
+
+```{r set-size confusion,  fig.width=12, fig.height=6.2}
+melted.p.behav.model %>% 
+  filter(type=='model', phase=='learn', iteration==1, parameter=='alpha') %>% 
+    unique() %>% 
+  pivot_wider(id_cols = c(subjects,half), names_from = condition, values_from = model) %>% 
+  mutate(toRL = set6 =="RL", 
+         toLTM = set6 =="LTM" 
+         #,toSTR = set6 =="STR", 
+        # toMETA = set6=="META"
+         ) %>% 
+  dplyr::group_by(half, set3) %>% 
+  dplyr::summarise(RL = mean(toRL), 
+                   LTM = mean(toLTM) 
+                  # ,STR = mean(toSTR), 
+                  # META =mean(toMETA) 
+                   ) %>% 
+  pivot_longer(cols = -c(half, set3), names_to = 'set6', values_to = 'prop') %>% 
+ 
+   ggplot(aes(x=set3, y=set6, fill=prop)) +
+  geom_tile()  +
+    geom_text(aes(label= round(prop,2) 
+                                ),
+              size=4,
+                  show.legend = F) +
+  scale_fill_gradient(limits=c(0,1),
+                          low='white',
+                           high = '#d7191c',
+                           #'#377eb8',
+                    #   midpoint = 0,
+                          guide='colorbar',
+                          aesthetics = 'fill',
+                          breaks= c(0,.25,.5,.75,1) 
+                       ) +
+  facet_wrap(vars(half))+
+theme_classic(base_size = 18) 
 
   
- models.lr %>% 
-   filter(estimate.type=='slope') %>% 
-   group_by(model,setSize ) %>%
-   dplyr::summarize('mean'= mean(estimate),
-                    'se' = sd(estimate, na.rm = T) / sqrt(sum(!is.na(estimate)))) %>% 
-   ggplot(aes(mean,x=setSize, group=model, color=model)) +
-    #geom_histogram(stat = 'count') +
-  geom_point(size=2)+
-    geom_errorbar(aes(ymax=mean+se,ymin=mean-se), width=.25, size=1.5)+
-      scale_color_brewer(palette = "Paired") +
-   theme_pubr()+
-   # facet_wrap(vars(model)) +
-   ggtitle("rate: beta estimate of first 6 iterations")
+```
 
+```{r half confusion,  fig.width=12, fig.height=6.2}
+melted.p.behav.model %>% 
+  filter(type=='model', phase=='learn', iteration==1, parameter=='alpha') %>% 
+    unique() %>% 
+  pivot_wider(id_cols = c(subjects,condition), names_from = half, values_from = model) %>% 
+  mutate(toRL = half2 =="RL", 
+         toLTM = half2 =="LTM", 
+         toSTR = half2 =="STR", 
+         toMETA = half2=="META") %>% 
+  dplyr::group_by(condition, half1) %>% 
+  dplyr::summarise(RL = mean(toRL), 
+                   LTM = mean(toLTM) 
+                  # ,STR = mean(toSTR), 
+                 #  META =mean(toMETA) 
+                   ) %>% 
+  pivot_longer(cols = -c(condition, half1), names_to = 'half2', values_to = 'prop') %>% 
+ 
+   ggplot(aes(x=half1, y=half2, fill=prop)) +
+  geom_tile()  +
+    geom_text(aes(label= paste0(round(prop,2)) 
+                                ),
+              size=4,
+              
+                  show.legend = F) +
+  scale_fill_gradient(limits=c(0,1),
+                          low='white',
+                           high = '#d7191c',
+                           #'#377eb8',
+    
+                          guide='colorbar',
+                          aesthetics = 'fill',
+                          breaks= c(0,.25,.5,.75,1) 
+                       ) +
+  facet_wrap(vars(condition))+
+theme_classic(base_size = 18) 
+
+  
+```
+
+## Are the parameter values largely different for each half and set-size? 
+
+## Individual plots
+
+```{r individual plots plotter, fig.width=12, fig.height= 125}
+
+#plot.indiv <- function(this.subject, title, columns) {
+ if (TRUE){
+  melted.p.behav.model %>% 
+  filter(phase!='test') %>% 
+unite(col='cond.model', c( 'condition', 'type'),remove = F) %>% 
+   #(subjects == 6200) %>% 
+    ggplot(aes(as.numeric(iteration), accuracy, color=cond.model, group=cond.model)) + 
+    geom_point() +
+    geom_line(size=1) +
+    facet_wrap(vars(subjects), scales = 'free')+
+    scale_color_brewer(palette = "Paired")+
+ # geom_text(aes(label= model),check_overlap = F, inherit.aes = T, nudge_x = .2, nudge_y = .02)+
+    theme_pubr(base_size = 16) +
+  facet_wrap(vars(subjects, half), ncol = 4) +
+    ggtitle('title')
+  
+#}
 }
- models.only.plt    
- 
- #stats
-  all.models %>% 
-    separate("condition", into = c( 'setSize','iteration'), convert = T) %>%   
-    filter(iteration==12) %>% 
-  summarySE(measurevar = 'accuracy', groupvars = c('model','setSize')) %>% kable(caption = 'Descriptive statistics for models: end of learning accuracy')
- 
-```
- 
-The panels in figure 8 show the mean accuracy for participant behavioral data. The model lines are averages across parameters for that group only. 
- As we are aiming for an individual differences look at these data, collapsing across so much of this variability is uninformative, as was shown above in figure 4,especially if the differences, once fit to actual behavioral data, indicate large differences in learning outcomes or cogntive faculty diagnostics like working memory capacity. Here, only the best fitting sets of parameter combinations were selected and collapsed. As can be seen in the figure below, the different model types appear to be vastly different and some charateristics of behavioral data have come through, such as the separations of the learning trajectories for the different setsizes in the RL-LTM Biased model fit. It can also be seen that some paramter sets in the LTM model also capture the diffculty associated with increasing set size (solid lines in Fig. 8B).  The LTM participants, on average have the highest accuracies for the testing phase in both set sizes but they are nearly indistinguishable from the meta-RL group for accuracy at end of learning. The biased group shows the most separation between the set size 3 and 6 at learningand also lower accuracy at test than LTM. The biased group  is negligibly different from the meta-RL group for set size 3 but shows a marked difference at set size 6, closely following the behavioral data. 
- 
-```{r models + subjects, fig.width=12, fig.height=12, fig.cap="Figure 8." }
- melted.p.behav.model %>% 
-   filter(iteration != 13) %>% 
-  summarySE( measurevar = "accuracy", groupvars = c("iteration", "condition", "cond.model", "model")) %>% 
-  ggplot(aes( as.factor(iteration), accuracy, color=cond.model, group=cond.model)) +
-  geom_point() +
-  geom_line(size=1) +
-  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.35, size=1) +
-  facet_wrap(vars(model)) +
-  scale_color_brewer(palette = "Paired") +
-  xlab('stimulus iteration') +
- theme_pubclean(base_size = 20)  
-```  
-For reference, the group mean of all 83 subjects is shown in figure 9 below. 
-```{r subjects only, fig.width=12, fig.height=12, fig.cap='Figure 9' }
-##--- subjects only
-
-subjects.only.plt <-
-  melted.p.behav.model %>% 
-   filter(iteration !=13) %>% 
-  summarySE( measurevar = "accuracy", groupvars = c("iteration", "setSize")) %>% 
-  ggplot(aes( as.factor(iteration), accuracy, color=setSize, group=setSize)) +
-  geom_point(size=2) +
-  geom_line(size=1.5) +
-  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.35, size=1) +
- # facet_wrap(vars(model)) +
- scale_color_brewer(palette = "Set1" ) +
-  xlab('Number of Stimulus Presentations') +
-  ylab('Accuracy')+
-  ylim(c(0.2,1))+
-  ggtitle('Learning Phase')+
-  labs(color='set-size')+
-theme_pubr(legend=c('bottom' ), base_family = 'Times')+
-  theme_pubclean(base_size = 24)
-  
-  #theme(legend.title  = c('set-size'))
-
-subjects.only.plt
-   
-
-
-#Figure showing end of learning and test 
-melted.p.behav.model %>% 
-  filter(iteration <=12 & iteration>=8, type=='MODEL') %>% 
-  group_by(subjects, setSize) %>% 
-  summarize(learn_mean=mean(accuracy)) %>% 
-  inner_join( melted.p.behav.model %>% 
-  filter(iteration ==13, type=='behav') %>% 
-  group_by(subjects, setSize) %>% 
-    summarize(test=accuracy), by=c('subjects','setSize')) %>% 
-  pivot_longer(cols = c(learn_mean, test), values_to = 'accuracy', names_to = 'condition') %>% 
-  summarySE( measurevar = "accuracy", groupvars = c("setSize", "condition")) %>% 
-  ggplot(aes( condition, accuracy, color=setSize, group=setSize)) +
-  geom_point(size=2) +
-  geom_line(size=1.5) +
-  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.2, size=1.5) +
- # facet_wrap(vars(model)) +
- scale_color_brewer(palette = "Set1" ) +
-  xlab('condition') +
-  ylab('Accuracy')+
-  ylim(c(0.7,1))+
-  #ggtitle('change from learn')+
-  labs(color='set-size')+
-theme_pubr(legend=c('bottom' ), base_family = 'Times')+
-  scale_x_discrete(labels=c("end of learning","test"))+
-  theme_pubclean(base_size = 24)
-
-
-
-
-
-
 
 ```
 
-There are five outcome measures of interest in the RLWM task: accuracy at the end learning, accuracy at test, learning rate characterized as slope estimate for the first 6 trials, the differences in learning of set 3 and set 6 and also the level of preserved learning at test for both set-sizes (test-learn). The following analyses compare the model data with behavioral data in these outcome measures. 
-
-```{r model + subjects group plot}
-
- # models.only.plt +
- #  geom_point(data= melted.p.behav.model %>% 
- #               filter(iteration != 13) %>% 
- #               summarySE( measurevar = "accuracy", groupvars = c("iteration", "setSize")),
- #             aes( as.factor(iteration), accuracy, color=setSize, group=setSize)) 
-```
-Figure 10 below shows accuracy at end of learning and test. The models closely track the behavioral data. Note that the RL group has only two data points.  
-```{r Learning and test combined plot, fig.width=12, fig.height=12,fig.cap="figure 10"}
-#------Learning and test combined
-
-
-melted.p.behav.model %>% 
-  filter(iteration>=12) %>% #Grab both the 12th iteration and test
-  summarySE( measurevar = "accuracy", groupvars = c( "model","cond.model", "iteration")) %>% 
-   ggplot(aes(x=as.factor(iteration),weight=accuracy,ymin=accuracy-se, ymax=accuracy+se, group=cond.model,  color=cond.model)) +
-  geom_errorbar(position=position_dodge(width = 0.1), width=.25, size=1.5) +
-  geom_point(position =position_dodge(width = 0.1), aes(y=accuracy, color=cond.model), size=2) +
-   geom_line(position =position_dodge(width = 0.1), aes(y=accuracy, color=cond.model), size=1) +
-   scale_color_brewer(palette = "Paired") +
-  ylim(c(0.25,1))+
-  xlab('condition') +
- theme_pubclean(base_size = 24)  +
-  scale_x_discrete(labels=c("learn","test"))+
-   facet_wrap(vars(model))
-  
-
-
-#stats 
-
-# melted.p.behav.model %>% 
-#   filter(type=='behav', iteration==12 | iteration==13) %>% 
-#   select(setSize, accuracy, iteration) %>% 
-#   ggplot(aes(accuracy, fill=factor(iteration))) +
-#   geom_density(alpha=.4) +
-#   facet_wrap(vars(setSize))
-
-  melted.p.behav.model %>% 
-  filter(type=='behav', iteration>=12) %>% 
-  select(setSize, accuracy, iteration) %>% 
-    lm(accuracy ~ setSize * iteration, data=.) %>% 
-  anova() %>%  
-    broom::tidy() %>% kable(caption = "2 x 2 setzise by interation(learn vs test) ANOVA table for behavioral data")
-  
-  melted.p.behav.model %>% 
-  filter(type=='model', iteration==12 | iteration==13) %>% 
-  select(setSize, accuracy, iteration) %>% 
-    lm(accuracy ~ setSize * iteration, data=.) %>% 
-  anova() %>%  
-    broom::tidy() %>% kable(caption = "2 x 2 setzise by interation(learn vs test) ANOVA table for model data")
-  
-```
-
-```{r Learning rate 1,fig.width=12, fig.height=12}
- #------Learning rate(number of trials to 90%)
-# 
-# matcher <- function(ths){ #wrap up match function to make it easier to use with apply function
-#   return(
-#     match(TRUE, ths)
-#     )
-#   }
-# acc.level = .84
-# 
-# learning.Rate <- 
-#   cbind(subjects,
-#        "model"= p.behav.model$model, 
-#         's3_behav'= apply(sdat[,1:12]>acc.level, 1, matcher) %>% 
-#           as.numeric(),
-#         's6_behav'= apply(sdat[,13:24]>acc.level, 1, matcher) %>% 
-#           as.numeric(),
-#         's3_model'= apply(join.model.dat[,3:14]>acc.level, 1, matcher) %>% 
-#           as.numeric(),
-#         's6_model'= apply(join.model.dat[,15:26]>acc.level, 1, matcher) %>% 
-#           as.numeric()
-#         ) %>% as.data.frame() 
-# 
-#   
-#   learning.Rate %>%
-#     reshape2::melt(id.vars = c("subjects","model"), value.name="learning.rate") %>% 
-#       separate("variable", into = c('setSize','type'), remove = FALSE, convert = TRUE) %>% 
-#     dplyr::group_by(setSize, model, type) %>% 
-#     dplyr::summarise('mean'=mean(learning.rate,na.rm=T), 
-#                      'SD'= sd(learning.rate, na.rm = T),
-#                      'se'= sd(learning.rate, na.rm = T) / sqrt(sum(!is.na(learning.rate))),
-#                      'n'= sum(!is.na(learning.rate))
-#                      ) %>% 
-#     ggplot(aes(mean,x=setSize, group=type, color=type)) +
-#     #geom_histogram(stat = 'count') +
-#   geom_point(size=2)+
-#     geom_errorbar(aes(ymax=mean+se,ymin=mean-se), width=.25, size=1.5)+
-#       scale_color_brewer(palette = "Paired") +
-#    theme_pubclean(base_size = 24)+
-#     facet_wrap(vars(model))+
-#     ggtitle('rate: n trials to 85%')
-```
-The models predict learning rate for set size 3 for most of the models (not in the explicit biased model, too few data points in RL to say). But the models predicted learing rate for s6 only in the biased model. See figure 11 below. 
-
-```{r alternative learning rate,fig.width=12, fig.height=12, fig.cap='Figure 11.'}
-
-#----- Alternative learning rate
-
-fit.lr <-  melted.p.behav.model %>% 
-    filter(iteration<7 & iteration!=13) %>% # get the first 6 learning trials to model
-    dplyr::group_by(subjects,setSize, type,model) %>% 
-    do( broom::tidy(lm(accuracy~iteration, data=.))[2] %>% 
-          as_data_frame()) %>% 
-   cbind('estimate.type'= rep(c('y-int','slope'), 83*2*2)) 
- 
-  fit.lr %>% 
-   filter(estimate.type=='slope') %>% 
-   group_by(setSize,type, model) %>%
-   dplyr::summarize('mean'= mean(estimate),
-                    'se' = sd(estimate, na.rm = T) / sqrt(sum(!is.na(estimate)))) %>% 
-   ggplot(aes(mean,x=setSize, group=type, color=type)) +
-    #geom_histogram(stat = 'count') +
-  geom_point(size=2)+
-    geom_errorbar(aes(ymax=mean+se,ymin=mean-se), width=.25, size=1.5)+
-      scale_color_brewer(palette = "Paired") +
-   theme_pubclean(base_size = 24)+
-    facet_wrap(vars(model)) +
-   ylab("slope") +
-   ggtitle("learning rate: slope estimate of first 6 iterations")
-   
- 
-  
- #Some stats for report
- 
- # fit.lr %>% 
- #   dplyr::filter(type=='behav', estimate.type=='slope') %>% 
- #   select(setSize, estimate) %>% 
- #   group_by(setSize) %>% summarize(mean(estimate), median(estimate)) %>% kable(caption = 'mean and median of slope for behavioral data by set-size')
- 
- #Histograms here show near normal distribution so t-tests are ok to do. 
- # fit.lr %>% 
- #   dplyr::filter(type=='behav', estimate.type=='slope') %>% 
- #   select(setSize, estimate) %>% 
- #   ggplot(aes(estimate, fill=setSize)) + geom_density(alpha=.4)
- 
-  
-fit.lr %>% 
-   ungroup() %>% 
-   dplyr::filter(type=='behav', estimate.type=='slope') %>% 
-   select(setSize, estimate) %>%
-   t.test(estimate ~ setSize, data = .) 
-    
-
-   fit.lr %>% 
-   filter(estimate.type=='slope') %>% 
-   group_by(setSize,type, model) %>%
-   dplyr::summarize('mean'= mean(estimate),
-                    'se' = sd(estimate, na.rm = T) / sqrt(sum(!is.na(estimate)))) %>% 
-     kable(caption = 'Descriptive stats of model and behavioral learning rate')
-   
-   
-   # mean differences
-   # fit.lr %>% 
-   #   ungroup() %>% 
-   # filter(estimate.type=='slope') %>% 
-   #   dcast(subjects + model + type ~ setSize ,value.var = 'estimate') %>% 
-   # group_by(model, type) %>%
-   # dplyr::summarize('meanS3'= mean(s3),
-   #                  'meanS6'= mean(s6),
-   #                 'mean_diff'= mean(s3) - mean(s6)
-   #                 ) %>% kable()
-   
-   # stat: normally done by model type.
-   #  fit.lr %>% 
-   #   ungroup() %>% 
-   # filter(estimate.type=='slope', type=='model', model=='LTM') %>% 
-   #    select(estimate,model,setSize) %>% 
-   #    #ggplot(aes(estimate, fill=setSize)) +
-   #    #geom_density(alpha=.4)
-   #   wilcox.test(estimate ~ setSize, data = .) 
-   
-   
-```
-
-```{r Analysis of separation between the curves, fig.cap="Figure 12"}
-   #------Separation between the curves (done)
-  
- s3s6Diff <- 
-    melted.p.behav.model %>% 
-     filter(iteration!=13) %>% # get everything but test , type=='behav'
-    select(c('subjects','model', 'accuracy','iteration', 'setSize', 'type')) %>% 
-   reshape2::dcast(setSize ~ iteration + subjects + model + type , value.var = 'accuracy') %>% #change in to wide form to subrtract b/n s3 and s6
-   select(-setSize) %>% #not needed
-    as.matrix() %>% #required to use diff() function
-  diff.default() %>% #take the difference b/n the set sizes
- #  abs() %>% #take the absolute value (I guess it doesn't matter if s3 is higher than s6 or viceversa)
-    reshape2::melt() %>%  
-    select(-Var1) %>% 
-      separate("Var2", into = c('iteration', "subjects","model","type"), remove = T, convert = TRUE) %>% 
-    summarySE(measurevar = "value", groupvars = c("subjects", "model", "type")) %>% 
-    select(subjects,type, model,"learnDiff"= value) 
-
- s3s6Diff %>% 
-  summarySE(measurevar = 'learnDiff', groupvars = c('model','type')) %>% 
-  ggplot(aes(model, learnDiff, group=type, color=type)) + 
-      geom_point(size=2) + 
-      geom_errorbar(aes(ymax=learnDiff+se, ymin=learnDiff-se), size=1.5,width=.25) +
-      theme_pubclean(base_size = 24) +
-      ggtitle("separation of the learning curves")+
-        scale_color_brewer(palette = "Paired") +
-  ylab('mean difference') 
-     
-  # ylim(c(0,.3))
-  #--stats
-# s3s6Diff %>% 
-#   filter(type=='behav') %>% 
-#   ggplot(aes(learnDiff, fill=model)) +
-#   geom_density(alpha=.4) +
-#   facet_wrap(vars(model))
-# These don't look like normal distros
-
-s3s6Diff %>% 
-  filter(type=='behav') %>% 
-  kruskal.test(learnDiff ~ model, data=. ) %>% 
-  broom::tidy() %>% 
-  kable(caption = 'K-W test one way rank-sum test: s6-s3 learning curve differences by model type for behavioral data')
-#---perhaps a K-W rank sum test is prefered
-
- s3s6Diff %>% 
-  filter(type=='model') %>% 
-  select(learnDiff,model) %>% 
-kruskal.test(learnDiff ~ model, data = .) %>% 
-  broom::tidy() %>% 
-   kable(caption = 'K-W test one way rank-sum test: s6-s3 learning curve differences by model type for model data')
-
- s3s6Diff %>% 
-  filter(type=='behav') %>% 
-  select(learnDiff,model) %$% 
-pairwise.t.test(learnDiff,model, p.adjust.method = 'bonferroni', exact=FALSE) %>% 
-  broom::tidy() %>% 
-    kable(caption = 'pairwise post-hoc tests for behav data') 
- 
-  s3s6Diff %>% 
-  filter(type=='model') %>% 
-  select(learnDiff,model) %$% 
-pairwise.t.test(learnDiff,model, p.adjust.method = 'bonferroni', exact=FALSE) %>% 
-  broom::tidy() %>% 
-    kable(caption = 'pairwise post-hoc tests for model data')
-   
-```
-
-```{r Change from learning to test, fig.cap="Figure 13."}
-
-    #---------Change from learning to test
-   learnTestDiff <- 
-     melted.p.behav.model %>% 
-       filter( iteration>= 12) %>% 
-        select(c('subjects','model', 'accuracy','iteration', 'setSize','type')) %>% 
-       reshape2::dcast(iteration ~ setSize + subjects + model + type, value.var = 'accuracy') %>% 
-      select(-iteration) %>% #not needed
-    as.matrix() %>% #required to use diff() function
-  diff.default() %>% 
-  # abs() %>%#take the difference b/n the learn and test
-    reshape2::melt() %>% 
-       select(-Var1) %>% 
-      separate("Var2", into = c('setSize', "subjects","model","type"), remove = T, convert = TRUE)
- 
-     learnTestDiff  %>% 
-      unite("cond.model", c(setSize,type), remove = FALSE) %>% 
-    summarySE(measurevar = "value", groupvars = c( "model", "cond.model")) %>% 
-      
-  ggplot(aes(model, value, color=cond.model, group=cond.model)) + 
-      geom_point(position=position_dodge(width = 0.4),size=2) + 
-      geom_errorbar(position=position_dodge(width = 0.4),aes(ymax=value+se, ymin=value-se), size=1,width=.75) +
-      theme_pubclean(base_size = 24) +
-      ggtitle("Change from training to test: test - learn")+
-        scale_color_brewer(palette = "Paired") +
-      theme(legend.position = 'none')+
-      ylab("mean difference")
-    #  ylim(c(-0.6,0))
-   
-  learnTestDiff %>% 
-    filter(model!='RL') %>% 
-    lm(value ~ setSize * type * model, data=.) %>% 
-    anova() %>% 
-    broom::tidy() %>% 
-    kable(caption = '(2)set-size x (2)type(modelorBehav data) x 3(model) anova. RL excluded.')
-```
-
-It is difficult to assess what the model fits are capturing without examining the specific paramter sets more carefully or deducing if membership in a particular model group predicts some other cognitve or learning aspects of the subjects.A summary of the parameter data follows.  
-First, for the cohort of subjects
-
-## Parameters
-### Parameter spread
-Parameter summary: what is the spread of the parameters across participants in the models?
-```{r summarize extracted parameters, fig.cap="Figure 14."}
-
-#parameter correlations
-p.behav.model %>% 
-  #filt
-  select('alpha','egs','bll','imag','ans','bias') %>% 
-  mutate('learning.rate'=alpha,
-         'RL.noise'=egs, 
-         'LTM.decay'=bll,
-         'attention.WM' =imag,
-         'LTM.noise'=ans,
-         'bias'=bias,.keep='none' ) %>% GGally::ggpairs() +
-  theme_bw()
-
-param.spread <- 
-  p.behav.model %>% 
-  select('alpha','egs','bll','imag','ans','bias') %>% 
-  reshape2::melt(value.name = 'unscaled.vals')  %>%
-  data.frame('scaled.vals' =p.behav.model %>% select('alpha','egs','bll','imag','ans','bias') %>% scale() %>% reshape2::melt()  %>% select(value) ) %>% 
-  dplyr::group_by(unscaled.vals, variable, value) %>% 
-  tally() 
-  
-  param.spread %>% 
-    ungroup() %>% 
-    filter(!is.na(unscaled.vals)) %>% 
-  ggplot(aes(x=value, variable,size=n, color=variable)) +
-  geom_point(alpha=.35)+
-#  facet_wrap(vars(model)) +
-  geom_text(aes(label=round(unscaled.vals,2), size=2,color='blue'), check_overlap = T)+
-     geom_text(aes(label=n, size=2,color='red'), check_overlap = T, nudge_y = .3)+
-   theme_classic2(base_size = 24)+
-    theme(legend.position = 'top')+
-    scale_size(range = c(1, 30), name='count', breaks = c(5,10,15,20)) +
-    theme(legend.position='none') +
-    ylab('parameter')+
-    xlab('scaled value') +
-    ggtitle('blue: unscaled values; pink: counts')
-  
-library(ggridges)
-  # 
-  # param.spread %>% 
-  #   ungroup() %>% 
-  #   filter(!is.na(unscaled.vals)) %>% 
-  # ggplot(aes(x=value, variable,size=n, fill=variable)) +
-  #   geom_density_ridges2(stat = 'binline', bins=20)
-  # 
-  #  param.spread %>% 
-  #    ungroup() %>% 
-  #   filter(!is.na(unscaled.vals)) %>% 
-  # ggplot(aes(x=variable, value,size=n, fill=variable))+
-  #    geom_boxplot()
-  # 
-  param.spread %>%
-    ungroup() %>%
-    dplyr::group_by(variable) %>%
-    filter(!is.na(value)) %>%
-    dplyr::summarise(mean=mean(unscaled.vals, na.rm = T),
-                     median=median(unscaled.vals, na.rm=T),
-                   #  mean_c=mean(n, na.rm = T),
-                  #   median_c=median
-                  ) %>% 
-    kable(caption='mean and medians of parameter values')
-
-  
-##
-  
-  # 
-  # p.behav.model %>% 
-  # select('model','bias') %>% 
-  #   filter(model=='metaRL' | model=='biased' ) %>% 
-  # reshape2::melt(id.vars='model', value.name = 'unscaled.vals')  %>%
-  #   group_by(model) %>% 
-  #   summarise('mean'=mean(unscaled.vals), 'median'=median(unscaled.vals)) %>% 
-  #   ggplot(aes(y=unscaled.vals, group=model, fill=model))+
-  #   geom_boxplot()
-  
-  
-```
-
-### Individual parameter effects on outcomes
-```{r effects of individual parameters on outcomes,fig.width=12,fig.height=4, fig.cap="Figure 15"}
-
-temp4join1 <- 
-  fit.lr %>% 
-  dplyr::filter(estimate.type=='slope') %>% 
-  reshape2::dcast(subjects  + model ~ setSize + estimate.type + type, value.var = 'estimate') %>% 
-  select(-model, -subjects) %>% 
-  scale() %>% 
-  data.frame(., 'subjects'=p.behav.model$subjects, 'model'=p.behav.model$model)
-
-temp4join2 <- 
-  learnTestDiff %>% 
-  select(-model) %>% 
-  data.frame('param'='TestForgetting') %>% 
- reshape2::dcast(subjects  ~ setSize +param +type, value.var = 'value')
-
-temp4join3 <- 
-  s3s6Diff %>% 
-  select(-model) %>% 
-   data.frame('param'='s3s6_learnDiff') %>% 
-  reshape2::dcast(subjects ~ param + type, value.var = 'learnDiff')
-  
-main4join <- 
-  p.behav.model %>% 
-  select(s3.12.behav, s3.12.model, s6.12.behav, s6.12.model,s3.13.behav, 
-         s3.13.model, s6.13.behav, s6.13.model) %>%
-  scale() %>% 
-  data.frame( p.behav.model %>% 
-                select('alpha','egs','bll','imag','ans','bias') %>% 
-                scale(),
-              'subjects'= p.behav.model$subjects
-  )
-
-
-p.param.outcomes <-  
-  merge(main4join, 
-       temp4join1, by = c("subjects"), sort=FALSE) %>% 
-   merge(temp4join2, by = c("subjects"), sort = FALSE ) %>% 
-    merge(temp4join3, by = c("subjects"), sort = FALSE ) 
  
 
- # p.param.outcomes %>% 
- #   select(-model,-subjects,-ends_with('model')) %>% 
- #  GGally::ggpairs() + 
- #   theme_pubclean() + theme(axis.text.y = element_text( angle=45))
 
-molt.param.out <- p.param.outcomes %>% 
-  reshape2::melt(id.vars=c('model','subjects','alpha','egs','bll','imag','ans','bias'), 
-                 variable.name='measures', value.name="measure_vals")  %>% 
-  reshape2::melt(id.vars=c('model','subjects', 'measures','measure_vals'), 
-                 variable.name='params',value.name='param_vals') %>% 
-  separate("measures", into = c('setSize', "condition","type"), remove = FALSE, convert = TRUE)
 
 
 
-#   
-# molt.param.out %>% 
-#   filter(condition=='13', model=='LTM') %>% 
-#   ggplot(aes(x=param_vals,y=measure_vals, color=params, group=params)) +
-#   geom_point(alpha=.4)+
-#   geom_smooth(method = 'lm', se=F) +
-#   theme_pubclean()+
-#   facet_wrap(vars(measures))
-#   scale_fill_brewer('Paired')
-  
- all_dat_cors <- 
-   molt.param.out %>% 
-    filter( type=='behav') %>% 
-    dplyr::group_by(condition, setSize, params) %>% 
-    dplyr::summarise(cor.pearson=cor(param_vals,measure_vals, use="complete.obs"),
-                     cor.spearman=cor(param_vals,measure_vals, use="complete.obs", method = 'spearman')
-                     ) 
-  
- 
- all_dat_cors %>%  
-   ggplot(aes(params, condition, fill=cor.spearman)) +
-   geom_tile() +
-    geom_text(aes(label=round(cor.spearman,2), size=.5), show.legend = F)+
-    facet_wrap(vars(setSize))+
-   theme_pubclean(base_size = 20) +
-     scale_fill_gradient2(limits=c(-1,1),
-                          low='#2b83ba',
-                           high = '#d7191c',
-                          mid = 'white',
-                          midpoint = 0,
-                          guide='colorbar',
-                          aesthetics = 'fill',
-                          breaks= c(-1,-.5,0,.5,1)
-     ) +
-# scale_fill_distiller(palette = 'Spectral', guide='colorbar') +
-   theme(legend.position = 'right') +
-   xlab('parameters') +
-   scale_y_discrete(labels=c('learn accuracy','test accuracy','learn difference','learning-rate','test-forgetting'))
- 
- # all_dat_cors %>%
- #   ggplot(aes(params, condition, fill=cor.pearson)) +
- #   geom_tile() +
- #   geom_text(aes(label=round(cor.pearson,2), size=.5), show.legend = F)+
- #    facet_wrap(vars(setSize))+
- #   theme_pubclean(base_size = 18) +
- #     scale_fill_gradient2(limits=c(-0.7,0.7),
- #                          low='#2b83ba',
- #                           high = '#d7191c',
- #                          mid = 'white',
- #                          midpoint = 0,
- #                          guide='colorbar',
- #                          aesthetics = 'fill',
- #                          breaks= c(-.5,-.25,0,.25,.5)
- #     ) +
- #  # scale_fill_distiller(palette = 'Spectral', guide='colorbar') +
- #   theme(legend.position = 'right') +
- #   xlab('parameters')
 
-  
-  
-  
-   # molt.param.out %>% 
-   #   filter(type=='model', condition=='13', setSize=='s3', params=='bias') %>% 
-   #   select(param_vals, measure_vals) %>% 
-   #   #dplyr::group_by(param_vals) %>% 
-   #   #dplyr::summarise(median(measure_vals)) %>% 
-   #   #plot()
-   #   cor(use="complete.obs",method = 'spearman')
 
-```
 
-```{r correlations by model, fig.height=8, fig.width=14, fig.cap= 'Figure 16'}
-all.cors.byModel <- 
-molt.param.out %>% 
-  filter(model!='RL', type=='behav') %>% 
-  group_by(model, condition, params, setSize) %>% 
-  dplyr::summarise(cor.pearson=cor(param_vals,measure_vals),
-                     cor.spearman=cor(param_vals,measure_vals, method = 'spearman')
-                     ) 
 
 
-# Correlation matrix
 
- all.cors.byModel %>% 
-   filter(is.na(cor.pearson)==F) %>% 
-   ggplot(aes(params, condition, fill=cor.spearman)) +
-   geom_tile() +
-    facet_wrap(vars(setSize, model))+
-   theme_pubclean(base_size = 18) +
-     geom_text(aes(label=round(cor.spearman,2), size=.5), show.legend = F)+
-     scale_fill_gradient2(limits=c(-1,1),
-                          low='#2b83ba',
-                           high = '#d7191c',
-                          mid = 'white',
-                          midpoint = 0,
-                          guide='colorbar',
-                          aesthetics = 'fill',
-                          breaks= c(-1,-.5,-.25,0,.25,.5,1)
-     ) +
-  theme(legend.position = 'right') +
-   xlab('parameters')
- 
-   # molt.param.out %>% 
-   # filter( setSize=='s3', condition==12) %>% 
-   # ggplot(aes(param_vals, measure_vals, group=condition, color=condition)) +
-   #   geom_point() +
-   #   geom_smooth(method = 'lm')+
-   #   facet_wrap(vars(model, params))
-     
-```
 
-```{r parameter influence on outcomes large lm}
-# p.param.outcomes %>% 
-#   filter(model=='LTM', subjects!=15012 & subjects!=6207 & subjects!=28307) %>% 
-#   lm( s3.13.behav ~ bll+ ans +imag,data=.) %>% 
-#   summary()
-#   
 
-
-
-```
-
-```{r pre-post correction comparison}
-# pre_corrected_values = read.csv('pre_corrected_values.csv')
-# current_values = data.frame(p.behav.model[c("subjects", "model" ,'bll','alpha','egs','imag','ans', 'bias' )], participant.min)
-# # Reported differences
-
-
-
-```
-
-### Bias in meta-learning model
-
-```{r bias parameter in metaRL model}
-#Differences in RL use in s3 and s6
-# simsRL_LTMpipe$data %>%
-#   select(strtg3,strtg6) %>%
-#   melt() %>%
-#   ggplot(aes(x=value,group=variable, fill=variable)) +
-#   geom_histogram() +
-#   theme_pubclean() 
-  
-# 
-# simsRL_LTMpipe$data %>%
-#   select(strtg3,strtg6) %>%
-#   melt() %>%
-#   lm(value ~ variable, data = .) %>% summary()
-# 
-# str_temp = simsRL_LTMpipe$data %>%
-#   select(strtg3,strtg6)
-# wilcox.test(str_temp$strtg3,str_temp$strtg6)
-# t.test(str_temp$strtg3,str_temp$strtg6)
-# 
-# 
-# sortbys3 = simsRL_LTMpipe$data %>%
-#   select(alpha) %>% 
-#   scale(center = F) %>% 
-#   order()
-# 
-# simsRL_LTMpipe$data %>%
-#   select(strtg3, alpha, bll, egs, ans, imag) %>%   #strtg6,
-# #  melt()  %>%
-#   scale(center = F) %>% data.frame() %$% 
-#   order(strtg3) %>% 
-#   ggplot(aes(strtg6,x=factor(imag) )) +
-#   geom_boxplot() +
-#   #geom_smooth(method = 'lm')
-#   theme_pubclean()
-
-###### Sort plots 
-simsRL_LTMpipe$data %>% 
-  select( bll, ans, imag, egs,alpha) %>% #, egs,, alpha
-  scale(center=F) %>% 
-  data.frame('strtg3'=simsRL_LTMpipe$data$strtg3,'strtg6'=simsRL_LTMpipe$data$strtg6) %>% #, 'strtg'=simsRL_LTMpipe$data$strtg
-  reshape2::melt(id.vars=c('strtg3','strtg6'), value.name = 'param_value', variable.name='parameter') %>% #,'strtg'
-  reshape2::melt(id.vars=c('parameter','param_value'), value.name='bias', variable.name='setsize' ) %>%
-  group_by(parameter,param_value, setsize) %>%  
-    summarise('mean'=mean(bias), 'sem' = std(bias)/sqrt(n()) ) %>% 
- 
-   ggplot(aes(y=mean, x=factor(param_value),color=setsize, group=setsize)) +
-  geom_point() +
-  geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem )) +
-  #geom_jitter(width=0, height = .02) +
- # geom_smooth()+
-  theme_linedraw() +
-  scale_color_brewer(palette = 'Set1') +
-  scale_x_discrete(labels=c('low','','','','','','','','','high'))+
-  xlab('parameter value') +
-  ylab('mean proportion RL used')+
- # geom_smooth(method = 'lm', alpha=.2)+
-  facet_wrap(vars(parameter))
-  
-```
-<!-- 
-
-
-```{r parameters:biased model}
-
-
-melted.p.behav.model %>%
-  filter(model=='biased' | model=='metaRL') %>%
-  filter(setSize=='s3')%>%
-  filter(type== 'behav') %>%
-  filter(iteration==12) %>% 
-  summarySE(groupvars =c('model',"type") , measurevar = "bias") %>%
-  ggplot(aes(x=model,y=bias, group=model,fill=model)) +
-  geom_bar(stat = 'identity') +
-  geom_errorbar(aes(ymin=bias-se, ymax=bias+se)) 
-
-melted.p.behav.model %>%
-  filter(model=='metaRL' ) %>%
-  filter(setSize=='s3')%>%
-  filter(type== 'behav') %>%
-  filter(iteration==12) %>% View
-  ggplot(aes(x=bias, group=model,fill=model)) +
-  geom_histogram()
-
-
-melted.p.behav.model %>%
-  filter(model=='biased') %>%
-  filter(iteration==13)%>%
-  filter(type== 'behav') %>%
-  summarySE(groupvars =c("bias","type", "setSize") , measurevar = "accuracy") %>%
-  ggplot(aes(as.factor(bias), accuracy, group=setSize,color=setSize)) +
-  geom_point() +
-  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se))
-
-
-melted.p.behav.model %>%
-  filter(model=='biased' | model=='metaRL', iteration==12, type== 'behav') %>%
-  select(subjects, model,bias, alpha, egs)%>%
-  merge(s3s6Diff %>%
-          filter(model=='biased' | model=='metaRL') %>%
-          select(subjects,learnDiff), by='subjects') %>%
- lm(learnDiff ~  egs + alpha, data=.)%>%
-  #plot(which=4)
- summary()
-
-ggplot(aes(bias,learnDiff)) +
-  geom_point(alpha=.4, size=2) +
-  geom_smooth()
-
- data.frame(
-  'bias'  =  RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],54] %>%  unlist() %>% as.numeric(),
-  'bias3' =  RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],55] %>%  unlist() %>% as.numeric(),
-  'bias6' =  RL_LTMpipe.sim.dat[ind.temp.RL_LTMpipe[participants.fit==3],56] %>%  unlist() %>% as.numeric()
-  ) %>% 
-     melt() %>% 
-     summarySE(groupvars = 'variable', measurevar = 'value' ) %>% 
-   ggplot(aes(y=value,x=variable, fill=variable)) +
-   geom_bar(stat = 'identity') + 
-   geom_errorbar(aes(ymin=value-se, ymax=value+se))
-   
-    
-
-```
-
-### Combined effect of parameters on outcomes
-
-```{r correlate parameters with behavioral data}
-
-```
-
-### How about some K-means clustering? 
-
-```{r kmeans on parameter values}
-param.cluster <-
-  p.behav.model %>% 
-  filter(model=='LTM') %>% 
-  select('bll','imag' ) %>% 
-  scale(center = F) %>% 
-   kmeans(centers = 4, iter.max = 12)
-
-p.behav.model  %>% 
-  filter(model=='LTM') %>% 
-  select('s3.13.behav','s6.13.behav' ) %>% #"s3.13.model", "s6.13.model"
-  data.frame('clu'=as.factor(param.cluster$cluster)) %>% 
-  reshape2::melt(id.vars='clu') %>% 
-  summarySE(measurevar = 'value', groupvars = c('clu', 'variable')) %>% 
-  ggplot(aes(clu,value, group=variable,fill=variable))+
-  geom_bar(stat='identity', position = position_dodge(width = .75)) +
-  geom_errorbar( aes(y=value, ymin=value-se, ymax=value+se), position = position_dodge(width = .75))
-
-```
---> 
-
-Some specific plans are to estimate the three LTM parameters for all 83 participants and see if they are related to WM, PSS measures. Also, how are the parameters related to the "separation" between s3 and s6? 
-
-Some more specific things to test might be effect of delay between stimulus presentations. 
-### What are the differences in learning type interms of behavioral outcomes in other tasks?
-
-These plots show group effects for uCLIMB subjects only in python and OLCTS measures and behavioral predictors. 
-```{r import uCLIMB data}
-# uclimb <- read.csv("RLWM_data/python_olcts_uclimb_summary_noEEG_092320.csv", header = T)
-# uclimb.model.temp1 <- uclimb %>%  merge(p.behav.model, by = "subjects") 
-# uclimb.model.dat <-  cbind(uclimb.model.temp1, 'wmComposite'= uclimb.model.temp1[,c("RspanScore", "SspanAbsoluteScore","OspanAbsoluteScore") ] %>% rowMeans())
-# 
-# #specific goals are to compare to:
-# #1 learning rate in language 
-# #2 Learning rate in Python
-# #3 Post-test Python
-# #4 Post-test Language
-# #5 WM composite score
-# #6 RAvens
-# #7 PSS measures
-# uclimb.model.dat %>% 
-#   select("MLAT_Total", "Ravens.Score","NDV", "wmComposite","RspanTotal", "PSS_ChooseA.ACC" , "PSS_AvoidB.ACC", "PSS_All.ACC" ) %>%
-#   scale(center = F)  %>% 
-#   data.frame('model'=uclimb.model.dat$model) %>% 
-#   reshape2::melt() %>% 
-#   summarySE(groupvars = c("model","variable" ), measurevar = "value") %>% 
-#   ggplot(aes(model, value, group=model,fill=model))+
-#   geom_bar(stat = "identity", position = "dodge") +
-#    geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.25, size=.75)+
-#  theme_pubr(base_size = 16)+
-#   facet_wrap(vars(variable))
-# 
-#   # Python only
-# uclimb.python <- read.csv("RLWM_data/python_uclimb_summary_noEEG_092320.csv", header = T)
-# uclimb.python.temp1 <-  uclimb.python %>%  merge(p.behav.model, by = "subjects") 
-# 
-# python.LR <- read.delim("RLWM_data/SlopeCoefficients_UpTo10_python20181222.txt", sep="\t", header = T)
-# 
-# uclimb.python.dat <- uclimb.python.temp1 %>% 
-#   merge(python.LR, by="subjects")    
-# 
-# uclimb.python.dat %>% 
-#   select( "PostTest_Total_ACC","python.learning.coeff","PT_Syntax_ACC" ,"PT_Semantics_ACC","RPS.Code") %>%
-#   scale(center = F)  %>% 
-#   data.frame('model'=uclimb.python.dat$model) %>% 
-#   reshape2::melt() %>% 
-#   summarySE(groupvars = c("model","variable" ), measurevar = "value") %>% 
-#   ggplot(aes(model, value, group=model,fill=model))+
-#   geom_bar(stat = "identity", position = "dodge") +
-#    geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.25, size=.75)+
-#  theme_pubr(base_size = 16)+
-#   facet_wrap(vars(variable))
-# 
-# 
-# #combined Python and OLCTS measures
-# #learning rate
-# # "Slope_OLCTS" and python learning rate
-# # syntax 
-# # "PT_Syntax_ACC_Python" and "GR_Total_OLCTS"
-# # vocab
-# #PT_Vocab_OLCTS and "PT_Semantics_ACC_Python" 
-
-```
-
-We have 3Back and PSS for a large majority of participants -  what are the group differences if any in these outcomes based on model fit?
-
-```{r paramter and group effects on 3Back and PSS}
-# pss3back.uClmb.STG <- read.csv('RLWM_data/STAG_uCLIMB_PSS_Nback_data_100120.csv', header = T)
-# # merge with modeling data
-# 
-# pss3Back.mergr <- 
-#  p.param.outcomes %>% # p.behav.model %>%
-#  # select('subjects', 'model','alpha','egs','bll','imag','ans') %>% 
-#   merge(pss3back.uClmb.STG, by='subjects')
-# #,'alpha','egs','bll','imag','ans'
-# 
-# #melt and plot
-# pss3Back.mergr %>% 
-#    select(-subjects, -model) %>% 
-#   scale(center = F) %>% 
-#   data.frame('model'=pss3Back.mergr$model) %>% 
-#   reshape2::melt() %>% 
-#   summarySE(measurevar = 'value', groupvars = c('model','variable')) %>% 
-#   ggplot(aes(model, value, group=model,fill=model))+
-#   geom_bar(stat = "identity", position = "dodge") +
-#    geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.25, size=.75)+
-#  theme_pubr(base_size = 16)+
-#   facet_wrap(vars(variable))
-#  
-# 
-# molt.behav.param.out <- pss3Back.mergr %>% 
-#   reshape2::melt(id.vars=c('model','subjects','alpha','egs','bll','imag','ans','bias'), 
-#                  variable.name='measures', value.name="measure_vals")  %>% 
-#   reshape2::melt(id.vars=c('model','subjects', 'measures','measure_vals'), 
-#                  variable.name='params',value.name='param_vals') %>% 
-#   separate("measures", into = c('setSize', "condition","type"), remove = FALSE, convert = TRUE)
-# 
-# 
-# 
-# #   
-# # molt.param.out %>% 
-# #   filter(condition=='13', model=='LTM') %>% 
-# #   ggplot(aes(x=param_vals,y=measure_vals, color=params, group=params)) +
-# #   geom_point(alpha=.4)+
-# #   geom_smooth(method = 'lm', se=F) +
-# #   theme_pubclean()+
-# #   facet_wrap(vars(measures))
-# #   scale_fill_brewer('Paired')
-#   
-#  all_dat_cors <- 
-#    molt.param.out %>% 
-#     filter( type=='behav') %>% 
-#     dplyr::group_by(condition, setSize, params) %>% 
-#     dplyr::summarise(cor.pearson=cor(param_vals,measure_vals, use="complete.obs"),
-#                      cor.spearman=cor(param_vals,measure_vals, use="complete.obs", method = 'spearman')
-#                      ) 
-# pss3Back.mergr %>% 
-#  select(-model,-subjects,-ends_with('model'), -contains('s3'),-contains('s6')) %>% 
-#    GGally::ggpairs() + 
-#    theme_pubclean() + theme(axis.text.y = element_text( angle=45))
-#   
-
-```
-
-```{r group effects on span tasks}
-# realm_span <- read.csv('RLWM_data/REALM_uCLIMB_WM_Span_Task_Results_Fall_2019.csv', header = T)
-# 
-# #compute composite WM score
-# realm_span.temp1 <-
-#  realm_span %>% 
-#     select(-'subjects') %>% 
-#     scale(center = F) %>% 
-#     rowMeans(na.rm=T) %>% cbind(realm_span, 'compositeWM'=.)
-#   
-# realm_span.mergr <- 
-#    p.behav.model %>%
-#   select('subjects', 'model','alpha','egs','bll','imag','ans','bias') %>% 
-#   merge(realm_span.temp1, by='subjects') 
-#   #,'alpha','egs','bll','imag','ans'
-# #melt and plot
-# 
-# 
-#  realm_span.mergr %>% 
-#    select(-subjects, -model, -compositeWM) %>% 
-#   scale(center = F) %>% 
-#   data.frame('model'=realm_span.mergr$model, 
-#              'compositeWM'=realm_span.mergr$compositeWM) %>%
-#   reshape2::melt() %>%  
-#   summarySE(measurevar = 'value', groupvars = c('model','variable'), na.rm = T) %>% 
-#   ggplot(aes(model, value, group=model,fill=model))+
-#   geom_bar(stat = "identity", position = "dodge") +
-#    geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.25, size=.75)+
-#  theme_pubr(base_size = 16)+
-#   facet_wrap(vars(variable))
-# 
-# realm_span.mergr %>% 
-#   select(-model,-subjects) %>% 
-#    GGally::ggpairs() 
-  
-  
-```
-
-Chantel's request: combine language and programming measures and compare groups.
-
-```{r combined OLCTS and PYTHON measures}
-# 
-# combined_measures = data.frame(
-#                                "model"= uclimb.model.dat[,"model"],
-#                                "learning_rate"= uclimb.model.dat[,c( "Slope_OLCTS","LearningRate_Python")] %>%
-#                                  scale(center = F) %>%
-#                                  rowMeans(na.rm=T),
-#                                "semantics"= uclimb.model.dat[,c( "PT_Vocab_OLCTS", "PT_Semantics_ACC_Python")] %>% 
-#                                  scale(center = F) %>% 
-#                                  rowMeans(na.rm = T),
-#                                "syntax"=uclimb.model.dat[,c( "GR_Total_OLCTS","PT_Syntax_ACC_Python")] %>% 
-#                                  scale(center = F) %>%
-#                                  rowMeans(na.rm = T)
-#                                
-#                                  )
-# 
-# combined_measures %>% 
-#   reshape2::melt() %>% 
-#   summarySE(groupvars = c("model","variable" ), measurevar = "value") %>%
-#    ggplot(aes(model, value, group=model,fill=model))+
-#   geom_bar(stat = "identity", position = "dodge") +
-#    geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.25, size=.75)+
-#  theme_pubr(base_size = 16)+
-#   facet_wrap(vars(variable))
-#   
-```
-
-
-## EEG Beta analysis
-```{r EEG beta with collins}
-# EEG.dat <- read.csv('./RLWM_data/EEG_data_UClimb_and_REALM.csv', header = T)
-# 
-# Beta.model.dat <- 
-#   EEG.dat %>% 
-# select(contains('Beta'), 'subjects') %>% 
-#  merge(p.behav.model %>% select('subjects', 'model'), by='subjects') 
-# 
-# write.csv(Beta.model.dat,'Beta_band_RLWM_model101720.csv',row.names = F)
-
-```
-
-
-
-
-## Individual plots:
-
-```{r show individual plots RL, fig.width=6, fig.height=4}
-plot.indiv('RL', 'RL Only Model', 2)
-
-```
-
-```{r, fig.height=24, fig.width=18}
-plot.indiv('biased', 'Integrated Model - Biased', 3)
-
-```
-
-```{r indiv plots, metaRL, fig.height=15, fig.width=24 }
-#plot.indiv('meta_RL', 'Integrated Model - Meta RL', 4)
-```
-
-```{r indiv plots LTM, fig.width=24, fig.height=72}
-plot.indiv('LTM', 'LTM Only Model', 4)
-
-```
 
 
 

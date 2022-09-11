@@ -1,4 +1,4 @@
- namingprac Landmarks pyramid 2653
+namingprac Landmarks pyramid 2653
 namingprac Landmarks pyramid 3360 "triangle" 2
 namingprac Clothing hat 3203
 namingprac Clothing hat 6558 "plus cap" 2
