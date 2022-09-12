@@ -660,17 +660,17 @@
        fproc yes
    )
 
-  ;; (p parse-feedback-neutral
-   ;;=visual>
-  ;;     feedback x
-   ;;?visual>
-    ;;   state free
-   ;;=goal>
-;;       fproc no
-;;   ==>
-;;   *goal>
-;;       fproc yes
-;;   )
+   (p parse-feedback-neutral
+   =visual>
+       feedback x
+   ?visual>
+       state free
+   =goal>
+       fproc no
+   ==>
+   *goal>
+       fproc yes
+   )
 
 (goal-focus
  make-response)
