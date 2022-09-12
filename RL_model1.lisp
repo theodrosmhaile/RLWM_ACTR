@@ -2,10 +2,15 @@
 ;; Model 1
 ;;------------------------------------
 ;;
-;; This is a 'pure' reinforcement learning model of the RLWM task (COllins, 2018). This model has only two parameters: alpha(learning
+;; This is a 'pure' reinforcement learning model of the RLWM task (Collins, 2018). This model has only two parameters: alpha(learning
 ;;rate) and temperature(softmax function)
 
-;; Stimulus is displayed --> processed --> disapears --> a response is selected --> feedback is given --> feedback is processed
+;; Stimulus is displayed --> processed --> disappears --> a response is selected --> feedback is given --> feedback is processed
+;;------------------------------------
+;; change log
+;;------------------------------------
+;; 07/12/2022 Fixed a bug where all 'l' response productions had goal> fproc =x in the LHS and were matching all the time for test phase
+;; 07/12/2022 created new feedback-neutral production
 
 (clear-all)
 
@@ -19,7 +24,7 @@
      :er t
      :ul t
      :esc t
-     :v nil
+     :v t
      )
 ;;--------------------------------------------------------
 ;;----------------Chunk types-----------------------------
@@ -114,7 +119,7 @@
    ?visual>
        state free
   =goal>
-   fproc =x
+   fproc yes
    ?manual>
    preparation free
      processor free
@@ -176,7 +181,7 @@
    ?visual>
        state free
   =goal>
-   fproc =x
+   fproc yes
    ?manual>
    preparation free
      processor free
@@ -240,7 +245,7 @@
    ?visual>
        state free
   =goal>
-   fproc =x
+   fproc yes
    ?manual>
    preparation free
      processor free
@@ -301,7 +306,7 @@
    ?visual>
        state free
   =goal>
-   fproc =x
+   fproc yes
    ?manual>
    preparation free
      processor free
@@ -363,7 +368,7 @@
    ?visual>
        state free
   =goal>
-   fproc =x
+   fproc yes
    ?manual>
    preparation free
      processor free
@@ -424,7 +429,7 @@
    ?visual>
        state free
   =goal>
-   fproc =x
+   fproc yes
    ?manual>
    preparation free
      processor free
@@ -486,7 +491,7 @@
    ?visual>
        state free
   =goal>
-   fproc =x
+   fproc yes
    ?manual>
    preparation free
      processor free
@@ -549,7 +554,7 @@
    ?visual>
        state free
   =goal>
-   fproc =x
+   fproc yes
    ?manual>
    preparation free
      processor free
@@ -612,7 +617,7 @@
    ?visual>
        state free
   =goal>
-   fproc =x
+   fproc yes
    ?manual>
    preparation free
      processor free
@@ -654,6 +659,18 @@
    *goal>
        fproc yes
    )
+
+  ;; (p parse-feedback-neutral
+   ;;=visual>
+  ;;     feedback x
+   ;;?visual>
+    ;;   state free
+   ;;=goal>
+;;       fproc no
+;;   ==>
+;;   *goal>
+;;       fproc yes
+;;   )
 
 (goal-focus
  make-response)
