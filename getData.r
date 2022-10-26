@@ -18,7 +18,7 @@ get_data = function(data, data_name){
       pivot_longer(cols = starts_with('x')
                    ,values_to = 'accuracy', names_to = 'iteration'),
     
-    c('set3_test', 'set6_test','alpha','egs', 'bll', 'imag','ans', 'bias') %>%
+    c('set3_test', 'set6_test','alpha','egs', 'bll', 'imag','ans') %>%
       map (~
              {
                temp = data %>% 
@@ -35,5 +35,8 @@ get_data = function(data, data_name){
       )
     
   ) %>%  
-    mutate(data_source = data_name)
+    mutate(data_source = data_name) #%>% 
+  #  pivot_wider( values_from = accuracy, names_from = condition) %>% 
+   # pivot_longer(cols = c('alpha', 'egs', 'bll','imag','ans'), names_to = 'parameter', values_to = 'param_vals') %>% 
+    #pivot_longer(cols=contains('set'), names_to = 'condition', values_to = 'accuracy' )
 }

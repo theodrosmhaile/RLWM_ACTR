@@ -9,21 +9,57 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, comment = FALSE)
 library(tidyverse)
 library(jsonlite)
-
+library(skimr)
 ```
 
 ```{r import data}
-RL.sim <- fromJSON('./simulated_data/RL_model/RL_sim_data_07_12_2022.JSON')$data %>% 
-  dplyr::mutate(bias = 0)
+RL.sim <- fromJSON('./simulated_data/RL_model/RL_sim_data_07_12_2022.JSON')$data 
 
-LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$data %>% 
-  dplyr::mutate(bias = 0 )
+LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$data 
+
+RL.new <-  fromJSON('./expanded_sims/RL_model/RL_sim_data_frac_100_0_to_100.JSON')$data
+LTM.new <- fromJSON('./expanded_sims/LTM_model/LTM_sim_data_frac_1000_0_to_1000.JSON')$data
 
 ```
 
 ```{r}
 source('getData.r')
 
-get_data('RL.sim', 'RL')
+sims.RL <- get_data(RL.sim, 'RL')
+
+sims.RL %>% 
+  filter(parameter=='egs' | parameter=='alpha') %>% 
+  mutate(model_index=as.factor(model_index)) %>% 
+  pivot_wider(values_from = param_vals, names_from = parameter) %>% 
+  group_by(condition) %>% 
+
+    lm(accuracy ~ as.factor(alpha), data = .) %>% 
+#  plot
+  
+  anova() %>% 
+  broom::tidy()
+  
+
+sims.RL %>% 
+  filter(parameter=='egs' | parameter=='alpha') %>% 
+  pivot_wider(names_from = iteration, values_from = accuracy) %>% 
+  
+ select(contains('X', ignore.case = F)) %>% 
+  as.data.frame()
+  
+  
+  
+ 
+```
+
+```{r new sims}
+sims.RL.new <- get_data(RL.new, 'RL')
+
+sims.RL %>% 
+  pivot_wider(id_cols = c(model_index, iteration), values_from = accuracy, names_from = condition) 
+  
+  
+  
+  plot_ly()
 ```
 

@@ -1,0 +1,33 @@
+---
+title: "RLWM ACT-R RMSE model fitting and outcome analysis for meta-learning data"
+author: "Theodros H."
+date: "10/2022"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_float: yes
+  word_document:
+    toc: no
+editor_options:
+  chunk_output_type: console
+---
+
+```{css, echo=FALSE}
+p {
+  font-size: 18px;
+}
+```
+
+```{r setup}
+library(tidyverse)
+library(jsonlite)
+
+```
+
+```{r import data}
+
+meta_sub_dat <- fromJSON('./processed_wmo/meta_learning_wmo_data_122020.JSON')$data
+
+```
+
