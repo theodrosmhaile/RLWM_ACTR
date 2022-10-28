@@ -698,28 +698,28 @@ parameter.dat %>% filter(subjects==6217) %>% View()
 ```
 
 ```{r model + behavior plot, fig.height=6, fig.width=6, dpi=300}
-# melted.p.behav.model %>% 
-#   filter(phase!='test') %>% 
-# unite(col='cond.model', c( 'half','condition', 'type'),remove = F) %>% 
-#   dplyr::group_by(type, half, condition, model,  iteration, cond.model) %>%  #,
-#  dplyr::summarize (
-#                     n_subjects = numel(accuracy)/12,
-#                    acc=mean(accuracy),
-#                    se = sd(accuracy, na.rm = T)/sqrt((n_subjects)) # divide by the number of iterations to get the correct number of samples
-#  )%>%
-#   
-#   
-#   ggplot(aes(as.numeric(iteration),acc, group=cond.model,color=cond.model)) +
-#   geom_point(size=1.5) +
-#   geom_line(size=1) +
-#   geom_errorbar(aes(ymin=acc-se,ymax=acc+se),width=.25, size=.75, width=.25, size=.75)+  
-#   facet_wrap(vars( model), ncol = 2) +
-#  # scale_color_viridis_d()+
-# 
-# #virid
-#  scale_color_brewer(palette = "Paired") +
-#   theme_pubclean(base_size = 24) +
-#     xlab('stimulus iteration')
+melted.p.behav.model %>%
+  filter(phase!='test') %>%
+unite(col='cond.model', c( 'model','type'),remove = F) %>% #'condition'
+  dplyr::group_by(type, half, condition, model,  iteration, cond.model) %>%  #,
+ dplyr::summarize (
+                    n_subjects = numel(accuracy)/12,
+                   acc=mean(accuracy),
+                   se = sd(accuracy, na.rm = T)/sqrt((n_subjects)) # divide by the number of iterations to get the correct number of samples
+ )%>%
+
+
+  ggplot(aes(as.numeric(iteration),acc, group=cond.model,color=cond.model)) +
+  geom_point(size=1.5) +
+  geom_line(size=1) +
+  geom_errorbar(aes(ymin=acc-se,ymax=acc+se),width=.25, size=.75, width=.25, size=.75)+
+  facet_wrap(vars(half, condition), ncol = 2) + #model , condition
+ # scale_color_viridis_d()+
+
+#virid
+ scale_color_brewer(palette = "Paired") +
+  #theme_pubclean(base_size = 24) +
+    xlab('stimulus iteration')
 
 ```
 
@@ -853,7 +853,7 @@ Let us assume that there are high RL learners (most likely to fit RL), high LTM 
 
 ## Group differences in performance (accuracy) for switchers vs non-switchers
 
-```{r sw vs nsw: set size, fig.width=6, fig.height=6.2, dpi=300}
+```{r sw vs nsw: set size not stable, fig.width=6.2, fig.height=6.2, dpi=300}
 switch.setSize <- 
   melted.p.behav.model %>% 
   filter(type=='behavioral',iteration == c(8,9,10,11,12))  %>%  
@@ -865,31 +865,105 @@ dplyr::group_by(half, subjects, condition, phase,model ) %>%
   inner_join(index_search %>% 
                separate(name, into = c('half', 'setSize')) %>%
                separate(condition, into = c('condition', 'phase')) %>%
-               pivot_wider(id_cols = c(subjects,half, phase), names_from = condition, values_from = model) %>% 
+               pivot_wider(id_cols = c(subjects,half, phase), 
+                           names_from = condition, values_from = model) %>% 
                dplyr::mutate(stable = set3==set6) %>% 
                 pivot_longer(cols = c(set3, set6), names_to = 'condition', values_to = 'model')
                    ,by=c('subjects','half','condition','model', 'phase')) 
 
 switch.setSize %>% 
- dplyr::group_by(stable,half, condition, phase, model ) %>% 
+ dplyr::group_by(stable, condition, phase, model ) %>% #half
   dplyr::summarise(acc.mean = mean(mean.acc), 
                    n=length(mean.acc), 
                    se=sd(mean.acc)/sqrt(n)) %>% 
+  unite(col = 'phase_model', model, phase, remove=F) %>% 
+  filter(stable==F) %>% 
   
-   ggplot(aes(x=stable, y=acc.mean, color=condition)) +
-  geom_point(size=4, alpha=.7) +
-  geom_errorbar(aes(ymin=acc.mean-se, ymax=acc.mean+se), size=.19, width=.2)+
-  facet_wrap(vars(phase, half, model)) +
-  scale_color_brewer(palette = 'Set2')
+   ggplot(aes(x=condition, y=acc.mean,ymin=acc.mean-se, ymax=acc.mean+se, fill=phase_model)) +
+ # geom_point(size=4, alpha=.7) +
+    geom_bar(stat = 'identity',position = position_dodge(width = .8), width = .8) +
+  geom_errorbar( size=.9, width=.5,position=position_dodge(width = .8))+
+#
+ # facet_wrap(vars(stable)) + #, half
+  scale_fill_brewer(palette = 'Paired') +
+ # theme_pubclean(base_size = 14) +
+  ggtitle("Fit different models for s3 and s6")
  
 
 switch.setSize %>% 
-  filter(phase=='learn') %>% 
-  lm(mean.acc ~ stable *half * condition * model, data = .) %>% 
-  anova() %>% 
+  unite(col = 'setSize_model', condition, model, remove=F) %>% 
+  #filter(phase=='learn') %>% 
+  lm(mean.acc ~ stable * half * setSize_model * phase, data = .) %>% 
+  #summary() 
+  anova() 
   broom::tidy() %>% 
   knitr::kable()
 ```
+
+All the subjects that fit RL in set-size 6 and fit LTM in set-size 3 had lower learning accuracy in set-size 6 but decay was minimal during test. But overall accuracy during test is the same for set-size 3 and 6. Learning in set-size 3 is successful and high for LTM and RL and it is similar to learning set-size 6 with LTM. Subjects who fit the RL model in set-size 3 had high accuracy at both learning and test and they also had high accuracy with minimal decay during set-size 6 even though they fit the LTM model best. 
+```{r sw vs nsw: set size stable, fig.width=6.2, fig.height=6.2, dpi=300}
+switch.setSize %>% 
+ dplyr::group_by(stable, condition, phase, model ) %>% #half
+  dplyr::summarise(acc.mean = mean(mean.acc), 
+                   n=length(mean.acc), 
+                   se=sd(mean.acc)/sqrt(n)) %>% 
+  unite(col = 'phase_model', model, phase, remove=F) %>% 
+  filter(stable==T) %>% 
+  
+   ggplot(aes(x=condition, y=acc.mean,ymin=acc.mean-se, ymax=acc.mean+se, fill=phase_model)) +
+ # geom_point(size=4, alpha=.7) +
+    geom_bar(stat = 'identity',position = position_dodge(width = .8), width = .8) +
+  geom_errorbar( size=.9, width=.5,position=position_dodge(width = .8))+
+#
+ # facet_wrap(vars(stable)) + #, half
+  scale_fill_brewer(palette = 'Paired') +
+  #theme_pubclean(base_size = 14) +
+   ggtitle("Fit the same model for s3 and s6")
+ 
+```
+
+For those subjects who did not fit different models for the two set-sizes, the LTM group is associated with higher decay during test than the RL group, who have very minimal decay on average. 
+
+```{r sw vs nsw: slope }
+slope.setSize <- 
+  melted.p.behav.model %>% 
+  filter(type=='behavioral',iteration == c(1,2,3,4), phase=='learn')  %>%  
+  unique() %>% 
+  dplyr::group_by(half, subjects, condition, phase,model ) %>% 
+    do( broom::tidy(lm(accuracy~as.numeric(iteration), data=.))[2,2] ) %>% 
+
+  inner_join(index_search %>% 
+               separate(name, into = c('half', 'setSize')) %>%
+               separate(condition, into = c('condition', 'phase')) %>%
+               pivot_wider(id_cols = c(subjects,half, phase), names_from = condition, values_from = model) %>% 
+               dplyr::mutate(stable = set3==set6) %>% 
+                pivot_longer(cols = c(set3, set6), names_to = 'condition', values_to = 'model')
+                   ,by=c('subjects','half','condition','model', 'phase')) 
+
+
+slope.setSize %>% 
+  #filter(subjects=='6200')
+ dplyr::group_by(stable, condition, model ) %>% #half
+  dplyr::summarise(mean.slope = mean(estimate), 
+                   n=length(estimate), 
+                   se=sd(estimate)/sqrt(n)) %>% 
+  unite(col = 'phase_model', model, remove=F) %>% 
+  #filter(stable==T) %>% 
+  
+   ggplot(aes(x=condition, y=mean.slope,ymin=mean.slope-se, ymax=mean.slope+se, fill=phase_model)) +
+ # geom_point(size=4, alpha=.7) +
+    geom_bar(stat = 'identity',position = position_dodge(width = .8), width = .8) +
+  geom_errorbar( size=.9, width=.5,position=position_dodge(width = .8))+
+#
+  facet_wrap(vars(stable)) + #, half
+  scale_fill_brewer(palette = 'Paired') 
+  
+
+
+```
+
+
+
 
 
 ```{r sw vs nsw: half, fig.width=6, fig.height=6.2, dpi=300}
@@ -929,6 +1003,10 @@ switch.half %>%
   broom::tidy() %>% 
   knitr::kable()
 ```
+
+
+
+
 
 
 ## Are the parameter values largely different for each half and set-size?
@@ -1066,7 +1144,7 @@ half1tohalf22 %>%
   melted.p.behav.model %>% 
   filter(phase!='test') %>% 
 unite(col='cond.model', c( 'condition', 'type'),remove = F) %>% 
-   #(subjects == 6200) %>% 
+   #filter(subjects == 6200) %>% 
     ggplot(aes(as.numeric(iteration), accuracy, color=cond.model, group=cond.model)) + 
     geom_point() +
     geom_line(size=1) +

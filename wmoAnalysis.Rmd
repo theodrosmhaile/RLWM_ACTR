@@ -76,6 +76,8 @@ Subjects <- unique(wmodata$subject)
 ```{r block analysis, fig.height=6, fig.width=14}
 blk.order=c(1,9,2,3,10,4,11,12,5,6,13,7,14,8)
 
+
+## These category names are not present in the Collins task data, just a number signifying the folder stimuli came from,  so I had to name each one with the category name
 wmo.mod <- 
   wmodata %>% 
   mutate('block' =  rep(
@@ -103,9 +105,11 @@ wmo.mod <-
                        length(unique(wmodata$subject)))
          )
   
+
+
 wmo.mod %>% 
  # filter(subject<1620) %>% 
-group_by( block, category, iteration, condition) %>% 
+dplyr::group_by( block, category, iteration, condition) %>% 
   summarize(mean=mean(acc), 
             se=sd(acc)/sqrt(length(acc))) %>%
 
@@ -130,7 +134,7 @@ theme_classic(base_size = 20)
  
 ```{r correlation with Naming frequency}
 
-acc_freq_dat= 
+acc_freq_dat <- 
   wmo.mod %>% 
  filter(iteration>5 & iteration <13) %>% 
 group_by(block, category, iteration) %>% 
@@ -162,7 +166,7 @@ acc_freq_dat %>%
 ```
 
 ```{r correlation with Naming response variability}
-acc_variability_dat= 
+acc_variability_dat <- 
   wmo.mod %>% 
  # filter(subject<1620) %>% 
 group_by(block, category, iteration) %>% 
