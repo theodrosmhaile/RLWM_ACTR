@@ -101,6 +101,16 @@ sdat.mod  <- cbind(sdat[, 1:24],
                    sdat.temp[84:166, ]) 
 
 
+
+### meta learning group
+sdat.meta <-  read.csv('meta_learning_group.csv', header = T)
+
+#### Combine the two groups
+subjects #%>% 
+  cbind(subjects %>% c(), sdat.meta[,1] %>% c() )
+
+rbind(sdat.mod, sdat.meta)
+
  #--------- Integrated model RL to LTM pipe
 simsRL_LTMpipe <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_032021.JSON')
 #fromJSON('./simulated_data/pipe_model/pipe_sim_data_12292020_corrected.JSON')

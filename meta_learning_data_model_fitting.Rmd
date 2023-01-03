@@ -20,14 +20,605 @@ p {
 ```
 
 ```{r setup}
-library(tidyverse)
+knitr::opts_chunk$set(
+  comment = "#>", echo = FALSE, warning = FALSE, 
+  message = FALSE, dpi = 300
+ 
+)
+
+library(magrittr)
+library(ggpubr)
+library(MLmetrics)
+library(matlab)
 library(jsonlite)
+library(tidyverse)
+
+theme_set(theme_pubclean(base_size = 12)) 
+```
+
+
+```{r functions}
+get_data = function(data, data_name){
+  bind_rows(
+    c('set3_learn','set6_learn') %>% 
+      map(~
+            #column is measurement at T, record is simulation
+            data %>% 
+            .[[.x]] %>% 
+            reduce(rbind) %>% 
+            data.frame() %>% 
+            mutate(condition = .x, 
+                   model_index= c(1:nrow(data))
+            )
+      ) %>% 
+      reduce(bind_rows) %>% 
+      pivot_longer(cols = starts_with('x')
+                   ,values_to = 'accuracy', names_to = 'iteration'),
+    
+    c('set3_test', 'set6_test') %>% #, 'bias' 'alpha','egs', 'bll', 'imag','ans'
+      map (~
+             {
+               temp = data %>% 
+                 .[[.x]]
+               
+               data.frame(
+                  model_index= c(1:nrow(data)),
+                 condition=.x, 
+                 iteration=paste0('X', rep(c(1:12), nrow(data))), 
+                 accuracy=rep(temp, 12)
+               )
+               
+             }
+      )
+  
+  ) %>%  
+    mutate(data_source = data_name)
+}
+get_data_ml = function(data){
+  bind_rows(
+    c('n3','m3','n6','m6') %>% 
+      map(~
+            #column is measurement at T, record is simulation
+            data %>% 
+            .[[.x]] %>% 
+            reduce(rbind) %>% 
+            data.frame() %>% 
+            mutate(condition = .x,
+                    subjects= data$index #13 stim iterations X 4 conditions
+                   
+            )
+      ) %>% 
+      reduce(bind_rows) %>% 
+      pivot_longer(cols = starts_with('x')
+                   ,values_to = 'accuracy', names_to = 'iteration'), 
+    
+    
+    c('test3', 'test6') %>%
+      map (~
+             {
+               temp = data %>% 
+                 .[[.x]]
+               
+               data.frame(
+                subjects= rep(data$index, 13),
+                 condition=.x, 
+                 iteration=paste0('X', rep(c(1:13), nrow(data))), 
+                 accuracy=rep(temp, 13)
+               )
+               
+             }
+      )
+  
+  ) 
+}
+
+
+Andys_BIC <- function(rmse, k, n) {
+  # RSS first
+  #n = 48 #lean3 + learn 6 + (test3)*12 + (test6)*12
+  RSS <- ((rmse)^2) * n
+  # BIC next
+  bic <- n + (n * log(2*pi)) + (n * log(RSS/n)) + (log(n) * (k + 1))
+  
+  return(bic)
+}
+
+
+fit.subject <- function(behav.dat, model.dat){
+
+apply(model.dat, 1, function(x,y) MSE(x, behav.dat)) %>% sqrt()
+   
+}
+
+
+fit.models.split <- function(model, half, setsize, params) {
+  #select model
+  
+  # select subject data
+  if (half == 1) {
+    sdat = sdat.repl.h1
+  } 
+  if(half ==2) {
+    sdat = sdat.repl.h2
+  }
+ 
+  # select setsize
+  
+  if (setsize == 3) {
+    ns = 1:24
+    n_size = 'set3_'
+  } 
+  
+  if(setsize == 6){
+    ns = 25:48
+  
+    n_size='set6_'
+  }
+ 
+  
+  dat.learn = eval(
+      parse(text=paste0(model,'.sim$',n_size, 'learn')
+                                 )
+                           ) %>% 
+    reduce(rbind)
+                      
+  
+  dat.test =  matrix(
+              eval(
+                parse(text=paste0(model,'.sim$',n_size, 'test'))),
+              nrow = numel(eval(parse(text=paste0(model,'.sim$',n_size, 'test')))),
+              ncol = 12)
+ 
+  
+  apply( sdat[, ns], 1,
+        function(x, y)
+          fit.subject(x, 
+                      (cbind(dat.learn, dat.test)
+                       )
+                      )) %>%
+    Andys_BIC(k = params, n = 24)
+  
+}
+  
+fit.models <- function(model, params) {
+  
+  #select model
+  if (model == 'RL') {
+    sim.mod = RL.sim
+  }
+  if (model == 'LTM') {
+    sim.mod = LTM.sim
+  }
+  if (model == 'STR') {
+    sim.mod = STR.sim
+  }
+  if (model == 'META') {
+    sim.mod = META.sim
+  }
+  
+sim.learn = sim.mod$set3_learn %>% 
+    reduce(rbind) %>%  
+  cbind(sim.mod$set6_learn %>% reduce(rbind)) 
+                      
+  
+  sim.test =  matrix(
+                sim.mod$set3_test,
+              nrow = numel(sim.mod$set3_test),
+              ncol = 12) %>% 
+    cbind(matrix(
+                sim.mod$set6_test,
+              nrow = numel(sim.mod$set6_test),
+              ncol = 12))
+  
+  apply( sdat %>% select(-subjects), 1,
+        function(x, y)
+          fit.subject(x, 
+                      (cbind(sim.learn, sim.test)
+                       )
+                      )) %>%
+    Andys_BIC(k = params, n = 48)
+  
+}
+
 
 ```
 
-```{r import data}
 
+```{r similiarity bn n and m trials}
+# hhh %>% 
+#   pivot_wider(names_from = condition, values_from=accuracy ) %>% 
+#   group_by(subjects) %>% 
+#   summarise(set3_r = cor(n3,m3), 
+#             set6_r = cor(n6, m6)) %>% 
+#   pivot_longer(cols = -subjects,names_to = 'condition', values_to = 'r_coef') %>% 
+#   count(condition)
+# 
+#   ggplot(aes(r_coef, fill=condition)) +
+#   #geom_histogram(alpha=.4) +
+#   geom_density(alpha=.4) +
+#  # stat_summary(fun=mean,geom="line",lwd=2) +
+#   facet_wrap(vars(condition))
+#   
+
+
+
+
+```
+
+```{r import process export for analysis in combination}
+if(0) {
+  
+  
 meta_sub_dat <- fromJSON('./processed_wmo/meta_learning_wmo_data_122020.JSON')$data
 
+meta_sub_dat %>% 
+  select(n3) %>% 
+bind_cols()
+  tibble()
+  
+
+
+s.dat.ml=get_data_ml(meta_sub_dat
+            ) %>% 
+  mutate(iteration = str_remove_all(iteration, "[:alpha:]") %>%  
+           as.numeric() )
+
+
+s.dat.ml.avg <- 
+s.dat.ml %>% 
+ # filter(subjects=="1f0024") %>%
+  pivot_wider(names_from = condition, values_from = accuracy) %>% 
+  mutate(learn3 = (n3+m3)/2, 
+         learn6 =(n6+m6)/2) %>% 
+  pivot_longer(cols = -c(subjects, iteration), names_to = 'condition', values_to = 'accuracy')
+
+  
+# this saves the averaged first and second half
+s.dat.ml.avg %>% 
+  filter( iteration<13, str_detect(condition, 'lear') | str_detect(condition, 'test')) %>% 
+  unite(col=dat,c( condition, iteration)) %>% 
+  pivot_wider(id_cols = subjects, names_from = dat, values_from = accuracy) %>% 
+  select(subjects,  paste0('learn3_', c(1:12) ),  paste0('learn6_', c(1:12)),  paste0('test3_', c(1:12) ),  paste0('test6_', c(1:12) ) ) %>% 
+  #select(learn6_12) %>% 
+  filter( learn6_12 > .33) %>% 
+  write_csv(file = 'meta_learning_group.csv')
+
+
+#this saves just the first half of the data only
+s.dat.ml %>% 
+filter( iteration<13, str_detect(condition, 'n') | str_detect(condition, 'test')) %>% 
+  unite(col=dat,c( condition, iteration)) %>% 
+  pivot_wider(id_cols = subjects, names_from = dat, values_from = accuracy)  %>% 
+  #select(learn6_12) %>% 
+  filter( n6_12 > .33) %>% 
+ write_csv(file = 'meta_learning_group_first_half_dat.csv')
+}
 ```
 
+
+```{r fit models to data: h1h2Together}
+#import subject data
+sdat <-  read_csv('meta_learning_group.csv')
+#sdat <-  read_csv('meta_learning_group_first_half_dat.csv')
+
+
+#import model data
+
+
+RL.sim <- fromJSON('./simulated_data/RL_model/RL_sim_data_07_12_2022.JSON')$data %>% 
+  dplyr::mutate(bias = 0)
+
+LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$data %>% 
+  dplyr::mutate(bias = 0 )
+
+STR.sim <- fromJSON('./simulated_data/strategy_model/STR_sim_data_032021.JSON')$data %>% 
+  dplyr::mutate(bias = str_remove_all(strtg, "[:alpha:]") %>% as.numeric()/100, .keep=c('unused'))
+
+META.sim <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_032021.JSON')$data %>% 
+   dplyr::mutate(bias = strtg,
+          bias3 = strtg3,
+          bias6 = strtg6, .keep='unused')
+
+
+
+
+
+##########--------RL fits----------------############
+
+RL.BIC <-  fit.models(model = 'RL', 2)
+
+##########---------LTM FITS ----------------############
+
+LTM.BIC<- fit.models('LTM',3)
+
+##########---------RL-LTMstr FITS ----------------############
+
+STR.BIC <- fit.models('STR', 6)
+
+##########---------RL-LTMmeta FITS ----------------############
+
+META.BIC <- fit.models('META',5)
+
+
+```
+
+```{r select best fits}
+all.models <- 
+  rbind(
+    RL.BIC %>% 
+      as_tibble() %>% 
+      mutate(model='RL', model.id=c(1:nrow(RL.sim))), 
+    LTM.BIC %>% 
+      as_tibble() %>% 
+      mutate(model='LTM',model.id=c(1:nrow(LTM.sim)) ),
+    STR.BIC %>% 
+      as_tibble() %>%
+      mutate(model='STR', model.id=c(1:nrow(STR.sim)) ),
+    META.BIC %>% as_tibble() %>%
+      mutate(model='META', model.id=c(1:nrow(META.sim)) )
+)  
+  
+best.fits <- 
+    all.models$model[all.models %>% 
+                       select(-contains('model')) %>% 
+                       apply(., 2, which.min)
+                     ] %>% 
+    as_data_frame() %>% 
+  mutate(model = value,
+    subjects = sdat$subjects, 
+    .keep='unused') 
+
+  
+best.fit.idx <- 
+    all.models$model.id[all.models %>% 
+                       select(-contains('model')) %>% 
+                       apply(., 2, which.min) 
+                     ] %>% 
+  as_data_frame() %>% 
+  mutate(index = value,
+         subjects = sdat$subjects, 
+         .keep = 'unused')
+```
+
+
+```{r best fit counts}
+best.fits %>% 
+  dplyr::count(model) %>% 
+  ggplot(aes(y=n, fill=model, x=model)) +
+  geom_bar(stat = 'identity') +
+ # facet_wrap(vars(name)) +
+  scale_fill_brewer(palette = 'Reds')+
+  ylab('Frequency')+
+  #geom_text( aes(y=c(5), label=freq, size=6, fill='red'), check_overlap = T, parse = T) +
+  theme_pubclean(base_size = 12) 
+  
+```
+
+```{r distribution of strategy parameter}
+str.bias = STR.sim$bias %>%
+  c() 
+meta.bias = META.sim$bias %>% 
+  c()
+
+str.bias[best.fit.idx[best.fits$model=='STR','index'] %>% 
+           reduce(rbind)
+           ] %>% as_data_frame() %>% 
+  count(value) %>% 
+  ggplot(aes(x=as.factor(value), y=n)) +
+   geom_bar(stat = 'identity') +
+  ggtitle("distribution of proportion of RL used in STR model")
+
+meta.bias[best.fit.idx[best.fits$model=='META','index'] %>% 
+           reduce(rbind)
+           ] %>% as_data_frame() 
+
+
+```
+
+```{r join model-behavioral data}
+
+
+all_sims =list(list(RL.sim, LTM.sim,STR.sim, META.sim), 
+     list("RL", "LTM","STR", "META" )) %>%  
+  pmap(get_data) %>%  
+  reduce(bind_rows) %>% 
+  mutate(iteration = str_remove_all(iteration, "[:alpha:]") %>%  
+           as.numeric(), 
+         type ='model' )
+
+  
+# separate out parameters and set them into their own long form column
+all_sims %<>% 
+  # filter(!str_detect(condition, 'set')) %>% 
+  # select(condition, accuracy, data_source, model_index) %>% 
+  # unique %>% 
+  # pivot_wider( values_from = accuracy, names_from = condition) %>% 
+  # inner_join(all_sims %>% 
+  #              filter(str_detect(condition, 'set')),
+  #            by = c('data_source','model_index')) %>% 
+  # mutate('alpha' = scale(alpha), 
+  #        'egs' = scale(egs) ,
+  #        'bll' = scale(bll),
+  #        'imag' = scale(imag),
+  #        'ans' = scale(ans) ) %>% 
+  # pivot_longer(cols = c('alpha', 'egs', 'bll','imag','ans'), names_to = 'parameter', values_to = 'param_vals') %>% 
+  unite(col = 'mod.id', c('data_source','model_index'), sep = '_', remove = F ) 
+
+
+
+# join all sims with index for best fitting model - index search
+
+index_search <-  merge(
+  best.fits
+  ,best.fit.idx
+  ,by = c('subjects')
+)
+
+# This subset contains the best fit model data for all participants conditions
+#all.p.model.dat = 
+#trial 1-column multi index
+index_search %<>%
+  unite(col = 'mod.id', c('model','index'), sep = '_', remove = F ) 
+
+
+
+
+# hlp=  index_search %>% 
+#  # sample_n(2) %>% 
+#   base::merge(all_sims
+#      #   ,by.x = c("model", "index")
+#     #    ,by.y = c("data_source", "model")
+#     ,by ='mod.id'
+#       #  ,all.x = T
+#     )
+
+ p.model.dat <- 
+   all_sims %>% 
+ inner_join(index_search,  
+    by = c('mod.id')
+    ) %>% 
+     select(-c( data_source, model_index, index, mod.id)) 
+ # arrange(condition) %>% 
+  
+ 
+
+#  "model"     "index"     "subjects"  "name"      "condition" "iteration" "accuracy"  "type"     
+subject.dat <- 
+  sdat 
+
+  
+  
+colnames(subject.dat) = c('subjects',
+                          paste0('set3_learn.', c(1:12)),
+                          paste0('set6_learn.', c(1:12)),
+                          paste0('set3_test.', c(1:12)),
+                          paste0('set6_test.', c(1:12))
+                          )
+
+  subject.dat %<>%   
+  dplyr::mutate(
+         'type' = 'behavioral' 
+        # ,'parameter' = NA, 
+      #   'param_vals'= NA
+        ) %>% 
+  pivot_longer(cols = -c(type, subjects), names_to = 'temp_condition', values_to = 'accuracy') %>% #, parameter, param_vals
+  separate(temp_condition, into = c('condition','iteration'), sep = '[/.]') 
+  
+# join model data and behavioral data   
+  
+  hlp.temp <- 
+    subject.dat %>%
+    mutate(iteration=as.double(iteration), .keep='unused') %>% 
+    inner_join(p.model.dat, by= c('condition', 'iteration', 'subjects' )) %>% 
+    pivot_longer(cols = c(type.x, type.y), names_to = 'type.temp', values_to = 'type') 
+  
+p.model.behav.dat <- 
+   rbind( hlp.temp %>% 
+    filter(type=='behavioral') %>% 
+    select(-accuracy.y, -type.temp) %>% 
+    mutate(accuracy=accuracy.x, .keep='unused'), 
+  hlp.temp %>% 
+    filter(type=='model') %>% 
+    select(-accuracy.x, -type.temp) %>% 
+    mutate(accuracy=accuracy.y, .keep='unused')) %>% 
+   separate(condition, into = c('condition', 'phase' ))
+  
+  
+  
+ 
+  
+#   
+# # last bit -  add model identity must join by half subject and condition
+#   mod.id.temp <- 
+#      all_sims %>% 
+#  inner_join(index_search,  
+#     by = c('mod.id')
+#     )%>%
+#      select(c(subjects, condition, model))
+#   
+#   melted.p.behav.model <- 
+#     
+#     
+#   rbind(subject.dat, p.model.dat) %>% 
+#   inner_join(mod.id.temp,
+#  by=c('subjects', 'condition')
+#  ) %>% 
+#     separate(col = condition, into = c('condition', 'phase'), remove = T )
+# 
+# parameter.dat <- 
+#   inner_join(index_search %>% 
+#                filter(condition=='set3_learn' |condition=='set6_learn' ), 
+#              rbind(data.frame(scale(RL.sim[,c('alpha','egs', 'bll', 'imag','ans')]), 
+#                               model='RL', index=c(1:nrow(RL.sim))),
+#                    data.frame(scale(LTM.sim[,c('alpha','egs', 'bll', 'imag','ans')]), 
+#                               model='LTM', index=c(1:nrow(LTM.sim)))
+#                    ),
+#              by = c('index', 'model')
+#              ) %>% 
+#   pivot_longer(cols = c('alpha','egs', 'bll', 'imag','ans'),
+#                names_to = 'parameter',
+#                values_to = 'param_vals')
+# 
+# #parameter.dat[(parameter.dat$param_vals==0), 'param_vals'] = NA
+# 
+# # parameter.dat %<>% 
+# #   dplyr::mutate(param_vals_sc=scale(param_vals))  
+# parameter.dat %>% filter(subjects==6217) %>% View()
+#   
+
+```
+
+```{r subject behavioral model plot, fig.height=13, fig.width=10}
+learn.plt <- p.model.behav.dat %>% 
+  filter(phase!='test') %>%
+unite(col='cond.model', c( 'condition','type'),remove = F) %>% #'condition'
+  dplyr::group_by(type,  condition, model,  iteration, cond.model) %>%  #,
+ dplyr::summarize (
+                    n_subjects = numel(accuracy),
+                   acc=mean(accuracy),
+                   se = sd(accuracy, na.rm = T)/sqrt((n_subjects)) # divide by the number of iterations to get the correct number of samples
+ )%>% 
+
+
+  ggplot(aes(as.numeric(iteration),acc, group=cond.model,color=cond.model)) +
+  geom_point(size=1.5) +
+  geom_line(size=1) +
+  geom_errorbar(aes(ymin=acc-se,ymax=acc+se),width=.25, size=.75, width=.25, size=.75)+
+  facet_wrap(vars(model), ncol = 1) + #model , condition
+ scale_color_brewer(palette = "Paired") +
+  ylim(c(0.2,1)) +
+  theme_pubclean(base_size = 14) +
+    xlab('stimulus iteration')
+
+  # plot test
+  
+test.plt <- p.model.behav.dat %>% 
+  filter(iteration > 8) %>%
+  dplyr::group_by(subjects, condition, phase, model, type) %>% 
+  dplyr::summarise(accuracy = mean(accuracy)) %>% 
+unite(col='cond.model', c( 'condition','type'),remove = F) %>% #'condition'
+  dplyr::group_by(type, condition, model,  cond.model, phase) %>%  #,
+ dplyr::summarize (
+                    n_subjects = numel(accuracy),
+                   acc=mean(accuracy),
+                   se = sd(accuracy, na.rm = T)/sqrt((n_subjects)) 
+                   ) %>% 
+
+  ggplot(aes(phase,acc, group=cond.model,color=cond.model)) +
+  geom_point(size=1.5) +
+  geom_line(size=1) +
+  geom_errorbar(aes(ymin=acc-se,ymax=acc+se),width=.25, size=.75, width=.25, size=.75)+
+  facet_wrap(vars(model), ncol = 1) + #model , condition
+ scale_color_brewer(palette = "Paired") +
+  theme_pubclean(base_size = 12) +
+  ylim(c(0.2,1))+
+    xlab('stimulus iteration') +
+  theme(legend.position = 'none')
+  
+
+ggarrange(learn.plt, test.plt, ncol = 2, align = 'v', legend = 'left', common.legend = T)
+
+```
+
+```{r fit models to data: s3s6_split}
+```

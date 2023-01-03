@@ -13,11 +13,11 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{css, echo=FALSE}
-p{
-  font-size: 18px;
-}
-```
+<!-- ```{css, echo=FALSE} -->
+<!-- p{ -->
+<!--   font-size: 18px; -->
+<!-- } -->
+<!-- ``` -->
 
 # Results
 
@@ -171,14 +171,14 @@ fit.models <- function(model, half, setsize, params) {
   }
  
   
-  dat.learn = eval(
+  sim.learn = eval(
       parse(text=paste0(model,'.sim$',n_size, 'learn')
                                  )
                            ) %>% 
     reduce(rbind)
                       
   
-  dat.test =  matrix(
+  sim.test =  matrix(
               eval(
                 parse(text=paste0(model,'.sim$',n_size, 'test'))),
               nrow = numel(eval(parse(text=paste0(model,'.sim$',n_size, 'test')))),
@@ -188,7 +188,7 @@ fit.models <- function(model, half, setsize, params) {
   apply( sdat[, ns], 1,
         function(x, y)
           fit.subject(x, 
-                      (cbind(dat.learn, dat.test)
+                      (cbind(sim.learn, sim.test)
                        )
                       )) %>%
     Andys_BIC(k = params, n = 24)
@@ -245,6 +245,7 @@ half1.N3 <- rbind(
   # META.BIC.half1.N3 %>% as_tibble() %>% mutate(model='META',
   #                                              model.id=c(1:nrow(META.sim)) )
 )
+
 half1.N6 <- rbind(RL.BIC.half1.N6 %>% as_tibble() %>% mutate(model='RL',
                                                              model.id=c(1:nrow(RL.sim))), 
                   LTM.BIC.half1.N6 %>% as_tibble() %>% mutate(model='LTM',
@@ -690,7 +691,7 @@ parameter.dat <-
 
 # parameter.dat %<>% 
 #   dplyr::mutate(param_vals_sc=scale(param_vals))  
-parameter.dat %>% filter(subjects==6217) %>% View()
+parameter.dat %>% filter(subjects==6209) 
   
   
   
@@ -983,18 +984,18 @@ dplyr::group_by(half, subjects, condition, phase,model ) %>%
                 pivot_longer(cols = c(half1, half2), names_to = 'half', values_to = 'model')
                    ,by=c('subjects','half','condition','model', 'phase')) 
 
-switch.half %>% 
- dplyr::group_by(stable,half, condition, phase, model ) %>% 
-  dplyr::summarise(acc.mean = mean(mean.acc), 
-                   n=length(mean.acc), 
-                   se=sd(mean.acc)/sqrt(n)) %>% 
-  
-   ggplot(aes(x=stable, y=acc.mean, color=half)) +
-  geom_point(size=4, alpha=.7) +
-  geom_errorbar(aes(ymin=acc.mean-se, ymax=acc.mean+se), size=.19, width=.2)+
-  facet_wrap(vars(phase, condition, model)) +
-  scale_color_brewer(palette = 'Set2')
- 
+# switch.half %>% 
+#  dplyr::group_by(stable,half, condition, phase, model ) %>% 
+#   dplyr::summarise(acc.mean = mean(mean.acc), 
+#                    n=length(mean.acc), 
+#                    se=sd(mean.acc)/sqrt(n)) %>% 
+#   
+#    ggplot(aes(x=stable, y=acc.mean, color=half)) +
+#   geom_point(size=4, alpha=.7) +
+#   geom_errorbar(aes(ymin=acc.mean-se, ymax=acc.mean+se), size=.19, width=.2)+
+#   facet_wrap(vars(phase, condition, model)) +
+#   scale_color_brewer(palette = 'Set2')
+#  
 
 switch.half %>% 
   filter(phase=='learn') %>% 
@@ -1006,14 +1007,17 @@ switch.half %>%
 
 
 
-
-
-
 ## Are the parameter values largely different for each half and set-size?
 
-```{r param diffs by condition}
+```{r param diffs by condition, fig.width=6, fig.height=6.2, dpi=300}
 
- 
+
+tibble('alpha'=0.15,
+       'egs' = 0.3, 
+       'bll'= 0.5, 
+       'imag'= 0.3,
+       'ans'= 0.3) %>% knitr::kable()
+
   Set3toSet6 <- 
 parameter.dat %>% 
    separate(name, into = c('half', 'setSize')) %>% 
@@ -1026,19 +1030,21 @@ parameter.dat %>%
                    ,by=c('subjects','half','setSize','model'))
 Set3toSet6 %>% 
   #filter(subjects==15000)
-  dplyr::group_by(stable, half, setSize, parameter) %>% 
+  dplyr::group_by(stable,  setSize, parameter) %>% #half,
    dplyr::summarise(mean=mean(param_vals, na.rm=T ),
                     n=length(param_vals %>% na.omit()),
                     se = sd(param_vals, na.rm = T)/sqrt(n)) %>% 
   #pivot_longer(cols = c(N3,N6), names_to = 'condition', values_to = 'model') %>%
  # filter(setSize=='N3') %>% 
-  ggplot(aes(x=stable, y=mean, color=setSize, group=setSize)) +
+  ggplot(aes(x=setSize, y=mean, fill=stable, group= stable)) +
   #geom_jitter(size=4, width = .3, alpha=.6) +
 #  geom_boxplot(position = 'dodge2')+
   #geom_density(alpha=.4)+
-  geom_errorbar(aes(ymax=mean+se, ymin=mean-se))+
-  geom_point(size=4, alpha=.5)+
-  facet_wrap(vars( parameter, half)) +
+  geom_bar(stat = 'identity',position = position_dodge(width = .8), width = .8)+
+  geom_errorbar(aes(ymax=mean+se, ymin=mean-se),position = position_dodge(width = .8), width = .8, width=.4)+
+  #geom_point(size=4, alpha=.5)+
+  facet_wrap(vars( parameter)) + # , half
+   scale_fill_brewer(palette = 'Set1') +
   theme_pubclean(base_size = 14)
 
 
@@ -1056,25 +1062,25 @@ parameter.dat %>%
                 pivot_longer(cols = c(half1,half2), names_to = 'half', values_to = 'model')
                    ,by=c('subjects','half','setSize','model'))
 
-
-half1tohalf22 %>% 
-   
-  #filter(subjects==15000)
-  dplyr::group_by(stable, half, setSize, parameter) %>% 
-   dplyr::summarise(mean=mean(param_vals, na.rm=T ),
-                    n=length(param_vals %>% na.omit()),
-                    se = sd(param_vals, na.rm = T)/sqrt(n)) %>% 
-  #pivot_longer(cols = c(N3,N6), names_to = 'condition', values_to = 'model') %>%
-  filter(half=='half1') %>% 
-  ggplot(aes(x=stable, y=mean, color=half, group=half)) +
-  #geom_jitter(size=4, width = .3, alpha=.6) +
-#  geom_boxplot(position = 'dodge2')+
-  #geom_density(alpha=.4)+
-  geom_errorbar(aes(ymax=mean+se, ymin=mean-se))+
-  geom_point(size=4, alpha=.5)+
-  facet_wrap(vars( parameter, setSize)) +
-  theme_pubclean(base_size = 14)
-# melted.p.behav.model %>% 
+# 
+# half1tohalf22 %>% 
+#    
+#   #filter(subjects==15000)
+#   dplyr::group_by(stable, half, setSize, parameter) %>% 
+#    dplyr::summarise(mean=mean(param_vals, na.rm=T ),
+#                     n=length(param_vals %>% na.omit()),
+#                     se = sd(param_vals, na.rm = T)/sqrt(n)) %>% 
+#   #pivot_longer(cols = c(N3,N6), names_to = 'condition', values_to = 'model') %>%
+#   filter(half=='half1') %>% 
+#   ggplot(aes(x=stable, y=mean, color=half, group=half)) +
+#   #geom_jitter(size=4, width = .3, alpha=.6) +
+# #  geom_boxplot(position = 'dodge2')+
+#   #geom_density(alpha=.4)+
+#   geom_errorbar(aes(ymax=mean+se, ymin=mean-se))+
+#   geom_point(size=4, alpha=.5)+
+#   facet_wrap(vars( parameter, setSize)) +
+#   theme_pubclean(base_size = 14)
+# # melted.p.behav.model %>% 
 #     drop_na() %>% 
 #   filter(type=='model', phase=='learn', iteration==1) %>% 
 #     unique() %>% 
