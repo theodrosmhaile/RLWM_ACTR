@@ -195,4 +195,45 @@ acc_variability_dat %>%
   
 ```
  
+```{r export reaction time data}
+wmodata %>% 
+  dplyr::mutate(
+   condition= rep(
+    c(rep('s3', 13*3), rep('s6', 13*6),rep('s3', 13*3) ,rep('s3', 13*3),
+      rep('s6', 13*6),rep('s3', 13*3),rep('s6', 13*6),rep('s6', 13*6),
+      rep('s3', 13*3), rep('s3', 13*3),rep('s6', 13*6),rep('s3', 13*3),rep('s6', 13*6),
+      rep('s3', 13*3)
+    ), length(unique(wmodata$subject)))) %>% 
+  arrange(subject, condition, seq) %>% 
+  mutate('iteration' = rep(rep(1:13, 60),
+                       length(unique(wmodata$subject))), 
+         'half' = rep(c(rep('half1',(30 * 13)),rep('half2',(30*13))),
+                    length(unique(wmodata$subject)))
+         ) %>% 
+  filter(subject==6200) %>% 
+  #filter(acc!=-1) %>% 
+  dplyr::group_by(half,condition, iteration) %>% 
+  dplyr::summarise(mean.acc = mean(acc), 
+                   n=length(acc), 
+                   mean.RT = mean(RT)) %>% View
+  ggplot(aes(x=iteration,y= mean.RT, group=condition, color=condition)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(vars(half))+
+  ylim(c(0.3,1))
+  
+
+
+filter(acc!=-1) %>% 
+  dplyr::group_by(subject,trial, acc) %>% 
+  
+  dplyr::summarise(mean=mean(RT), 
+                   n=length(RT)) %>% 
+  ggplot(aes(y=mean,x=as.factor(trial), color=as.factor(acc)))+ #x=as.factor(acc))) +
+ # geom_point() +
+  geom_violin()#+
+  #facet_wrap(vars(trial))
+
+```
+ 
  

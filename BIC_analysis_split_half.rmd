@@ -1,0 +1,1131 @@
+
+## Overview of model-fitting quality
+
+<!-- The plot below shows mean BIC value for the best fitting model for each of the halves and set-sizes. -->
+
+<!-- ```{r BIC analysis of model fit} -->
+
+<!-- getBIC  <- function(bic.table) { -->
+<!--   index <-  bic.table %>% select(-contains('model')) %>%  -->
+<!--     apply(., 2, which.min) -->
+
+<!--   table.mat <-  bic.table[,1:83] %>%  -->
+<!--     as.matrix() -->
+
+<!--   table.mat[seq(from = 0,  -->
+<!--                 to = (table.mat %>% dim() %>% prod) - 1, -->
+<!--                 by = nrow(table.mat) -->
+<!--                 ) + index] -->
+
+<!-- } -->
+
+<!-- bic.dat <- tibble(subjects = h1.subjects, -->
+<!--   half1_N3 =getBIC(half1.N3), -->
+<!--                   half2_N3 = getBIC(half2.N3),  -->
+<!--                   half1_N6 =getBIC(half1.N6),  -->
+<!--                   half2_N6 = getBIC(half2.N6))  -->
+
+<!-- BIC.model.dat <-  -->
+<!--   bic.dat %>%  -->
+<!--    pivot_longer(cols = contains('n'), names_to = 'cond', values_to = 'bic_values') %>%  -->
+<!--   separate(cond, into = c('half', 'condition')) %>%  -->
+<!--    inner_join( best.fits %>%  -->
+<!--            select(-type) %>% -->
+<!--                 separate(name, into=c('half', 'condition')), -->
+<!--               by = c('subjects', 'half', 'condition')) -->
+
+
+<!-- BIC.model.dat %>%  -->
+<!--   dplyr::group_by(half, condition, model) %>%  -->
+<!--   dplyr::summarise(m = mean(bic_values),  -->
+<!--                    n = length(bic_values),  -->
+<!--                    se = sd(bic_values)/sqrt(n)) %>%  -->
+<!--   ggplot(aes(y= m, x= model, color=condition, group=condition)) + -->
+<!--   geom_point() + -->
+<!--   geom_errorbar(aes(ymin = m-se, ymax = m+se), width=.2) + -->
+<!--   facet_wrap(vars(half)) + -->
+<!--   ylab('Mean BIC') + -->
+<!--   xlab('Best Fitting Model') + -->
+<!--   scale_color_brewer(palette = 'Set1')+ -->
+<!--   theme_pubclean(base_size = 18) -->
+
+
+
+<!-- BIC.model.dat %>%  -->
+<!--   ggplot(aes(x=model, y=bic_values, color = condition)) + -->
+<!--   geom_violin() + -->
+<!--   facet_wrap(vars(half)) + -->
+<!--   scale_color_brewer(palette = 'Set1') -->
+
+
+<!-- ``` -->
+
+<!-- ```{r  Ranked BIC analysis, fig.height=8, fig.width=8, dpi=300} -->
+<!-- h1n3.sorted.bic <-  -->
+<!--   apply(half1.N3[,1:83], 2, sort) -->
+<!-- h1n6.sorted.bic <-  -->
+<!--   apply(half1.N6[,1:83], 2, sort) -->
+<!-- h2n3.sorted.bic <-  -->
+<!--   apply(half2.N3[,1:83], 2, sort) -->
+<!-- h2n6.sorted.bic <-  -->
+<!--   apply(half2.N6[,1:83], 2, sort) -->
+
+
+
+
+<!--   BIC.plot <- function(data,Title) { -->
+
+<!--   data %>%  -->
+<!--   as_tibble() %>%  -->
+<!--   dplyr::mutate(index = c(1:nrow(half1.N3) )) %>%  -->
+<!--   pivot_longer(cols = -index) %>%  -->
+<!--   dplyr::group_by(index) %>%  -->
+<!--   dplyr::summarise(mean=mean(value), -->
+<!--                    n = length(value),  -->
+<!--                    se = sd(value)/sqrt(n)) %>%  -->
+<!--   filter(index<101) %>%  -->
+<!--   ggplot(aes(x=index, y=mean)) + -->
+<!--   geom_point() + -->
+<!--   geom_errorbar(aes(ymax=mean+se, ymin=mean-se), width=2, color='red') + -->
+<!--       ylim(c(-55, 0)) + -->
+<!--   ggtitle(Title) + -->
+<!--   theme_pubclean(base_size = 12) -->
+<!--   } -->
+
+<!-- ggarrange(BIC.plot(h1n3.sorted.bic, "Half 1; Setsize 3"), -->
+<!--           BIC.plot(h1n6.sorted.bic, "Half 1; Setsize 6"), -->
+<!--           BIC.plot(h2n3.sorted.bic, "Half 2; Setsize 3"), -->
+<!--           BIC.plot(h2n6.sorted.bic, "Half 2; Setsize 6") -->
+<!--           ) -->
+
+<!-- ``` -->
+
+<!-- ```{r Ranked BIC differences, fig.height=6, fig.width=7, dpi=300} -->
+
+
+<!-- plot.bic.diff <- function(data, Title) { -->
+
+<!-- data %>%  -->
+<!--   as_tibble() %>%  -->
+<!--   dplyr::mutate(index = c(1:nrow(half1.N3) )) %>%  -->
+<!--   filter(index<12) %>%  -->
+<!--   apply(., 2, diff) %>%  -->
+<!--   as_tibble() %>%  -->
+<!--   dplyr::mutate(index = as.factor(c(1:10 ))) %>%  -->
+<!--    pivot_longer(cols = -index) %>%  -->
+<!--   dplyr::group_by(index) %>%  -->
+<!--   dplyr::summarise(mean=mean(value), -->
+<!--                    n = length(value),  -->
+<!--                    se = sd(value)/sqrt(n)) %>%  -->
+<!--   ggplot(aes(x=index, y=mean)) + -->
+<!--   geom_point() + -->
+<!--   geom_errorbar(aes(ymax=mean+se, ymin=mean-se), width=1, color='red') + -->
+<!--   ggtitle(Title) + -->
+<!--     ylim(c(0,5)) + -->
+
+<!--   theme_pubclean(base_size = 12) -->
+<!--   } -->
+
+<!-- ggarrange(plot.bic.diff(h1n3.sorted.bic, "Half 1; Setsize 3"), -->
+<!--           plot.bic.diff(h1n6.sorted.bic, "Half 1; Setsize 6"), -->
+<!--           plot.bic.diff(h2n3.sorted.bic, "Half 2; Setsize 3"), -->
+<!--           plot.bic.diff(h2n6.sorted.bic, "Half 2; Setsize 6") -->
+<!--           ) -->
+
+<!-- ``` -->
+
+<!-- ```{r model + behavior plot, fig.height=6, fig.width=6, dpi=300} -->
+<!-- melted.p.behav.model %>% -->
+<!--   filter(phase!='test') %>% -->
+<!-- unite(col='cond.model', c( 'model','type'),remove = F) %>% #'condition' -->
+<!--   dplyr::group_by(type, half, condition, model,  iteration, cond.model) %>%  #, -->
+<!--  dplyr::summarize ( -->
+<!--                     n_subjects = numel(accuracy)/12, -->
+<!--                    acc=mean(accuracy), -->
+<!--                    se = sd(accuracy, na.rm = T)/sqrt((n_subjects)) # divide by the number of iterations to get the correct number of samples -->
+<!--  )%>% -->
+
+
+<!--   ggplot(aes(as.numeric(iteration),acc, group=cond.model,color=cond.model)) + -->
+<!--   geom_point(size=1.5) + -->
+<!--   geom_line(size=1) + -->
+<!--   geom_errorbar(aes(ymin=acc-se,ymax=acc+se),width=.25, size=.75, width=.25, size=.75)+ -->
+<!--   facet_wrap(vars(half, condition), ncol = 2) + #model , condition -->
+<!--  # scale_color_viridis_d()+ -->
+
+<!-- #virid -->
+<!--  scale_color_brewer(palette = "Paired") + -->
+<!--   #theme_pubclean(base_size = 24) + -->
+<!--     xlab('stimulus iteration') -->
+
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- # melted.p.behav.model %>%  -->
+<!-- #   filter(type=='model', phase=='learn', iteration==1) %>%  -->
+<!-- #   select(subjects, half, model, condition) %>%  -->
+<!-- #   unique() %>%  -->
+<!-- #   dplyr::group_by(half, condition, model) %>%  -->
+<!-- #   dplyr::summarise(length(subjects)) -->
+
+<!-- ``` -->
+
+<!-- ## Dynamics -->
+
+<!-- ### Does the best fit model change from 1st half to second half and between the two set-sizes? -->
+
+<!-- Next, we sought to track learning dynamics for each individual learner. In other words, we wanted to see if learners changed strategies in response to 1) their learning experience, by comparing model fits to the first half and second half of learning, 2) task demands, by comparing model fits to th two set-size conditions, and, 3) interactions between the two. -->
+
+<!-- ```{r half confusion,  fig.width=6, fig.height=3.2, dpi=300} -->
+<!-- half.conf <- -->
+<!--   best.fits %>%  -->
+<!--   separate(col = name, into = c('half','condition')) %>%  -->
+<!--   pivot_wider(id_cols = c(subjects,condition), names_from = half, values_from = model) %>%  -->
+<!--    mutate(toRL = half2 == "RL",  -->
+<!--          toLTM = half2 == "LTM"  -->
+<!--          ,toSTR = half2 == "STR",  -->
+<!--          toMETA = half2== "META" -->
+<!--          ) %>%  -->
+<!--   dplyr::group_by(condition, half1) %>%  -->
+<!--   dplyr::summarise(RL = mean(toRL),  -->
+<!--                    LTM = mean(toLTM),  -->
+<!--                   n=n()  -->
+<!--                  ,STR = mean(toSTR),  -->
+<!--                    META = mean(toMETA)  -->
+<!--                    )  %>%  -->
+<!--    pivot_longer(cols = c(RL, LTM, STR, META), names_to = 'half2', values_to = 'percent') %>%  -->
+<!--     dplyr::group_by(condition, half1,half2, n, percent) %>%  -->
+<!--     dplyr::summarise( prop = n*percent)  -->
+
+<!--   # melted.p.behav.model %>%  -->
+<!--   # filter(type=='model', phase=='learn', iteration==1) %>% #, parameter=='alpha' -->
+<!--   #   unique() %>%  -->
+<!--   # pivot_wider(id_cols = c(subjects,condition), names_from = half, values_from = model) %>%  -->
+<!--   # mutate(toRL = half2 =="RL",  -->
+<!--   #        toLTM = half2 =="LTM"  -->
+<!--   #        ,toSTR = half2 =="STR",  -->
+<!--   #        toMETA = half2=="META" -->
+<!--   #        ) %>%  -->
+<!--   # dplyr::group_by(condition, half1) %>%  -->
+<!--   # dplyr::summarise(RL = mean(toRL),  -->
+<!--   #                  LTM = mean(toLTM),  -->
+<!--   #                 count(half1)  -->
+<!--   #                ,STR = mean(toSTR),  -->
+<!--   #                  META =mean(toMETA)  -->
+<!--   #                  )  %>%  -->
+<!--   #  pivot_longer(cols = c(RL, LTM), names_to = 'half2', values_to = 'percent') %>%  -->
+<!--   #   dplyr::group_by(condition, half1,half2, freq, percent) %>%  -->
+<!--   #   dplyr::summarise( prop = freq*percent)  -->
+
+<!--  # pivot_longer(cols = c(contains('prop')), names_to = 'count_c', values_to = 'n')  -->
+
+
+<!-- #half.conf$n[half.conf$n==0]=NA -->
+<!-- half.conf %>%  -->
+
+<!--    ggplot(aes(x=half1, y=half2, fill=percent)) + -->
+<!--   geom_tile()  + -->
+<!--     geom_text(aes(label= paste0(round(percent,2),  '(', prop,')')  -->
+<!--                                 ), -->
+<!--               size=4, -->
+
+<!--                   show.legend = F) + -->
+<!--   scale_fill_gradient(limits=c(0,1), -->
+<!--                           low='white', -->
+<!--                            high = '#d7191c', -->
+<!--                            #'#377eb8', -->
+
+<!--                           guide='colorbar', -->
+<!--                           aesthetics = 'fill', -->
+<!--                           breaks= c(0,.25,.5,.75,1)  -->
+<!--                        ) + -->
+<!--   facet_wrap(vars(condition))+ -->
+<!-- theme_classic(base_size = 18) + -->
+<!--   ggtitle("percentage(count) of changes") -->
+
+
+<!-- ``` -->
+
+<!-- We found that over 81% of learners who fit the LTM model in the first half also fit that model in the second half of learning (set-size 3: `r round(half.conf$prop[2]*100, 2)`%; set-size 6: `r round(half.conf$prop[6]*100, 2)`%). In contrast, more than 50% of those subjects who were best fit by the RL model in the first half also fit the RL model in the second half (set-size 3: `r round(half.conf$prop[3]*100, 2)`%; set-size 6: `r round(half.conf$prop[7]*100, 2)`%), the rest shifted to LTM. -->
+
+<!-- ```{r set-size confusion,  fig.width=6, fig.height=3.2, dpi=300} -->
+<!--  setsize.conf <- -->
+
+<!--   best.fits %>%  -->
+<!--   separate(col = name, into = c('half','condition')) %>%  -->
+<!--   pivot_wider(id_cols = c(subjects,half), names_from = condition, values_from = model) %>%  -->
+<!--   mutate(toRL = N6 =="RL",  -->
+<!--          toLTM = N6 =="LTM"  -->
+<!--          ,toSTR = N6 =="STR",  -->
+<!--          toMETA = N6=="META" -->
+<!--          ) %>%  -->
+<!--   dplyr::group_by(half, N3) %>%  -->
+<!--   dplyr::summarise(RL = mean(toRL),  -->
+<!--                    LTM = mean(toLTM),  -->
+<!--                    n = n()  -->
+<!--                   ,STR = mean(toSTR),  -->
+<!--                    META =mean(toMETA)  -->
+<!--                    ) %>%  -->
+<!--   pivot_longer(cols = c('RL', 'LTM', 'STR', 'META'), names_to = 'N6', values_to = 'percent') %>%  -->
+<!--     dplyr::mutate(prop = percent*n) -->
+
+
+<!--   setsize.conf %>%  -->
+<!--     ggplot(aes(x=N3, y=N6, fill=percent)) + -->
+<!--   geom_tile()  + -->
+<!--     geom_text(aes(label= paste0(round(percent,2),'(', prop,')' )  -->
+<!--                                 ), -->
+<!--               size=4, -->
+<!--                   show.legend = F) + -->
+<!--   scale_fill_gradient(limits=c(0,1), -->
+<!--                           low='white', -->
+<!--                            high = '#d7191c', -->
+<!--                            #'#377eb8', -->
+<!--                     #   midpoint = 0, -->
+<!--                           guide='colorbar', -->
+<!--                           aesthetics = 'fill', -->
+<!--                           breaks= c(0,.25,.5,.75,1)  -->
+<!--                        ) + -->
+<!--   facet_wrap(vars(half))+ -->
+<!-- theme_classic(base_size = 18) + -->
+<!--     ggtitle("percentage(count) of changes") -->
+
+
+<!-- ``` -->
+
+<!-- Patterns of model fits for the set-sizes were similar to the first-half - second-half fits above. More than 75% of subjects who fit the LTM model during set-size 3 trials also fit the LTM model in set-size 6, and these are largely the same across the first and second half of the task (half 1: `r round(setsize.conf$prop[2]*100, 2)`%; half 2: `r round(setsize.conf$prop[6]*100, 2)`%). In contrast, fewer numbers of subjects who fit the RL model for set-size 3 blocks also fit RL in the set-size 6 blocks; and these numbers differ between half 1 and half 2 (half 1: `r round(setsize.conf$prop[3]*100, 2)`%; half 2: `r round(setsize.conf$prop[7]*100, 2)`%) -->
+
+<!-- ## How do the groups in Experiment 1 fare in Experiment 2? -->
+
+<!-- Let us assume that there are high RL learners (most likely to fit RL), high LTM learners (most likely to fit LTM) and those in the middle that are likely to fit the combination models. If we fit the set-size 3 and 6 parts separately, how would these three different groups behave? What would we learn about their meta-cognition? We expect that the people in the extremes would use the same strategy for the two set-sizes, and, the people in the center would perhaps respond more to task demands and use LTM for s3 and RL for s6, as Collins predicts. -->
+
+<!-- ## Group differences in performance (accuracy) for switchers vs non-switchers -->
+
+<!-- ```{r sw vs nsw: set size not stable, fig.width=6.2, fig.height=6.2, dpi=300} -->
+
+<!-- switch.setSize <- -->
+
+<!--   melted.p.behav.model %>% -->
+
+<!--   filter(type=='behavioral',iteration == c(8,9,10,11,12))  %>% -->
+
+<!--   unique() %>% -->
+
+<!-- dplyr::group_by(half, subjects, condition, phase,model ) %>% -->
+
+<!--   dplyr::summarise(mean.acc = mean(accuracy), -->
+
+<!--                    n = length(accuracy), -->
+
+<!--                    se= sd(accuracy)/sqrt(n)) %>% -->
+
+<!--   inner_join(index_search %>% -->
+
+<!--                separate(name, into = c('half', 'setSize')) %>% -->
+
+<!--                separate(condition, into = c('condition', 'phase')) %>% -->
+
+<!--                pivot_wider(id_cols = c(subjects,half, phase), -->
+
+<!--                            names_from = condition, values_from = model) %>% -->
+
+<!--                dplyr::mutate(stable = set3==set6) %>% -->
+
+<!--                 pivot_longer(cols = c(set3, set6), names_to = 'condition', values_to = 'model') -->
+
+<!--                    ,by=c('subjects','half','condition','model', 'phase')) -->
+
+<!-- switch.setSize %>% -->
+
+<!--  dplyr::group_by(stable, condition, phase, model ) %>% #half -->
+
+<!--   dplyr::summarise(acc.mean = mean(mean.acc), -->
+
+<!--                    n=length(mean.acc), -->
+
+<!--                    se=sd(mean.acc)/sqrt(n)) %>% -->
+
+<!--   unite(col = 'phase_model', model, phase, remove=F) %>% -->
+
+<!--   filter(stable==F) %>% -->
+
+<!--    ggplot(aes(x=condition, y=acc.mean,ymin=acc.mean-se, ymax=acc.mean+se, fill=phase_model)) + -->
+
+<!--  # geom_point(size=4, alpha=.7) + -->
+
+<!--     geom_bar(stat = 'identity',position = position_dodge(width = .8), width = .8) + -->
+
+<!--   geom_errorbar( size=.9, width=.5,position=position_dodge(width = .8))+ -->
+
+<!-- # -->
+
+<!--   # facet_wrap(vars(stable)) + #, half --> 
+
+<!--   scale_fill_brewer(palette = 'Paired') +  -->
+
+<!--   # theme_pubclean(base_size = 14) + --> 
+
+<!--    ggtitle("Fit different models for s3 and s6")  -->
+
+<!--  switch.setSize %>%  -->
+
+<!--   unite(col = 'setSize_model', condition, model, remove=F) %>%   -->
+
+<!--   #filter(phase=='learn') %>%  --> 
+
+<!--   lm(mean.acc ~ stable * half * setSize_model * phase, data = .) %>%   -->
+<!--    #summary()  --> 
+
+<!--   anova()  -->
+
+<!--    broom::tidy() %>%  -->
+
+<!--    knitr::kable()  -->
+
+<!-- ```  -->
+
+<!-- <!-- All the subjects that fit RL in set-size 6 and fit LTM in set-size 3 had lower learning accuracy in set-size 6 but decay was minimal during test. But overall accuracy during test is the same for set-size 3 and 6. Learning in set-size 3 is successful and high for LTM and RL and it is similar to learning set-size 6 with LTM. Subjects who fit the RL model in set-size 3 had high accuracy at both learning and test and they also had high accuracy with minimal decay during set-size 6 even though they fit the LTM model best.  --> 
+
+<!-- <!-- ```{r sw vs nsw: set size stable, fig.width=6.2, fig.height=6.2, dpi=300} --> 
+
+<!-- <!-- switch.setSize %>%  --> 
+
+<!-- <!--  dplyr::group_by(stable, condition, phase, model ) %>% #half --> 
+
+<!-- <!--   dplyr::summarise(acc.mean = mean(mean.acc),  --> 
+
+<!-- <!--                    n=length(mean.acc),  --> 
+
+<!-- <!--                    se=sd(mean.acc)/sqrt(n)) %>%  --> 
+
+<!-- <!--   unite(col = 'phase_model', model, phase, remove=F) %>%  -->
+
+<!-- <!--   filter(stable==T) %>%  --> 
+
+<!-- <!--    ggplot(aes(x=condition, y=acc.mean,ymin=acc.mean-se, ymax=acc.mean+se, fill=phase_model)) + --> 
+
+<!-- <!--  # geom_point(size=4, alpha=.7) + --> 
+
+<!-- <!--     geom_bar(stat = 'identity',position = position_dodge(width = .8), width = .8) + --> 
+
+<!-- <!--   geom_errorbar( size=.9, width=.5,position=position_dodge(width = .8))+ --> 
+
+<!-- <!-- # -->
+
+<!-- <!--  # facet_wrap(vars(stable)) + #, half --> 
+
+<!-- <!--   scale_fill_brewer(palette = 'Paired') + --> 
+
+<!-- <!--   #theme_pubclean(base_size = 14) + --> 
+
+<!-- <!--    ggtitle("Fit the same model for s3 and s6") --> 
+
+<!-- ``` -->
+
+<!-- For those subjects who did not fit different models for the two set-sizes, the LTM group is associated with higher decay during test than the RL group, who have very minimal decay on average. -->
+
+<!-- ```{r sw vs nsw: slope } -->
+
+<!-- melted.p.behav.model %>% -->
+
+<!--     filter(type=='behavioral',iteration == c(1,2,3,4,5,6,7, 8,9,10,11, 12), phase=='learn') %>% -->
+
+<!--   unique %>% -->
+
+<!--   pivot_wider(names_from = 'iteration', values_from = 'accuracy') %>% -->
+
+<!--   mutate(diffs_012=`2`-`1`, -->
+
+<!--          diffs_023=`3`-`2`, -->
+
+<!--          diffs_034=`4`-`3`, -->
+
+<!--          diffs_045=`5`-`4`, -->
+
+<!--          diffs_056=`6`-`5`, -->
+
+<!--          diffs_067=`7`-`6`, -->
+
+<!--          diffs_078=`8`-`7`, -->
+
+<!--          diffs_089=`9`-`8`, -->
+
+<!--          diffs_0910=`10`-`9`, -->
+
+<!--          diffs_1011=`11`-`10`, -->
+
+<!--          diffs_1112=`12`-`11`) %>% -->
+
+<!--   dplyr::select(condition, subjects, half, contains('diffs')) %>% -->
+
+<!--   pivot_longer(cols = diffs_012:diffs_1112, names_to = 'diffs', values_to = 'acc_diff') %>% -->
+
+<!--   dplyr::group_by(diffs, condition, half) %>% -->
+
+<!--   dplyr::summarise(means=mean(acc_diff), -->
+
+<!--                    inflect.point = means< .09) %>% -->
+
+<!--   ggplot(aes(x=diffs, y= means, group=condition, color=condition)) + -->
+
+<!--   geom_point()+ -->
+
+<!--   geom_line()+ -->
+
+<!--   geom_hline(yintercept = 0.09)+ -->
+
+<!--   facet_wrap(vars(half)) -->
+
+<!-- learn.rate <- melted.p.behav.model %>% -->
+
+<!--     filter(type=='behavioral',iteration == c(1,2,3,4), phase=='learn') %>% -->
+
+<!--   unique %>% -->
+
+<!--    dplyr::group_by(iteration, condition, half) %>% -->
+
+<!--   dplyr::summarise(means=log10(mean(accuracy)), -->
+
+<!--                    n=length(accuracy), -->
+
+<!--                    se=sd(accuracy)/sqrt(n)) %>%  -->
+<!--   ggplot(aes(log10(as.numeric(iteration)), -->
+
+<!--             (means), group=condition, color=condition)) + -->
+
+<!--   geom_point(alpha=.4)+ -->
+
+<!--   geom_line(alpha=.4)+ -->
+
+<!--   geom_errorbar(aes(ymin=means-se, ymax=means+se), width=.2) + -->
+
+<!--   geom_smooth(method = 'lm',formula = 'y~x ', se=F) + -->
+
+<!--   facet_wrap(vars(half)) -->
+
+<!-- melted.p.behav.model %>% -->
+
+<!--     filter(type=='behavioral',iteration == c(1,2,3,4), phase=='learn') %>% -->
+
+<!--   unique %>% -->
+
+<!--   #  dplyr::group_by(iteration, condition, half) %>% -->
+
+<!--   # dplyr::summarise(means=mean(accuracy), -->
+
+<!--   #                  n=length(accuracy), -->
+
+<!--   #                  se=sd(accuracy)/sqrt(n)) %>% -->
+
+<!--   ggplot(aes(as.numeric(iteration), accuracy, group=as.factor(subjects), color=as.factor(subjects))) + -->
+
+<!--   geom_point(alpha=.4)+ -->
+
+<!--   geom_line(alpha=.4)+ -->
+
+<!--  # geom_errorbar(aes(ymin=means-se, ymax=a+se), width=.2) + -->
+
+<!--   geom_smooth(method = 'lm',formula = 'y~x ') + -->
+
+<!--   facet_wrap(vars(half)) -->
+
+<!-- dplyr::group_by(iteration) %>% -->
+
+<!--   dplyr::summarize(difs=diff(accuracy)) -->
+
+<!-- slope.setSize <- -->
+
+<!--   melted.p.behav.model %>% -->
+
+<!--   filter(type=='behavioral',iteration == c(1,2,3,4), phase=='learn')  %>% -->
+
+<!--   unique() %>% -->
+
+<!--   dplyr::group_by(half, subjects, condition, phase,model ) %>% -->
+
+<!--     do( broom::tidy(lm(accuracy~as.numeric(iteration), data=.))[2,2] ) %>% -->
+
+<!--   inner_join(index_search %>% -->
+
+<!--                separate(name, into = c('half', 'setSize')) %>% -->
+
+<!--                separate(condition, into = c('condition', 'phase')) %>% -->
+
+<!--                pivot_wider(id_cols = c(subjects,half, phase), names_from = condition, values_from = model) %>% -->
+
+<!--                dplyr::mutate(stable = set3==set6) %>% -->
+
+<!--                 pivot_longer(cols = c(set3, set6), names_to = 'condition', values_to = 'model') -->
+
+<!--                    ,by=c('subjects','half','condition','model', 'phase')) -->
+
+<!-- slope.setSize %>% -->
+
+<!--   #filter(subjects=='6200') -->
+
+<!--  dplyr::group_by(stable, condition, model ) %>% #half -->
+
+<!--   dplyr::summarise(mean.slope = mean(estimate), -->
+
+<!--                    n=length(estimate), -->
+
+<!--                    se=sd(estimate)/sqrt(n)) %>% -->
+
+<!--   unite(col = 'phase_model', model, remove=F) %>% -->
+
+<!--   #filter(stable==T) %>% -->
+
+<!--    ggplot(aes(x=condition, y=mean.slope,ymin=mean.slope-se, ymax=mean.slope+se, fill=phase_model)) + -->
+
+<!--  # geom_point(size=4, alpha=.7) + -->
+
+<!--     geom_bar(stat = 'identity',position = position_dodge(width = .8), width = .8) + -->
+
+<!--   geom_errorbar( size=.9, width=.5,position=position_dodge(width = .8))+ -->
+
+<!-- # -->
+
+<!--   facet_wrap(vars(stable)) + #, half -->
+
+<!--   scale_fill_brewer(palette = 'Paired') -->
+
+
+<!-- ## correlate learning rate for the two halves -->
+<!-- slope.setSize %>%  -->
+<!--   ungroup %>%  -->
+<!--   select(subjects,half, condition, estimate) %>%  -->
+<!--   pivot_wider(id_cols=c( subjects,condition),names_from = half, values_from = estimate) %>%  -->
+
+<!--   ggplot(aes(half1, half2, color=condition)) + -->
+<!--     geom_point()+ -->
+<!--     geom_smooth(method='lm') + -->
+<!--     # facet_wrap(vars(condition)) + -->
+
+<!-- scale_color_brewer(palette='Set1') -->
+
+
+
+<!-- ``` -->
+
+
+<!-- ```{r sw vs nsw: half, fig.width=6, fig.height=6.2, dpi=300} -->
+
+<!-- switch.half <-  -->
+
+<!--   melted.p.behav.model %>%  -->
+
+<!--   filter(type=='behavioral',iteration == c(8,9,10,11,12))  %>%   -->
+
+<!--   unique() %>%  -->
+
+<!-- dplyr::group_by(half, subjects, condition, phase,model ) %>%  -->
+
+<!--   dplyr::summarise(mean.acc = mean(accuracy),  -->
+
+<!--                    n = length(accuracy),  -->
+
+<!--                    se= sd(accuracy)/sqrt(n)) %>%  -->
+
+<!--   inner_join(index_search %>%  -->
+
+<!--                separate(name, into = c('half', 'setSize')) %>% -->
+
+<!--                separate(condition, into = c('condition', 'phase')) %>% -->
+
+<!--                pivot_wider(id_cols = c(subjects,condition, phase), names_from = half, values_from = model) %>%  -->
+
+<!--                dplyr::mutate(stable = half1==half2) %>%  -->
+
+<!--                 pivot_longer(cols = c(half1, half2), names_to = 'half', values_to = 'model') -->
+
+<!--                    ,by=c('subjects','half','condition','model', 'phase'))  -->
+
+<!-- # switch.half %>%  -->
+
+<!-- #  dplyr::group_by(stable,half, condition, phase, model ) %>%  -->
+
+<!-- #   dplyr::summarise(acc.mean = mean(mean.acc),  -->
+
+<!-- #                    n=length(mean.acc),  -->
+
+<!-- #                    se=sd(mean.acc)/sqrt(n)) %>%  -->
+
+<!-- #    -->
+
+<!-- #    ggplot(aes(x=stable, y=acc.mean, color=half)) + -->
+
+<!-- #   geom_point(size=4, alpha=.7) + -->
+
+<!-- #   geom_errorbar(aes(ymin=acc.mean-se, ymax=acc.mean+se), size=.19, width=.2)+ -->
+
+<!-- #   facet_wrap(vars(phase, condition, model)) + -->
+
+<!-- #   scale_color_brewer(palette = 'Set2') -->
+
+<!-- #   -->
+
+<!-- switch.half %>%  -->
+
+<!--   filter(phase=='learn') %>%  -->
+
+<!--   lm(mean.acc ~ stable *half * condition * model, data = .) %>%  -->
+
+<!--   anova() %>%  -->
+
+<!--   broom::tidy() %>%  -->
+
+<!--   knitr::kable() -->
+
+<!-- ``` -->
+
+<!-- ## Are the parameter values largely different for each half and set-size? -->
+
+<!-- ```{r param diffs by condition, fig.width=6, fig.height=6.2, dpi=300} -->
+
+<!-- tibble('alpha'=0.15, -->
+
+<!--        'egs' = 0.3,  -->
+
+<!--        'bll'= 0.5,  -->
+
+<!--        'imag'= 0.3, -->
+
+<!--        'ans'= 0.3) %>% knitr::kable() -->
+
+<!--   Set3toSet6 <-  -->
+
+<!-- parameter.dat %>%  -->
+
+<!--    separate(name, into = c('half', 'setSize')) %>%  -->
+
+<!--   inner_join(index_search %>%  -->
+
+<!--                filter(condition=='set3_learn' |condition=='set6_learn' ) %>%  -->
+
+<!--                separate(name, into = c('half', 'setSize')) %>% -->
+
+<!--                pivot_wider(id_cols = c(subjects,half), names_from = setSize, values_from = model) %>%  -->
+
+<!--                dplyr::mutate(stable = N3==N6) %>%  -->
+
+<!--                 pivot_longer(cols = c(N3,N6), names_to = 'setSize', values_to = 'model') -->
+
+<!--                    ,by=c('subjects','half','setSize','model')) -->
+
+<!-- Set3toSet6 %>%  -->
+
+<!--   #filter(subjects==15000) -->
+
+<!--   dplyr::group_by(stable,  setSize, parameter) %>% #half, -->
+
+<!--    dplyr::summarise(mean=mean(param_vals, na.rm=T ), -->
+
+<!--                     n=length(param_vals %>% na.omit()), -->
+
+<!--                     se = sd(param_vals, na.rm = T)/sqrt(n)) %>%  -->
+
+<!--   #pivot_longer(cols = c(N3,N6), names_to = 'condition', values_to = 'model') %>% -->
+
+<!--  # filter(setSize=='N3') %>%  -->
+
+<!--   ggplot(aes(x=setSize, y=mean, fill=stable, group= stable)) + -->
+
+<!--   #geom_jitter(size=4, width = .3, alpha=.6) + -->
+
+<!-- #  geom_boxplot(position = 'dodge2')+ -->
+
+<!--   #geom_density(alpha=.4)+ -->
+
+<!--   geom_bar(stat = 'identity',position = position_dodge(width = .8), width = .8)+ -->
+
+<!--   geom_errorbar(aes(ymax=mean+se, ymin=mean-se),position = position_dodge(width = .8), width = .8, width=.4)+ -->
+
+<!--   #geom_point(size=4, alpha=.5)+ -->
+
+<!--   facet_wrap(vars( parameter)) + # , half -->
+
+<!--    scale_fill_brewer(palette = 'Set1') + -->
+
+<!--   theme_pubclean(base_size = 14) -->
+
+<!-- half1tohalf22 <-  -->
+
+<!-- parameter.dat %>%  -->
+
+<!--    separate(name, into = c('half', 'setSize')) %>%  -->
+
+<!--   inner_join(index_search %>%  -->
+
+<!--                filter(condition=='set3_learn' |condition=='set6_learn' ) %>%  -->
+
+<!--                separate(name, into = c('half', 'setSize')) %>% -->
+
+<!--                pivot_wider(id_cols = c(subjects,setSize), names_from = half, values_from = model) %>%  -->
+
+<!--                dplyr::mutate(stable = half1==half2) %>%  -->
+
+<!--                 pivot_longer(cols = c(half1,half2), names_to = 'half', values_to = 'model') -->
+
+<!--                    ,by=c('subjects','half','setSize','model')) -->
+
+<!-- #  -->
+
+<!-- # half1tohalf22 %>%  -->
+
+<!-- #     -->
+
+<!-- #   #filter(subjects==15000) -->
+
+<!-- #   dplyr::group_by(stable, half, setSize, parameter) %>%  -->
+
+<!-- #    dplyr::summarise(mean=mean(param_vals, na.rm=T ), -->
+
+<!-- #                     n=length(param_vals %>% na.omit()), -->
+
+<!-- #                     se = sd(param_vals, na.rm = T)/sqrt(n)) %>%  -->
+
+<!-- #   #pivot_longer(cols = c(N3,N6), names_to = 'condition', values_to = 'model') %>% -->
+
+<!-- #   filter(half=='half1') %>%  -->
+
+<!-- #   ggplot(aes(x=stable, y=mean, color=half, group=half)) + -->
+
+<!-- #   #geom_jitter(size=4, width = .3, alpha=.6) + -->
+
+<!-- # #  geom_boxplot(position = 'dodge2')+ -->
+
+<!-- #   #geom_density(alpha=.4)+ -->
+
+<!-- #   geom_errorbar(aes(ymax=mean+se, ymin=mean-se))+ -->
+
+<!-- #   geom_point(size=4, alpha=.5)+ -->
+
+<!-- #   facet_wrap(vars( parameter, setSize)) + -->
+
+<!-- #   theme_pubclean(base_size = 14) -->
+
+<!-- # # melted.p.behav.model %>%  -->
+
+<!-- #     drop_na() %>%  -->
+
+<!-- #   filter(type=='model', phase=='learn', iteration==1) %>%  -->
+
+<!-- #     unique() %>%  -->
+
+<!-- #   pivot_wider(id_cols = c(subjects,half, parameter), names_from = condition, values_from = model) %>%  -->
+
+<!-- #   mutate(stable =  set3==set6, -->
+
+<!-- #          ) %>%  -->
+
+<!-- #     filter(stable==F) %>%  -->
+
+<!-- #    -->
+
+<!-- #     pivot_longer(cols = c(set3,set6), names_to = 'condition', values_to = 'model') %>%  -->
+
+<!-- #     inner_join(melted.p.behav.model %>%  -->
+
+<!-- #                  select(condition, model, subjects, half, parameter, param_vals),  -->
+
+<!-- #                  by = c('condition', 'model', 'subjects', 'half', 'parameter') ) %>%  -->
+
+<!-- #     unique() %>%  -->
+
+<!-- #      filter(subjects==29318) %>%  -->
+
+<!-- #     View -->
+
+<!-- #   dplyr::group_by(stable, half, condition, parameter, model) %>%  -->
+
+<!-- #    dplyr::summarise(mean(param_vals)) %>%  -->
+
+<!-- #     -->
+
+<!-- #    View -->
+
+<!-- #      -->
+
+<!-- #      -->
+
+<!-- #     dplyr::summarise(RL = mean(toRL),  -->
+
+<!-- #                    LTM = mean(toLTM)  -->
+
+<!-- #                   # ,STR = mean(toSTR),  -->
+
+<!-- #                   # META =mean(toMETA)  -->
+
+<!-- #                    )# %>%  -->
+
+<!-- #   pivot_longer(cols = -c(half, set3, subjects), names_to = 'set6', values_to = 'prop') %>%  -->
+
+<!-- #   inner_join( -->
+
+<!-- #  -->
+
+<!-- # melted.p.behav.model %>%  -->
+
+<!-- #   filter(type=='model', phase=='learn', iteration==1) %>%  -->
+
+<!-- #     unique() %>%  -->
+
+<!-- #   select(subjects, parameter, param_vals),  -->
+
+<!-- # by = c('subjects')) -->
+
+<!-- #  -->
+
+<!-- #  -->
+
+<!-- # half1tohalf2 %>%  -->
+
+<!-- #   unite(col = 'change', sep = '_', set3,prop ) %>% -->
+
+<!-- #   dplyr::group_by( change, parameter) %>% -->
+
+<!-- #   dplyr::summarise(m=mean(param_vals), -->
+
+<!-- #                    numel(param_vals)) %>%   -->
+
+<!-- #  -->
+
+<!-- #   ggplot(aes(change, m, group=parameter, color=parameter)) + -->
+
+<!-- #   -->
+
+<!-- #   geom_point(size=2) + -->
+
+<!-- #  # geom_boxplot() + -->
+
+<!-- #    # geom_bar(stat = 'identity')+ -->
+
+<!-- #   facet_wrap(vars(parameter))+ -->
+
+<!-- #   scale_color_brewer(palette = 'Set1') + -->
+
+<!-- #  theme( -->
+
+<!-- #     axis.text.x = element_text( -->
+
+<!-- #       angle = 45, -->
+
+<!-- #        -->
+
+<!-- #   )) -->
+
+<!-- ``` -->
+
+<!-- how much of the learning slope is predictable by WM capacity and n-back? Is set-3 more predicted by WM capacity than s6? -->
+
+<!-- In relation to that, what other learning features are also predicted? decay duting test is one other candidate.  -->
+
+<!-- ```{r span tasks} -->
+
+<!-- wm.measure <- read_csv('RLWM_data/REALM_uCLIMB_WM_Span_Task_Results_Fall_2019.csv')  -->
+
+<!-- wm.analysis <-  -->
+
+<!--   wm.measure %>%  -->
+
+<!--   mutate(Ospan_Score = scale(Ospan_Score), -->
+
+<!--         Sspan_Score = scale(Sspan_Score),  -->
+
+<!--         Rspan_Score= scale(Rspan_Score),  -->
+
+<!--         composite = (Ospan_Score + Sspan_Score + Rspan_Score )/3) %>%  -->
+
+<!--   inner_join(slope.setSize, by='subjects') -->
+
+<!-- wm.analysis %>%  -->
+
+<!--   #filter(model=='RL') %>%  -->
+
+<!--   ggplot(aes(x=composite, y=estimate, color=condition, group=condition)) + -->
+
+<!--   geom_point(size=4, alpha=.7) + -->
+
+<!--   geom_smooth(method = 'lm') + -->
+
+<!--   facet_wrap(vars(half)) + -->
+
+<!--   scale_color_brewer(palette = 'Set1') + -->
+
+<!--   theme_pubclean(base_size = 12) + -->
+
+<!--   ggtitle('composite wm score with learning rate of first 4') -->
+
+<!-- ## correlations -->
+
+<!-- wm.learn.decay <-  -->
+
+<!-- melted.p.behav.model %>%  -->
+
+<!--   filter(type=='behavioral', iteration==12) %>%  -->
+
+<!--   dplyr::select(subjects, accuracy,  condition, phase, half) %>%  -->
+
+<!--   unique() %>%  -->
+
+<!--   pivot_wider(names_from = phase, values_from = accuracy) %>%  -->
+
+<!--   dplyr::mutate(decay = test -learn) %>%  -->
+
+<!--   inner_join(wm.analysis, by=c('subjects', 'half','condition')) -->
+
+<!-- wm.learn.decay %>%  -->
+
+<!--   ggplot(aes(x=composite, y=decay, color=condition, group=condition)) + -->
+
+<!--   geom_point(size=4, alpha=.7) + -->
+
+<!--   geom_smooth(method = 'lm') + -->
+
+<!--   facet_wrap(vars(half)) + -->
+
+<!--   scale_color_brewer(palette = 'Set1') + -->
+
+<!--   theme_pubclean(base_size = 12) + -->
+
+<!--   ggtitle("WM span with test-learn decay") -->
+
+<!-- wm.learn.decay %>%  -->
+
+<!--   ggplot(aes(x=composite, y=learn, color=condition, group=condition)) + -->
+
+<!--   geom_point(size=4, alpha=.7) + -->
+
+<!--   geom_smooth(method = 'lm') + -->
+
+<!--   facet_wrap(vars(half)) + -->
+
+<!--   scale_color_brewer(palette = 'Set1') + -->
+
+<!--   theme_pubclean(base_size = 12) + -->
+
+<!--   ggtitle("WM span with learn accuracy") -->
+
+<!-- ## slope and decay correlation -->
+
+<!-- wm.analysis %>%  -->
+
+<!--   dplyr::select(subjects, condition, half,  estimate) %>%  -->
+
+<!--   inner_join(wm.learn.decay %>% dplyr::select(subjects, condition, half, decay),  -->
+
+<!--              by = c('subjects', 'condition', 'half')) %>%  -->
+
+<!--   ggplot(aes(x=estimate, y=decay, color=condition, group=condition))+ -->
+
+<!--   geom_point()+ -->
+
+<!--   geom_smooth(method = 'lm') + -->
+
+<!--   facet_wrap(vars(half)) -->
+
+<!-- ``` -->
+
+<!-- ## DO we need to adjust wm? -->
+
+<!-- ```{r nback analysis} -->
+
+<!-- nback.measure <- read_csv('RLWM_data/STAG_uCLIMB_PSS_Nback_data_100120.csv') -->
+
+<!-- nback.analysis <-  -->
+
+<!--   nback.measure %>%  -->
+
+<!--   inner_join(slope.setSize, by='subjects') -->
+
+<!-- nback.analysis %>%  -->
+
+<!--   ggplot(aes(x=nback_total_acc, y=estimate, color=condition, group=condition)) + -->
+
+<!--   geom_point(size=4, alpha=.7) + -->
+
+<!--   geom_smooth(method = 'lm') + -->
+
+<!--   facet_wrap(vars(half)) + -->
+
+<!--   scale_color_brewer(palette = 'Set1') + -->
+
+<!--   theme_pubclean(base_size = 12) + -->
+
+<!--   ggtitle("nBack  with learning rate") -->
+
+<!-- nback.learn.deacy <-  -->
+
+<!--   melted.p.behav.model %>%  -->
+
+<!--   filter(type=='behavioral', iteration==12) %>%  -->
+
+<!--   dplyr::select(subjects, accuracy,  condition, phase, half) %>%  -->
+
+<!--   unique() %>%  -->
+
+<!--   pivot_wider(names_from = phase, values_from = accuracy) %>%  -->
+
+<!--   dplyr::mutate(decay = test -learn) %>%  -->
+
+<!--   inner_join(nback.measure, by='subjects') -->
+
+<!-- nback.learn.deacy %>%  -->
+
+<!--   ggplot(aes(x=nback_total_acc, y=decay, color=condition, group=condition)) + -->
+
+<!--   geom_point(size=4, alpha=.7) + -->
+
+<!--   geom_smooth(method = 'lm') + -->
+
+<!--   facet_wrap(vars(half)) + -->
+
+<!--   scale_color_brewer(palette = 'Set1') + -->
+
+<!--   theme_pubclean(base_size = 12) + -->
+
+<!--   ggtitle("nBack  with test-learn decay") -->
+
+<!-- ``` -->
+
+<!-- ## Individual plots -->
+
+<!-- ```{r individual plots plotter, fig.width=12, fig.height= 125} -->
+
+<!-- #plot.indiv <- function(this.subject, title, columns) { -->
+
+<!--  if (T){ -->
+
+<!--   melted.p.behav.model %>%  -->
+
+<!--   filter(phase!='test') %>%  -->
+
+<!-- unite(col='cond.model', c( 'condition', 'type'),remove = F) %>%  -->
+
+<!--    #filter(subjects == 6200) %>%  -->
+
+<!--     ggplot(aes(as.numeric(iteration), accuracy, color=cond.model, group=cond.model)) +  -->
+
+<!--     geom_point() + -->
+
+<!--     geom_line(size=1) + -->
+
+<!--     facet_wrap(vars(subjects), scales = 'free')+ -->
+
+<!--     scale_color_brewer(palette = "Paired")+ -->
+
+<!--  # geom_text(aes(label= model),check_overlap = F, inherit.aes = T, nudge_x = .2, nudge_y = .02)+ -->
+
+<!--     theme_pubr(base_size = 16) + -->
+
+<!--   facet_wrap(vars(subjects, half), ncol = 4) + -->
+
+<!--     ggtitle('title') -->
+
+<!-- #} -->
+
+<!-- } -->
+
+<!-- ``` -->
+
+
