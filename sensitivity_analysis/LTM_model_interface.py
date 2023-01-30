@@ -206,19 +206,19 @@ current_response  = np.repeat('x', nTrials * 2).tolist() #multiply by 2 for numb
 lastLearnTrial = np.size(stims3 + stims6) -1
 
 #parameter ranges for simulation
-#bll_param   = [0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,range around .5 actr rec val
+bll_param   = [0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,range around .5 actr rec val
 #alpha_param = [0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection 0.2 rec val
 #egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
-#imag_param  = [0.1, 0.2, 0.3 , 0.4, 0.5] #simulates working memory as attentional focus
-#ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual.
+imag_param  = [0.1, 0.2, 0.3 , 0.4, 0.5] #simulates working memory as attentional focus
+ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual.
 
 ###########################################
 #----EXPANDED GRANULAR PARAMETER SPACE----
 
-bll_param   = [ 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75]   # halved the distance between values and extended beyound the previous upper limit since most subjects had accumulated there.
+#bll_param   = [ 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75]   # halved the distance between values and extended beyound the previous upper limit since most subjects had accumulated there.
 
-imag_param  = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50] #halved and expanded lower range as per data
-ans_param   = [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55] #halved and expanded upper range as per data
+#imag_param  = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50] #halved and expanded lower range as per data
+#ans_param   = [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55] #halved and expanded upper range as per data
 
 ###########################################
 

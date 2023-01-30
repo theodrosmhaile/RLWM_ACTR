@@ -207,14 +207,14 @@ lastLearnTrial = np.size(stims3 + stims6) -1
 
 #parameter ranges for simulation
 #bll_param   = [0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,range around .5 actr rec val
-#alpha_param = [0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection 0.2 rec val
-#egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
+alpha_param = [0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection 0.2 rec val
+egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
 #
 ###########################################
 #----EXPANDED GRANULAR PARAMETER SPACE----
 
-alpha_param = [0.025, 0.050, 0.075, 0.100, 0.125, 0.150, 0.175, 0.200, 0.225, 0.250] # learning rate of the RL utility selection 0.2 rec val
-egs_param   = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50] # amount of noise added to the RL utility selection
+#alpha_param = [0.025, 0.050, 0.075, 0.100, 0.125, 0.150, 0.175, 0.200, 0.225, 0.250] # learning rate of the RL utility selection 0.2 rec val
+#egs_param   = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50] # amount of noise added to the RL utility selection
 ##########################################
 
 #imag_param  = [0.1, 0.2, 0.3 , 0.4, 0.5] #simulates working memory as attentional focus
