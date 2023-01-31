@@ -260,6 +260,12 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
     global sim_data6
     global accuracy
     global sim_std
+    global learn_3
+    global learn_6
+    global test_3
+    global test_6
+    global s6_n
+    global s3_n
 
     print('vars reset')
     temp3 = []
@@ -366,7 +372,19 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
         #sim_data.append([temp3, temp6, np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
         #del temp3, temp6
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
-        sim_data.append([temp3,temp6,temp_test3, temp_test6, bll, alpha, egs, imag, ans ])
+        # this selects 8 block simulations for set size 3
+        if n == 7:
+            learn_3 = np.mean(temp3, 0)
+            test_3  = np.mean(temp_test3)
+            s3_n = len(temp3)
+    # this selects 6 block simulations for set size 6
+        if n == 5:
+            learn_6 = np.mean(temp6, 0)
+            test_6  = np.mean(temp_test6)
+            s6_n = len(temp6)
+
+    sim_data.append([learn_3, learn_6, test_3, test_6, bll, alpha, egs, imag, ans ])
+        #sim_data.append([temp3,temp6,temp_test3, temp_test6, bll, alpha, egs, imag, ans ])
 
     #sim_std.append([np.std(temp3,0), np.std(temp6,0), np.std(np.mean(temp_test3,1)), np.std(np.mean(temp_test6, 1))])
 
