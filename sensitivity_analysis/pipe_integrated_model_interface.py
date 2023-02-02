@@ -261,6 +261,17 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
     global test_6
     global s6_n
     global s3_n
+    global all_stg
+    global s3_stg
+    global s6_stg
+    if True:
+        global gloves_presented_t
+        global shoes_presented_t
+        global shirt_presented_t
+        global jacket_presented_t
+        global jeans_presented_t
+        global test_acc_array
+        global test_array
 
     print('vars reset')
     temp3 = []
@@ -303,7 +314,6 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
         stg3 = np.mean([stg_array[cup_presented], stg_array[plate_presented], stg_array[bowl_presented]],0)
 
                ##set 6 analysis
-
 
         hat_presented    = np.where(stims_array == 'hat')
         gloves_presented = np.where(stims_array == 'gloves')
@@ -350,17 +360,18 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
 
         test_3 = np.mean([test_acc_array[cup_presented_t], test_acc_array[plate_presented_t], test_acc_array[bowl_presented_t]],0)
 
+
         test_6 = np.mean([
             test_acc_array[shirt_presented_t],
             test_acc_array[jacket_presented_t],
             test_acc_array[jeans_presented_t]], 0)
-
+        #print( test_6)
         # Aggregate across simulations
         temp_test3.append(test_3)
         temp_test6.append(test_6)
         stg_temp.append(strategy_used)
        # print(temp3)
-
+        #print(temp_test6)
        # print('accuracy ', np.mean(accuracy))
             #pyplot.figure(dpi=120)
             #sns.barplot(x=["set 3", "set 6"], y=[np.mean(test_3),np.mean(test_6)])
@@ -378,6 +389,7 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
 
 
 
+
 #                   save averaged resluts from simulations along with parameters
 
         #sim_data.append([temp3, temp6, np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
@@ -386,22 +398,27 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
         # this selects 8 block simulations for set size 3
         if n == 7:
             learn_3 = np.mean(temp3, 0)
-            test_3  = np.mean(temp_test3)
-            s3_n = len(temp3)
+            testAcc3  = np.mean(temp_test3)
+            s3_n = len(temp_test3)
+            all_stg = np.mean(stg_temp)
+            s3_stg = np.mean(tempStg3)
+
+
     # this selects 6 block simulations for set size 6
         if n == 5:
             learn_6 = np.mean(temp6, 0)
-            test_6  = np.mean(temp_test6)
-            s6_n = len(temp6)
+            testAcc6  = np.mean(temp_test6)
+            s6_n = len(temp_test6)
+            s6_stg = np.mean(tempStg6)
 
-    sim_data.append([learn_3, learn_6, test_3, test_6, bll, alpha, egs, imag, ans,stg_temp,tempStg3, tempStg6 ])
+    sim_data.append([learn_3, learn_6, testAcc3, testAcc6, bll, alpha, egs, imag, ans,all_stg,s3_stg, s6_stg ])
         #sim_data.append(temp3, temp6, temp_test3,temp_test6, bll, alpha, egs, imag, ans,stg_temp,tempStg3, tempStg6])
     #grab stds for distribution
     #sim_std.append([np.std(temp3,0), np.std(temp6,0), np.std(np.mean(temp_test3,1)), np.std(np.mean(temp_test6, 1))])
 
-    sim_data3 = tempStg3
-    sim_data6 = tempStg6
-    testTemp = test_3
+    #sim_data3 = tempStg3
+    #sim_data6 = tempStg6
+    #testTemp = test_3
    #del temp3, temp6
    # return sim_data
 #sum(np.array(pd.DataFrame(I_data)<132))
@@ -416,4 +433,4 @@ def execute_sim(n,fromI,toI,frac):
     #sim_st = pd.DataFrame(sim_std, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test'])
 
     #sim_st.to_pickle('./simulated_data/pipe_model/pipe_std_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI))
-    sim.to_json('./pipe_sims/pipe_sim_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI), orient'table')
+    sim.to_json('./pipe_sims/pipe_sim_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI), orient='table')
