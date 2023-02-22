@@ -1,0 +1,342 @@
+---
+title: "RLWM ACT-R RMSE model fitting sensitivity test analysis"
+author: "Theodros H."
+date: "01/2023"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_float: yes
+  word_document:
+    toc: no
+editor_options:
+  chunk_output_type: console
+---
+
+```{r set up, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
+rm(list = ls())
+library(MASS)
+library(ggpubr)
+library(matlab)
+library(MLmetrics)
+library(jsonlite)
+library(knitr)
+library(Rmisc)
+library(magrittr)
+library(data.table)
+library(skimr)
+library(tidyverse)
+knitr::opts_chunk$set(
+  comment = "#>", echo = FALSE, warning = FALSE, 
+  message = FALSE, dpi = 300
+ 
+)
+theme_set(theme_pubclean(base_size = 12)) 
+
+```
+
+
+```{r random sample generator}
+## for this session I am using all RL parameter sets since there are only 25
+
+
+```
+
+```{r functions}
+
+#(1) Transform RMSE into residual sum of squares by doing RSS = RMSE^2 * n
+#11:34
+#(2) Calculate BIC as: BIC = n + n log (2*pi) + n log (RSS/n) + log(n) * (k + 1)
+#11:36
+#In RL, k = 2; in LTM, k = 3; and Integrated, k = 5 or k = 6
+
+#MAP 
+# This function extracts simulated subjects and formats like sdat table
+extract_sims <- function(sim_dat) {
+  
+
+
+sim.learn.3 <-  sim_dat$set3_learn %>% 
+  reduce(rbind) %>%
+  as_tibble()
+   
+ colnames(sim.learn.3) = paste0('s3_',c(1:12))
+   
+ # sim.learn.3 %<>% 
+ #   mutate('sim_id'=1:25, 
+ #          condition='set3')
+   
+    
+   sim.learn.6 <- sim_dat$set6_learn %>% 
+     reduce(rbind) %>% 
+     as_tibble()
+  colnames(sim.learn.6) = paste0('s6_',c(1:12))
+  
+  # sim.learn.6 %<>% 
+  #   mutate('sim_id'=paste0('RL',1:25),
+  #          condition='set6')
+ 
+  
+  sim.test.3 <- matrix(sim_dat$set3_test,
+                       nrow = length(sim_dat$set3_test), 
+                       ncol = 12)
+   colnames(sim.test.3) = paste0('t3_',c(1:12))
+ 
+    sim.test.6 <- matrix(sim_dat$set6_test %>% 
+                           reduce(rbind) %>% 
+                           as_tibble() %>%  
+                           rowMeans() ,
+                       nrow = length(sim_dat$set6_test), 
+                       ncol = 12)
+    
+  colnames(sim.test.6) = paste0('t6_',c(1:12))
+   sub.sims <- cbind(sim.learn.3, sim.learn.6,sim.test.3, sim.test.6)
+}
+
+Andys_BIC <- function(rmse, k, n) {
+  # RSS first
+  #n = 48 #lean3 + learn 6 + (test3)*12 + (test6)*12
+  RSS <- ((rmse)^2) * n
+  # BIC next
+  bic <- n + (n * log(2*pi)) + (n * log(RSS/n)) + (log(n) * (k + 1))
+  
+  return(bic)
+}
+
+
+fit.subject <- function(behav.dat, model.dat){
+
+apply(model.dat, 1, function(x,y) MSE(x, behav.dat)) %>% sqrt()
+   
+}
+
+fit.models <- function(model,sdat, params) {
+  
+  #select model
+  if (model == 'RL') {
+    sim.mod = RL.model
+  }
+  if (model == 'LTM') {
+    sim.mod = LTM.model
+  }
+  if (model == 'STR') {
+    sim.mod = STR.model
+  }
+  if (model == 'META') {
+    sim.mod = META.model
+  }
+  
+  
+  
+sim.learn = sim.mod$set3_learn %>% 
+    reduce(rbind) %>%  
+  cbind(sim.mod$set6_learn %>% reduce(rbind)) 
+                      
+  
+  sim.test =  matrix(
+                sim.mod$set3_test,
+              nrow = numel(sim.mod$set3_test),
+              ncol = 12) %>% 
+    cbind(matrix(
+                sim.mod$set6_test,
+              nrow = numel(sim.mod$set6_test),
+              ncol = 12))
+  
+  apply( sdat, 1,
+        function(x, y)
+          fit.subject(x, 
+                      (cbind(sim.learn, sim.test)
+                       )
+                      )) %>%
+    Andys_BIC(k = params, n = 48)
+  
+}
+
+
+
+```
+
+```{r import data: testing models}
+RL.model <- fromJSON('./simulated_data/RL_model/RL_sim_data_07_12_2022.JSON')$data %>% 
+  dplyr::mutate(bias = 0)
+
+# RL.sim$set3_test <- matrix(
+#               RL.sim$set3_test,
+#               nrow = numel( RL.sim$set3_test),
+#               ncol = 12 )
+# RL.sim$set6_test <- matrix(
+#               RL.sim$set6_test,
+#               nrow = numel( RL.sim$set6_test),
+#               ncol = 12 )
+LTM.model <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$data %>% 
+  dplyr::mutate(bias = 0 )
+# LTM.sim$set3_test <- matrix(
+#               LTM.sim$set3_test,
+#               nrow = numel( LTM.sim$set3_test),
+#               ncol = 12 )
+
+
+
+STR.model <- fromJSON('./simulated_data/strategy_model/STR_sim_data_032021.JSON')$data %>% 
+  dplyr::mutate(bias = str_remove_all(strtg, "[:alpha:]") %>% as.numeric()/100, .keep=c('unused'))
+
+META.model <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_032021.JSON')$data %>% 
+   dplyr::mutate(bias = strtg,
+          bias3 = strtg3,
+          bias6 = strtg6, .keep='unused')
+
+
+```
+
+```{r import data: simulated subjects}
+sim_dat.RL <- fromJSON('./sensitivity_analysis/RL_sims/RL_sim_data_frac_1111_0_to_25')$data %>% 
+  dplyr::mutate(bias = 0)
+
+sim_dat.LTM <- fromJSON('./sensitivity_analysis/LTM_sims/LTM_sim_data_frac_1111_0_to_125.JSON')$data %>% 
+  dplyr::mutate(bias = 0)
+
+sim_dat.STR <- fromJSON('./sensitivity_analysis/strategy_sims/STR_sim_data_frac_11111_0_to_12500')$data %>% 
+  dplyr::mutate(bias = 0)
+
+
+```
+
+```{r perform model fits}
+##### simulated RL subjects
+subs.sims.rl <- extract_sims(sim_dat.RL)
+
+mod.RL.sub.RL.bic <-  fit.models(model = 'RL', subs.sims.rl, 2)
+mod.LTM.sub.RL.bic <-  fit.models(model = 'LTM', subs.sims.rl, 3)
+mod.STR.sub.RL.bic <-  fit.models(model = 'STR', subs.sims.rl, 6)
+mod.META.sub.RL.bic <-  fit.models(model = 'META', subs.sims.rl, 5)
+
+
+##### simulated LTM subjects
+subs.sims.ltm <- extract_sims(sim_dat.LTM)
+
+mod.RL.sub.LTM.bic <-  fit.models(model = 'RL', subs.sims.ltm, 2)
+mod.LTM.sub.LTM.bic <-  fit.models(model = 'LTM', subs.sims.ltm, 3)
+mod.STR.sub.LTM.bic <-  fit.models(model = 'STR', subs.sims.ltm, 6)
+mod.META.sub.LTM.bic <-  fit.models(model = 'META', subs.sims.ltm, 5)
+
+##### simulated STR subjects
+
+
+##### simulated META subjects
+
+```
+
+```{r select best fit}
+
+##### Best fit for RL sim subjects
+
+all.models.sub.RL <- 
+  rbind(
+    mod.RL.sub.RL.bic %>% 
+      as_tibble() %>% 
+      mutate(model='RL', model.id=c(1:nrow(RL.model))),
+    mod.LTM.sub.RL.bic %>% 
+      as_tibble() %>% 
+      mutate(model='LTM',model.id=c(1:nrow(LTM.model)) ),
+  
+   mod.STR.sub.RL.bic  %>% 
+      as_tibble() %>%
+      mutate(model='STR', model.id=c(1:nrow(STR.model)) ),
+   
+    mod.META.sub.RL.bic  %>% as_tibble() %>%
+      mutate(model='META', model.id=c(1:nrow(META.model)) )
+)  
+sub.RL.count  <- all.models.sub.RL$model[all.models.sub.RL %>% 
+                                           select(-contains('model')) %>% 
+                                           apply(., 2, which.min) ] 
+
+
+##### Best fit for LTM sim subjects
+
+all.models.sub.LTM <- 
+  rbind(
+    mod.RL.sub.LTM.bic %>% 
+      as_tibble() %>% 
+      mutate(model='RL', model.id=c(1:nrow(RL.model))),
+    mod.LTM.sub.LTM.bic %>% 
+      as_tibble() %>% 
+      mutate(model='LTM',model.id=c(1:nrow(LTM.model)) ),
+  
+   mod.STR.sub.LTM.bic  %>% 
+      as_tibble() %>%
+      mutate(model='STR', model.id=c(1:nrow(STR.model)) ),
+   
+    mod.META.sub.LTM.bic  %>% as_tibble() %>%
+      mutate(model='META', model.id=c(1:nrow(META.model)) )
+)  
+sub.LTM.count  <- all.models.sub.LTM$model[all.models.sub.LTM %>% 
+                                           select(-contains('model')) %>% 
+                                           apply(., 2, which.min) ] #%>% 
+  as_tibble() %>% 
+  mutate(sub_model= paste0('LTM',1:125))
+
+mean(sub.LTM.count=='LTM')
+
+# all.models.sub.LTM <- 
+#   rbind(
+#     mod.RL.sub.LTM.bic %>% 
+#       as_tibble() %>% 
+#       mutate(model= paste0('RL',c(1:nrow(RL.model)))),
+#     mod.LTM.sub.LTM.bic %>% 
+#       as_tibble() %>% 
+#       mutate(model=paste0('LTM',c(1:nrow(LTM.model))) ),
+#   
+#    mod.STR.sub.LTM.bic  %>% 
+#       as_tibble() %>%
+#       mutate(model=paste0('STR', c(1:nrow(STR.model))) ),
+#    
+#     mod.META.sub.LTM.bic  %>% as_tibble() %>%
+#       mutate(model=paste0('META', c(1:nrow(META.model))) )
+)  
+```
+
+```{r check learning trajectories}
+
+  
+  RL.sim.dat <- 
+  sim.learn.3 %>% 
+    pivot_longer(cols = c(-sim_id, -condition) , names_to = 'iteration', values_to = 'accuracy' ) %>% 
+    rbind(sim.learn.6 %>% 
+    pivot_longer(cols = c(-sim_id, -condition) , names_to = 'iteration', values_to = 'accuracy' ) ) %>% 
+    separate(col=iteration, into = c('xx', 'iteration') )
+  
+RL.sim.dat %>% 
+  ggplot(aes(x=as.numeric(iteration), y=accuracy, group=condition, color=condition)) +
+  geom_point() + geom_line() + facet_wrap(vars(sim_id)) +
+  ggtitle("Original 100 run simulations")
+  
+  
+  
+  sim.test =  matrix(
+                sim_dat.RL$set3_test,
+              nrow = numel(sim_dat.RL$set3_test),
+              ncol = 12) %>% 
+    cbind(matrix(
+                sim_dat.RL$set6_test,
+              nrow = numel(sim_dat.RL$set6_test),
+              ncol = 12))
+
+  
+  
+  name <- function(variables) {
+    sim.learn = sim.mod$set3_learn %>% 
+    reduce(rbind) %>%  
+  cbind(sim.mod$set6_learn %>% reduce(rbind)) 
+                      
+  
+  sim.test =  matrix(
+                sim.mod$set3_test,
+              nrow = numel(sim.mod$set3_test),
+              ncol = 12) %>% 
+    cbind(matrix(
+                sim.mod$set6_test,
+              nrow = numel(sim.mod$set6_test),
+              ncol = 12))
+  }
+```
+
