@@ -1,0 +1,33 @@
+SpaceKey = KbName('space');
+%RShift = KbName('rightshift');
+%LShift = KbName('leftshift');
+ESCKey = KbName('escape');
+
+clear all
+this_span_response = '';
+while KbCheck; end
+
+while 1
+    
+       
+         [ keyIsDown, ~, keyCode ] = KbCheck;
+        
+         if keyIsDown
+             if find(keyCode) == ESCKey
+                 
+                 break
+            elseif find(keyCode) == SpaceKey
+               % trials = trials+1;
+                 break
+             else
+                KbReleaseWait;
+                 temp_char= KbName(keyCode) ;
+               this_span_response  = [this_span_response,temp_char(1) ];              
+                
+                FlushEvents
+               continue
+             end
+        % KbReleaseWait;
+        end
+ 
+end
