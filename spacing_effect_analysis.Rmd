@@ -1,0 +1,121 @@
+---
+title: "Spacing Effect Analysis"
+author: "Theodros H."
+date: "07/2023"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+
+```{r}
+library(tidyverse)
+library(jsonlite)
+```
+
+```{r functions}
+
+get_data = function(data, data_name){
+  bind_rows(
+    c('set3_learn','set6_learn') %>% 
+      map(~
+            #column is measurement at T, record is simulation
+            data %>% 
+            .[[.x]] %>% 
+            reduce(rbind) %>% 
+            data.frame() %>% 
+            mutate(condition = .x, 
+                   model_index= c(1:nrow(data))
+            )
+      ) %>% 
+      reduce(bind_rows) %>% 
+      pivot_longer(cols = starts_with('x')
+                   ,values_to = 'accuracy', names_to = 'iteration'),
+    
+    c('set3_test', 'set6_test') %>% #, 'bias' 'alpha','egs', 'bll', 'imag','ans'
+      map (~
+             {
+               temp = data %>% 
+                 .[[.x]]
+               
+               data.frame(
+                  model_index= c(1:nrow(data)),
+                 condition=.x, 
+                 iteration=paste0('X', rep(c(1:12), nrow(data))), 
+                 accuracy=rep(temp, 12)
+               )
+               
+             }
+      )
+  
+  ) %>%  
+    mutate(data_source = data_name)
+}
+
+```
+
+
+```{r}
+LTM.se.sim1 <-  fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_frac_1_1_to_65.JSON')$data %>% 
+  mutate(bias=NA)
+
+LTM.se.sim2 <-  fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_frac_2_66_to_150.JSON')$data %>% 
+  mutate(bias=NA)
+
+LTM.missing_1 <- fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_missing_frac1.JSON')$data %>% 
+  mutate(bias=NA)
+
+
+LTM.missing_2 <- fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_missing_frac2.JSON')$data %>% 
+  mutate(bias=NA)
+
+LTM.se.sim <- rbind(LTM.missing_1,LTM.se.sim1, LTM.missing_2,LTM.se.sim2  )
+
+#LTM_old 
+
+LTM.se.sim=fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_spacing_effect_1_to_125_0629.JSON')$data %>% 
+  mutate(bias=NA)
+
+
+LTM.se <- get_data(LTM.se.sim, 'ltm') %>% 
+   mutate(iteration = str_remove_all(iteration, "[:alpha:]")) 
+ 
+
+
+LTM.se %>%
+  filter(iteration=='12') %>% 
+  select(-data_source, -iteration) %>% 
+  pivot_wider(id_cols = c(model_index), names_from = condition, values_from = accuracy) %>% 
+  cbind(LTM.se.sim %>% select(se, imag, ans)) %>% 
+  pivot_longer(cols =-c(se, imag, ans, model_index), names_to = 'condition', values_to = 'acc' ) %>% 
+filter(imag==0.2) %>% 
+  group_by(se, condition, ans) %>% 
+  summarise(m=mean(acc), 
+            n=n(), 
+            err = sd(acc)/sqrt(n)) %>% 
+  ggplot(aes(x=se,y=m, ymax=m+err, ymin=m-err, 
+             group=as_factor(condition), color=as_factor(condition ))) +
+  geom_point() +
+  geom_line(size=1) +
+ 
+  geom_errorbar( width=.002, size=1) +
+  ggpubr::theme_pubclean(base_size = 16) +
+  facet_wrap(vars(ans))
+
+
+LTM.se %>% 
+  inner_join(LTM.se.sim %>% 
+               select(se, imag, ans) %>% 
+               mutate(model_index = c(1:125)), by = 'model_index') %>% 
+ # filter(model_index %in% c(1:15)) %>% 
+  filter(imag==0.5) %>% 
+
+  ggplot(aes(x=as.numeric(iteration), y=accuracy, group=condition, color=condition)) +
+  geom_point()+
+  geom_line()+
+  facet_wrap(vars(model_index))
+  
+
+```
+ 
+

@@ -198,7 +198,8 @@ sim_dat.LTM <- fromJSON('./sensitivity_analysis/LTM_sims/LTM_sim_data_frac_1111_
 sim_dat.STR <- fromJSON('./sensitivity_analysis/strategy_sims/STR_sim_data_frac_11111_0_to_12500')$data %>% 
   dplyr::mutate(bias = 0)
 
-
+sim_dat.META <- fromJSON('./sensitivity_analysis/pipe_sims/pipe_sim_data_frac_1111_0_to_3125')$data %>% 
+  dplyr::mutate(bias = 0)
 ```
 
 ```{r perform model fits}
@@ -220,9 +221,49 @@ mod.STR.sub.LTM.bic <-  fit.models(model = 'STR', subs.sims.ltm, 6)
 mod.META.sub.LTM.bic <-  fit.models(model = 'META', subs.sims.ltm, 5)
 
 ##### simulated STR subjects
+subs.sims.STR <- extract_sims(sim_dat.STR)
+
+mod.RL.sub.STR.bic <-  fit.models(model = 'RL', subs.sims.STR, 2)
+mod.LTM.sub.STR.bic <-  fit.models(model = 'LTM', subs.sims.STR, 3)
+
+if(0){
+mod.STR.sub.STR.bic <-  fit.models(model = 'STR', subs.sims.STR, 6) 
+save(mod.STR.sub.STR.bic, 
+          file = './sensitivity_analysis/mod.STR.sub.STR.bic.RData')
+mod.META.sub.STR.bic <-  fit.models(model = 'META', subs.sims.STR, 5) 
+save(mod.META.sub.STR.bic, 
+          file = './sensitivity_analysis/mod.META.sub.STR.bic.RData')
+
+}
+
+if(1){ load('./sensitivity_analysis/mod.STR.sub.STR.bic.RData')
+  load('./sensitivity_analysis/mod.META.sub.STR.bic.RData')
+  }
+
 
 
 ##### simulated META subjects
+subs.sims.META <- extract_sims(sim_dat.META)
+
+mod.RL.sub.META.bic <-  fit.models(model = 'RL', subs.sims.META, 2)
+mod.LTM.sub.META.bic <-  fit.models(model = 'LTM', subs.sims.META, 3)
+
+if(0){
+mod.META.sub.META.bic <-  fit.models(model = 'META', subs.sims.META, 5)
+
+save(mod.META.sub.META.bic, 
+          file = './sensitivity_analysis/mod.META.sub.META.bic.RData')
+
+mod.STR.sub.META.bic <-  fit.models(model = 'STR', subs.sims.META, 5)
+
+save(mod.STR.sub.META.bic, 
+          file = './sensitivity_analysis/mod.STR.sub.META.bic.RData')
+
+}
+
+if(1){ load('./sensitivity_analysis/mod.STR.sub.META.bic.RData')
+        load('./sensitivity_analysis/mod.META.sub.META.bic.RData')}
+
 
 ```
 
@@ -246,9 +287,16 @@ all.models.sub.RL <-
     mod.META.sub.RL.bic  %>% as_tibble() %>%
       mutate(model='META', model.id=c(1:nrow(META.model)) )
 )  
-sub.RL.count  <- all.models.sub.RL$model[all.models.sub.RL %>% 
+sub.RL.count  <- tibble(model.id = all.models.sub.RL$model[all.models.sub.RL %>% 
                                            select(-contains('model')) %>% 
-                                           apply(., 2, which.min) ] 
+                                           apply(., 2, which.min) 
+                                         ],
+                           model.index =all.models.sub.RL$model.id[all.models.sub.RL %>% 
+                                           select(-contains('model')) %>% 
+                                           apply(., 2, which.min) 
+                                         ] ) 
+
+
 
 
 ##### Best fit for LTM sim subjects
@@ -269,13 +317,73 @@ all.models.sub.LTM <-
     mod.META.sub.LTM.bic  %>% as_tibble() %>%
       mutate(model='META', model.id=c(1:nrow(META.model)) )
 )  
-sub.LTM.count  <- all.models.sub.LTM$model[all.models.sub.LTM %>% 
+sub.LTM.count  <- tibble(model.id = all.models.sub.LTM$model[all.models.sub.LTM %>% 
                                            select(-contains('model')) %>% 
-                                           apply(., 2, which.min) ] #%>% 
-  as_tibble() %>% 
-  mutate(sub_model= paste0('LTM',1:125))
+                                           apply(., 2, which.min) 
+                                         ],
+                           model.index =all.models.sub.LTM$model.id[all.models.sub.LTM %>% 
+                                           select(-contains('model')) %>% 
+                                           apply(., 2, which.min) 
+                                         ] ) 
 
 mean(sub.LTM.count=='LTM')
+
+
+##### Best fit for STR sim subjects
+
+all.models.sub.STR <- 
+  rbind(
+    mod.RL.sub.STR.bic %>% 
+      as_tibble() %>% 
+      mutate(model='RL', model.id=c(1:nrow(RL.model))),
+    mod.LTM.sub.STR.bic %>% 
+      as_tibble() %>% 
+      mutate(model='LTM',model.id=c(1:nrow(LTM.model)) ),
+  
+   mod.STR.sub.STR.bic  %>% 
+      as_tibble() %>%
+      mutate(model='STR', model.id=c(1:nrow(STR.model)) ),
+   
+    mod.META.sub.STR.bic  %>% as_tibble() %>%
+      mutate(model='META', model.id=c(1:nrow(META.model)) )
+)  
+sub.STR.count  <- tibble(model.id = all.models.sub.STR$model[all.models.sub.STR %>% 
+                                           select(-contains('model')) %>% 
+                                           apply(., 2, which.min) 
+                                         ],
+                           model.index =all.models.sub.STR$model.id[all.models.sub.STR %>% 
+                                           select(-contains('model')) %>% 
+                                           apply(., 2, which.min) 
+                                         ] ) 
+
+
+##### Best fit for META sim subjects
+
+all.models.sub.META <- 
+  rbind(
+    mod.RL.sub.META.bic %>% 
+      as_tibble() %>% 
+      mutate(model='RL', model.id=c(1:nrow(RL.model))),
+    mod.LTM.sub.META.bic %>% 
+      as_tibble() %>% 
+      mutate(model='LTM',model.id=c(1:nrow(LTM.model)) ),
+  
+   mod.STR.sub.META.bic  %>% 
+      as_tibble() %>%
+      mutate(model='STR', model.id=c(1:nrow(STR.model)) ),
+   
+    mod.META.sub.META.bic  %>% as_tibble() %>%
+      mutate(model='META', model.id=c(1:nrow(META.model)) )
+)  
+sub.META.count <- tibble(model.id = all.models.sub.META$model[all.models.sub.META %>% 
+                                           select(-contains('model')) %>% 
+                                           apply(., 2, which.min) 
+                                         ],
+                           model.index =all.models.sub.META$model.id[all.models.sub.META %>% 
+                                           select(-contains('model')) %>% 
+                                           apply(., 2, which.min) 
+                                         ] ) 
+
 
 # all.models.sub.LTM <- 
 #   rbind(
@@ -292,7 +400,235 @@ mean(sub.LTM.count=='LTM')
 #    
 #     mod.META.sub.LTM.bic  %>% as_tibble() %>%
 #       mutate(model=paste0('META', c(1:nrow(META.model))) )
-)  
+#)  
+```
+
+```{r group count confusion matrix}
+ fit_proportions <- 
+  rbind( tibble( parent = 'RL',
+                    rl = mean(sub.RL.count$model.id=='RL')*100,
+                    LTM = mean(sub.RL.count$model.id=='LTM')*100, 
+                    str = mean(sub.RL.count$model.id=='STR')*100, 
+                    meta = mean(sub.RL.count$model.id=='META')*100 
+                   ), 
+        tibble( parent = 'LTM',
+                    rl = mean(sub.LTM.count$model.id=='RL')*100,
+                    LTM = mean(sub.LTM.count$model.id=='LTM')*100, 
+                    str = mean(sub.LTM.count$model.id=='STR')*100, 
+                    meta = mean(sub.LTM.count$model.id=='META')*100 
+                   ),
+        tibble( parent = 'STR',
+                    rl = mean(sub.STR.count$model.id=='RL')*100,
+                    LTM = mean(sub.STR.count$model.id=='LTM')*100, 
+                    str = mean(sub.STR.count$model.id=='STR')*100, 
+                    meta = mean(sub.STR.count$model.id=='META')*100 
+                   ),
+        tibble( parent = 'META',
+                    rl = mean(sub.META.count$model.id=='RL')*100,
+                    LTM = mean(sub.META.count$model.id=='LTM')*100, 
+                    str = mean(sub.META.count$model.id=='STR')*100, 
+                    meta = mean(sub.META.count$model.id=='META')*100 
+                   )
+
+
+
+       ) %>% 
+  pivot_longer(cols = -parent, values_to = 'prop', names_to = 'model')
+  
+
+fit_proportions %>% 
+  ggplot(aes(x=parent, y=model, fill=prop)) +
+  geom_tile() +
+   geom_text(aes(label = round(prop,2)) ,size=6,
+               show.legend = F) +
+  scale_fill_gradient(limits=c(0,100),
+                          low='white',
+                           high = '#d9191c',
+                           #'#377eb8',
+    
+                          guide='colorbar',
+                          aesthetics = 'fill',
+                          breaks= c(0,25,50,75,100)
+                       ) +
+  theme_pubclean(base_size = 18) +
+  xlab('Simulated Participants') +
+  ylab('Model')
+
+```
+
+
+```{r parameter recovery}
+#### RL parameters 
+RLparams <- RL.model[,c('alpha','egs')]
+
+## make index of parent model sims that fit the correct model
+sel.RL <- 
+  sub.RL.count %>%
+  filter(model.id=='RL') %>% 
+    select(model.index) %>%
+  unlist %>% c()
+
+param.comp.RL <-
+  rbind(
+  RLparams[sel.RL,] %>%
+  mutate(sub.id =c(1:25)[sub.RL.count$model.id=='RL'], 
+         data ='model') %>% 
+  pivot_longer(cols = -c('sub.id','data'), names_to = 'parameter', values_to = 'value'), 
+  
+    RLparams[sub.RL.count$model.id=='RL',] %>% 
+      mutate(sub.id =c(1:25)[sub.RL.count$model.id=='RL'], 
+         data='sim') %>% 
+      pivot_longer(cols = -c('sub.id','data'), names_to = 'parameter', values_to = 'value')
+    ) %>% 
+  pivot_wider(names_from = data, values_from = value)
+
+
+param.comp.RL %>% 
+  ggplot(aes(x=sim, y=model)) +
+  #geom_point(size=4, alpha=.7,  color='#0c2c84') +
+  geom_count(color='#0c2c84') +
+  geom_smooth(method = 'lm', color='#ef6548', alpha=.2)+
+  facet_wrap(vars(parameter), scales = 'free', ncol = 1) +
+  theme_pubclean(base_size = 18)+
+  xlab('Parameter value (simulated participants)') +
+  ylab('Parameter value (Recovered)')
+
+param.comp.RL %>% 
+  mutate(diffs = model-sim) %>% 
+  ggplot(aes(diffs))+
+  geom_density() +
+  facet_wrap(vars(parameter), scales = 'free')
+
+param.comp.RL %>%
+  group_by(parameter) %>% 
+  summarize(corr = cor(model,sim))
+
+##-------- LTM parameters 
+LTMparams <- LTM.model[,c('bll','imag', 'ans')]
+
+sel.LTM <- 
+  sub.LTM.count %>%
+  filter(model.id=='LTM') %>% 
+    select(model.index) %>%
+  unlist %>% c()
+
+param.comp.LTM <-
+  rbind(
+  LTMparams[sel.LTM,] %>%
+  mutate(sub.id =c(1:125)[sub.LTM.count$model.id=='LTM'], 
+         data ='model') %>% 
+  pivot_longer(cols = -c('sub.id','data'), names_to = 'parameter', values_to = 'value'), 
+  
+    LTMparams[sub.LTM.count$model.id=='LTM',] %>% 
+      mutate(sub.id =c(1:125)[sub.LTM.count$model.id=='LTM'], 
+         data='sim') %>% 
+      pivot_longer(cols = -c('sub.id','data'), names_to = 'parameter', values_to = 'value')
+    ) %>% 
+  pivot_wider(names_from = data, values_from = value)
+
+param.comp.LTM %>% 
+  ggplot(aes(x=sim, y=model)) +
+  #geom_point(size=3, alpha=.5) +
+   geom_count(color='#0c2c84') +
+  geom_smooth(method = 'lm', color='#ef6548', alpha=.2)+
+  facet_wrap(vars(parameter), scales = 'free') +
+theme_pubclean(base_size = 18)+
+  xlab('Parameter value (simulated participants)') +
+  ylab('Parameter value (Model)')
+
+
+param.comp.LTM %>% 
+  mutate(diffs = model-sim) %>% 
+  ggplot(aes(diffs))+
+  geom_density() +
+  facet_wrap(vars(parameter), scales = 'free')
+
+param.comp.LTM %>% 
+   mutate(diffs = model-sim) %>% 
+ group_by(parameter) %>% 
+ summarize(mean(diffs))
+
+param.comp.LTM %>% 
+group_by(parameter) %>% 
+  summarize(corr = cor(model,sim))
+
+#### STR parameters 
+STRparams <- STR.model[,c('alpha','egs','bll','imag', 'ans', 'bias')]
+
+sel.STR <- 
+  sub.STR.count %>%
+  filter(model.id=='STR') %>% 
+    select(model.index) %>%
+  unlist %>% c()
+
+param.comp.STR <-
+  rbind(
+  STRparams[sel.STR,] %>%
+  mutate(sub.id =c(1:12500)[sub.STR.count$model.id=='STR'], 
+         data ='model') %>% 
+  pivot_longer(cols = -c('sub.id','data'), names_to = 'parameter', values_to = 'value'), 
+  
+    STRparams[sub.STR.count$model.id=='STR',] %>% 
+      mutate(sub.id =c(1:12500)[sub.STR.count$model.id=='STR'], 
+         data='sim') %>% 
+      pivot_longer(cols = -c('sub.id','data'), names_to = 'parameter', values_to = 'value')
+    ) %>% 
+  pivot_wider(names_from = data, values_from = value)
+
+param.comp.STR %>% 
+  ggplot(aes(x=model, y=sim)) +
+  geom_count()+
+  #geom_point(size=3, alpha=.5) +
+  geom_smooth(method = 'lm')+
+  facet_wrap(vars(parameter), scales = 'free')
+
+param.comp.STR %>% 
+  group_by(parameter) %>% 
+  summarize(r = cor.test(model, sim)$estimate, 
+            p = cor.test(model, sim)$p.value)
+
+
+param.comp.STR %>% 
+  mutate(diffs = model-sim) %>% 
+  ggplot(aes(diffs))+
+  geom_density() +
+  facet_wrap(vars(parameter), scales = 'free')
+
+
+#### STR parameters 
+METAparams <- META.model[,c('alpha','egs','bll','imag', 'ans', 'bias')]
+
+sel.META <- 
+  sub.META.count %>%
+  filter(model.id=='META') %>% 
+    select(model.index) %>%
+  unlist %>% c()
+
+param.comp.META <-
+  rbind(
+  METAparams[sel.META,] %>%
+  mutate(sub.id =c(1:3125)[sub.META.count$model.id=='META'], 
+         data ='model') %>% 
+  pivot_longer(cols = -c('sub.id','data'), names_to = 'parameter', values_to = 'value'), 
+  
+    METAparams[sub.META.count$model.id=='META',] %>% 
+      mutate(sub.id =c(1:3125)[sub.META.count$model.id=='META'], 
+         data='sim') %>% 
+      pivot_longer(cols = -c('sub.id','data'), names_to = 'parameter', values_to = 'value')
+    ) %>% 
+  pivot_wider(names_from = data, values_from = value)
+
+param.comp.META %>% 
+  ggplot(aes(x=model, y=sim)) +
+  geom_point(size=3, alpha=.5) +
+  geom_smooth(method = 'lm')+
+  facet_wrap(vars(parameter), scales = 'free')
+
+param.comp.META %>% 
+group_by(parameter) %>% 
+  summarize(r = cor.test(model,sim)$estimate, 
+            p = cor.test(model, sim)$p.value)
+
 ```
 
 ```{r check learning trajectories}
@@ -340,3 +676,182 @@ RL.sim.dat %>%
   }
 ```
 
+```{r task sensitivity to strategies RL} 
+# get best case scenarios as ground for testing effect of parameter value on learning outcomes
+# ACT-R default values:
+#            RL: alpha = 0.2 ; egs:0 but will use lowest value, 0.1;
+#            LTM: bll = 0.5 ;ans: 0.1 ;imag: 1 but use highest value as constant, 0.5
+
+
+
+#--------RL first
+#--------------- effects of alpha
+alpha_effects <-  RL.model %>% 
+  filter(egs==0.1) %>% 
+  extract_sims() %>% 
+  cbind(RL.model %>% 
+          filter(egs==0.1) %>% 
+          select(alpha)
+        ) %>% 
+  pivot_longer(cols = -alpha, values_to = 'acc', names_to = 'cond') %>% 
+  separate('cond', into = c('setSize', 'iteration'))
+
+
+alpha_effects %>% 
+  mutate(iteration = as.numeric(iteration)) %>% 
+  filter(iteration>8) %>% 
+  group_by(alpha, setSize) %>% 
+  summarize(mean.acc = mean(acc), 
+            n=n(), 
+            se = std(acc)/sqrt(n)) %>% 
+  ggplot(aes(x=alpha, y=mean.acc, color=setSize, group=setSize)) +
+  geom_point() +
+  geom_line(size=1) +
+  geom_errorbar(aes(ymax = mean.acc +se, ymin= mean.acc-se), width=.01, size=.8) +
+  scale_color_brewer(palette = 'Paired') +
+  theme_pubclean(base_size = 16) + 
+  ylim(c(0.5,1))+
+  xlab('RL learning rate') +
+  ylab('mean accuracy') +
+  ggtitle("Effect of learning rate, holding noise constant")
+
+  noise_effects <- 
+    RL.model %>% 
+  filter(alpha==0.2) %>% 
+  extract_sims() %>% 
+  cbind(RL.model %>% 
+          filter(alpha==0.2) %>% 
+          select(egs)
+        ) %>% 
+  pivot_longer(cols = -egs, values_to = 'acc', names_to = 'cond') %>% 
+  separate('cond', into = c('setSize', 'iteration'))
+
+noise_effects %>% 
+  mutate(iteration = as.numeric(iteration)) %>% 
+  filter(iteration>8) %>% 
+  group_by(egs, setSize) %>% 
+  summarize(mean.acc = mean(acc), 
+            n=n(), 
+            se = std(acc)/sqrt(n)) %>% 
+  ggplot(aes(x=egs, y=mean.acc, color=setSize, group=setSize)) +
+  geom_point() +
+  geom_line(size=1) +
+  geom_errorbar(aes(ymax = mean.acc +se, ymin= mean.acc-se), width=.01, size=.8) +
+  scale_color_brewer(palette = 'Paired') +
+  theme_pubclean(base_size = 16) + 
+  ylim(c(0.5,1)) +
+  xlab('RL noise') +
+  ylab('mean accuracy') +
+  ggtitle("Effect of noise, holding learning rate constant")
+
+
+
+```
+
+```{r task sensitivity to strategies LTM} 
+# get best case scenarios as ground for testing effect of parameter value on learning outcomes
+# ACT-R default values:
+#            RL: alpha = 0.2 ; egs:0 but will use lowest value, 0.1;
+#            LTM: bll = 0.5 ;ans: 0.1 ;imag: 1 but use highest value as constant, 0.5
+
+
+#-------- bll first
+
+bll_effects <- 
+    LTM.model %>% 
+  filter(ans==0.1 & imag==0.1) %>% 
+  extract_sims() %>% 
+  cbind(LTM.model %>% 
+          filter(ans==0.1 & imag==0.1) %>% 
+          select(bll)
+        ) %>% 
+  pivot_longer(cols = -bll, values_to = 'acc', names_to = 'cond') %>% 
+  separate('cond', into = c('setSize', 'iteration'))
+
+
+bll_effects %>% 
+  mutate(iteration = as.numeric(iteration)) %>% 
+  filter(iteration>8) %>% 
+  group_by(bll, setSize) %>% 
+  summarize(mean.acc = mean(acc), 
+            n=n(), 
+            se = std(acc)/sqrt(n)) %>% 
+  ggplot(aes(x=bll, y=mean.acc, color=setSize, group=setSize)) +
+  geom_point() +
+  geom_line(size=1) +
+  geom_errorbar(aes(ymax = mean.acc +se, ymin= mean.acc-se), width=.01, size=.8) +
+  scale_color_brewer(palette = 'Paired') +
+  theme_pubclean(base_size = 16) + 
+  ylim(c(0.9,1)) +
+  xlab('LTM decay rate') +
+  ylab('mean accuracy') +
+  ggtitle("Effect of LTM decay, holding WM and noise constant")
+
+
+#### -------- ans second
+# LTM: bll = 0.5 ;ans: 0.1 ;imag: 1 but use highest value as constant, 0.5
+
+ans_effects <- 
+    LTM.model %>% 
+  filter(bll==0.5 & imag==0.5) %>% 
+  extract_sims() %>% 
+  cbind(LTM.model %>% 
+          filter(bll==0.5 & imag==0.5) %>% 
+          select(ans)
+        ) %>% 
+  pivot_longer(cols = -ans, values_to = 'acc', names_to = 'cond') %>% 
+  separate('cond', into = c('setSize', 'iteration'))
+
+
+ans_effects %>% 
+  mutate(iteration = as.numeric(iteration)) %>% 
+  filter(iteration>8) %>% 
+  group_by(ans, setSize) %>% 
+  summarize(mean.acc = mean(acc), 
+            n=n(), 
+            se = std(acc)/sqrt(n)) %>% 
+  ggplot(aes(x=ans, y=mean.acc, color=setSize, group=setSize)) +
+  geom_point() +
+  geom_line(size=1) +
+  geom_errorbar(aes(ymax = mean.acc +se, ymin= mean.acc-se), width=.01, size=.8) +
+  scale_color_brewer(palette = 'Paired') +
+  theme_pubclean(base_size = 16) + 
+  ylim(c(0.9,1)) +
+  xlab('LTM noise') +
+  ylab('mean accuracy') +
+  ggtitle("Effect of LTM noise, holding WM and decay constant")
+
+#### -------- imag third
+# LTM: bll = 0.5 ;ans: 0.1 ;imag: 1 but use highest value as constant, 0.5
+
+imag_effects <- 
+    LTM.model %>% 
+  filter(bll==0.5 & ans==0.1) %>% 
+  extract_sims() %>% 
+  cbind(LTM.model %>% 
+          filter(bll==0.5 & ans==0.1) %>% 
+          select(imag)
+        ) %>% 
+  pivot_longer(cols = -imag, values_to = 'acc', names_to = 'cond') %>% 
+  separate('cond', into = c('setSize', 'iteration'))
+
+
+imag_effects %>% 
+  mutate(iteration = as.numeric(iteration)) %>% 
+  filter(iteration>8) %>% 
+  group_by(imag, setSize) %>% 
+  summarize(mean.acc = mean(acc), 
+            n=n(), 
+            se = std(acc)/sqrt(n)) %>% 
+  ggplot(aes(x=imag, y=mean.acc, color=setSize, group=setSize)) +
+  geom_point() +
+  geom_line(size=1) +
+  geom_errorbar(aes(ymax = mean.acc +se, ymin= mean.acc-se), width=.01, size=.8) +
+  scale_color_brewer(palette = 'Paired') +
+  theme_pubclean(base_size = 14) + 
+  ylim(c(0.9,1)) +
+  xlab('Spreading activation (WM)') +
+  ylab('mean accuracy') +
+  ggtitle("Effect of spreading activation, holding noise and decay constant")
+
+```

@@ -3,11 +3,11 @@
 ;;------------------------------------
 ;;
 
-;; This model relies only on storage and retrieval of memory of past experience 
-;; with stimuli and associated response. 
-;; It relies on three parameters: memory decay(BLL), activation noise(ANS) and 
-;; retrieval threshold(RT) at which a memory will be...activated/retrieved. 
-;; Important features: Stiumulus, associate-key and feedback 
+;; This model relies only on storage and retrieval of memory of past experience
+;; with stimuli and associated response.
+;; It relies on three parameters: memory decay(BLL), activation noise(ANS) and
+;; retrieval threshold(RT) at which a memory will be...activated/retrieved.
+;; Important features: Stiumulus, associate-key and feedback
 
 ;;------------------------------------
 ;; Change log
@@ -16,7 +16,7 @@
 ;;            - Added parse-feedback-yes and parse-feedback-no productions
 ;;            - Enabled subsymbolic computations
 ;;            - Minor modifications to encode-feedback and commit-to-memory productions
-;;            - Added parse-feedback-test productions 
+;;            - Added parse-feedback-test productions
 ;;
 ;;------------------------------------
 
@@ -31,26 +31,26 @@
      ;;:ans nil
      ;; :rt  0.5  ;; Not needed
      :er  t
-     :v nil
+     :v t
      :esc t
      :mas 8.0
-     ;:visual-activation 5.0 
+     ;:visual-activation 5.0
      )
 
-;;---------------------------------------    
+;;---------------------------------------
 ;; Chunk types
-;;--------------------------------------- 
+;;---------------------------------------
 
 (chunk-type goal
             responded ;; Whether a response was chosen or not
             fproc)    ;; fproc= feedback processed
-    
+
 (chunk-type stimulus
             picture
             associated-key
-            outcome 
+            outcome
             )
-    
+
 (chunk-type feedback
             feedback)
 
@@ -69,13 +69,13 @@
 ;;----------------------------------------
 ;; productions
 ;;----------------------------------------
-   ;; Check memory: picture cur_pic, current picture presented is a variable. 
+   ;; Check memory: picture cur_pic, current picture presented is a variable.
    ;; This is a general purpose production that just takes in whatever presented stimulus
    ;; and checks against declarative memory in the retrieval buffer
 
 (p check-memory
    =visual>
-     picture =cur_pic 
+     picture =cur_pic
 
    ?visual>
      state free
@@ -83,25 +83,25 @@
    ?imaginal>
      state free
      buffer empty
-     
+
    =goal>
      fproc yes
-    
+
    ?retrieval>
      state free
    - buffer full
   ==>
-       
-   +retrieval> 
+
+   +retrieval>
       picture =cur_pic
       outcome yes
-   
+
    +imaginal>
       picture =cur_pic
 
    =visual>
 )
-;;-------------------------------------    
+;;-------------------------------------
 ;; Depending on outcome: yes or no (retrieval error)
 
    ;;outcome is no (retrieval error): make random response (3 possible)
@@ -119,7 +119,7 @@
 
   =goal>
     fproc yes
-  
+
   =visual>
   - picture nil
 
@@ -135,13 +135,13 @@
 
   =imaginal>
     associated-key j
-  
+
   *goal>
     fproc no
 
   =visual>
   )
-    
+
 (p response-monkey-k
   ?retrieval>
     state error
@@ -173,7 +173,7 @@
 
   *goal>
     fproc no
-  
+
   =visual>
   )
 
@@ -213,15 +213,15 @@
 
   =visual>
   )
-   
-;;-------------------------------------    
-;;outcome is yes: make response based on memory 
+
+;;-------------------------------------
+;;outcome is yes: make response based on memory
 ;; How do I select, conditionally, the right key to press if we have only one production?
 ;;-------------------------------------
 
 (p outcome-yes
-  =retrieval> 
-    outcome yes 
+  =retrieval>
+    outcome yes
     associated-key =k
 
   =goal>
@@ -232,7 +232,7 @@
 
   =imaginal>
     associated-key nil
-  
+
   ?manual>
     preparation free
     processor free
@@ -246,15 +246,15 @@
 
   *imaginal>
     associated-key =k
-  
+
   *goal>
-    fproc no   
+    fproc no
 )
 
-    
+
 ;;Encode response after feedback
- 
-(p parse-feedback-yes  
+
+(p parse-feedback-yes
    =visual>
      feedback yes
 
@@ -291,22 +291,22 @@
    "Encodes the visual response"
   =visual>
     feedback =f
-   
+
   ?imaginal>
     state free
 
   =goal>
     fproc yes
-  
+
   =imaginal>
-    outcome nil	
-	
-==> 
+    outcome nil
+
+==>
   *imaginal>
     outcome =f
 
   ;*goal>
-   ; fproc yes  
+   ; fproc yes
 
   =visual>
   )
@@ -319,16 +319,16 @@
 
   =goal>
     fproc  yes
-    
+
   =imaginal>
 
-  - outcome nil 
-  
+  - outcome nil
+
 ==>
-  
-  -visual>  
+
+  -visual>
   -imaginal>
-) 
+)
 
 (p parse-test-feedback
    =visual>
@@ -351,10 +351,9 @@
   ;;)
 
 ;;(goal-focus make-response)
- 
 
 
-;;(set-buffer-chunk 'visual 'cup-stimulus)    
-    
+
+;;(set-buffer-chunk 'visual 'cup-stimulus)
+
 )
-

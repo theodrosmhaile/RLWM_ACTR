@@ -46,13 +46,33 @@ theme_set(theme_pubclean(base_size = 12))
 ```
 
 # Results
-
+# setup 
 ```{r SUBJECTS: import  data}
 # sdat contains data fro 83 participants (columns), 
 # rows 1:12 learn accuracy set 3 ; 
 # rows 13:24 learn accuracy set 6 ;
 # row 25 test set 3 accuracy ;
 # row 26 test set 6 accuracy ;
+
+#### Full data set
+subjects = read.csv("./RLWM_data/wmo_subjects_across_studies_031820.csv", header = F)
+colnames(subjects)='subjects'
+sdat.temp = fread('./RLWM_data/all_subject_n83_learn_test_data.csv', header = T) %>% t()
+
+sdat.full <- cbind(
+  sdat.temp[ ,1:12],
+                   matrix(sdat.temp[ ,25],
+                          nrow = numel(sdat.temp[ ,25]), ncol = 12),
+                   sdat.temp[ ,13:24],
+                  matrix(sdat.temp[ ,26],nrow = numel(sdat.temp[ ,25]), ncol = 12) )
+
+colnames(sdat.full) = c(paste0('set3_learn.', c(1:12)),
+                          paste0('set3_test.', c(1:12)),
+                          paste0('set6_learn.', c(1:12)),
+                          paste0('set6_test.', c(1:12)))
+
+####### Half dataset
+
 
 sdat.h1 = read.csv('./RLWM_data/Half1_all_subject_n83_learn_test_data.csv',header = T) 
 h1.subjects <-  sdat.h1$V1
@@ -107,6 +127,19 @@ subject.dat <-
         ) %>% 
   pivot_longer(cols = -c(half,type, subjects), names_to = 'temp_condition', values_to = 'accuracy') %>% #, parameter, param_vals
   separate(temp_condition, into = c('condition','iteration'), sep = '[/.]')
+  
+  
+  
+subject.dat.full <- 
+  sdat.full %>%
+    as.data.frame() %>% 
+  mutate(subjects, 
+         type='behavioral') %>% 
+  pivot_longer(cols=-c(type, subjects), 
+               names_to = 'temp_condition',
+               values_to = 'accuracy') %>% 
+     separate(temp_condition, into = c('condition','iteration'), sep = '[/.]')
+  
 ```
 
 ```{r MODELS: import  data}
@@ -140,7 +173,7 @@ META.sim <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_032021.JSON')$da
 
 ```
 
-```{r functions}
+```{r custom functions}
 
 #(1) Transform RMSE into residual sum of squares by doing RSS = RMSE^2 * n
 #11:34
@@ -166,6 +199,7 @@ apply(model.dat, 1, function(x,y) MSE(x, behav.dat)) %>% sqrt()
    
 }
 
+#### Part 1 function
 fit.models.unsplit <- function(model,half, params) {
   
   #select model
@@ -214,6 +248,7 @@ sim.learn = sim.mod$set3_learn %>%
   
 }
 
+#### Part 3 function
 fit.models <- function(model, half, setsize, params) {
   #select model
   # if (model == 'RL') {
@@ -274,6 +309,103 @@ fit.models <- function(model, half, setsize, params) {
     Andys_BIC(k = params, n = 24)
   
 }
+
+#### Part 2 function
+fit.models.setsize <- function(model,  setsize, params) {
+  #select model
+  # if (model == 'RL') {
+  #   model = RL.sim
+  # }
+  # if (model == 'LTM') {
+  #   model = LTM.sim
+  # }
+  # if (model == 'STR') {
+  #   model = STR.sim
+  # }
+  # if (model == 'META') {
+  #   model = META.sim
+  # }
+  # 
+  # select subject data
+ sdat =  sdat.full
+ 
+  # select setsize
+  
+  if (setsize == 3) {
+    ns = 1:24
+    n_size = 'set3_'
+  } 
+  
+  if(setsize == 6){
+    ns = 25:48
+  
+    n_size='set6_'
+  }
+ 
+  
+  sim.learn = eval(
+      parse(text=paste0(model,'.sim$',n_size, 'learn')
+                                 )
+                           ) %>% 
+    reduce(rbind)
+                      
+  
+  sim.test =  matrix(
+              eval(
+                parse(text=paste0(model,'.sim$',n_size, 'test'))),
+              nrow = numel(eval(parse(text=paste0(model,'.sim$',n_size, 'test')))),
+              ncol = 12)
+ 
+  
+  apply( sdat[, ns], 1,
+        function(x, y)
+          fit.subject(x, 
+                      (cbind(sim.learn, sim.test)
+                       )
+                      )) %>%
+    Andys_BIC(k = params, n = 24)
+  
+}
+
+
+
+get_data = function(data, data_name){
+  bind_rows(
+    c('set3_learn','set6_learn') %>% 
+      map(~
+            #column is measurement at T, record is simulation
+            data %>% 
+            .[[.x]] %>% 
+            reduce(rbind) %>% 
+            data.frame() %>% 
+            mutate(condition = .x, 
+                   model_index= c(1:nrow(data))
+            )
+      ) %>% 
+      reduce(bind_rows) %>% 
+      pivot_longer(cols = starts_with('x')
+                   ,values_to = 'accuracy', names_to = 'iteration'),
+    
+    c('set3_test', 'set6_test') %>% #, 'bias' 'alpha','egs', 'bll', 'imag','ans'
+      map (~
+             {
+               temp = data %>% 
+                 .[[.x]]
+               
+               data.frame(
+                  model_index= c(1:nrow(data)),
+                 condition=.x, 
+                 iteration=paste0('X', rep(c(1:12), nrow(data))), 
+                 accuracy=rep(temp, 12)
+               )
+               
+             }
+      )
+  
+  ) %>%  
+    mutate(data_source = data_name)
+}
+
 ```
 
 # PART I
@@ -479,7 +611,8 @@ ex1.ex2.comp <-
   mutate(compH1 = half1 == model, 
          compH2 = half2 == model, 
          H1H2 = compH1 & compH2, 
-         H1orH2 = compH1 | compH2) 
+         H1orH2 = compH1 | compH2, 
+         h1vh2 = half1==half2) 
 
 both_halves_fit_Ex1 = mean(ex1.ex2.comp$H1H2) %>% 
   round(3)*100
@@ -575,21 +708,23 @@ H1vsH2 %>%
 
 
 half_counts %>% 
-   ggplot(aes(x=half1, y=half2, fill=percent)) +
+   ggplot(aes(x=half1, y=half2, fill=percent*100)) +
   geom_tile()  +
-   geom_text(aes(label= prop) ,size=4,
+   geom_text(aes(label= round(percent,2)*100) ,size=7,
                show.legend = F) +
-  scale_fill_gradient(limits=c(0,1),
+  scale_fill_gradient(limits=c(0,100),
                           low='white',
-                           high = '#d9191c',
+                           high = '#66af62',
                            #'#377eb8',
     
                           guide='colorbar',
                           aesthetics = 'fill',
-                          breaks= c(0,.25,.5,.75,1) 
+                          breaks= c(0,25,50,75,100) 
                        ) +
  # facet_wrap(vars(condition))+
-theme_classic(base_size = 18) +
+  xlab('Half-1') +
+  ylab('Half-2') +
+theme_pubclean(base_size = 20) #+
   ggtitle("count of fit changes from H1 to H2")
 
 
@@ -611,6 +746,7 @@ acc.half.model <-
 
 These scatter plots show the differences in the distributions for learning outcomes for subjects who fit the same models for H1 and H2 and different
 ```{r PART 1: Plots of outcomes for stable TvsF, fig.height=4, fig.width=4}
+
 mean.acc.half.model <- 
 acc.half.model %>% 
 filter(comp==F) %>% 
@@ -649,19 +785,46 @@ mean.acc.half.model %>%
 
 ## t.test for comparisons
 acc.half.model %>% 
-  filter(comp==F) %>% 
+  #filter(comp==F) %>% 
   group_by(condition) %>% 
   summarize(t_val = t.test(mean.acc[half=='half1'],mean.acc[half=='half2'])$statistic, 
             p_val= t.test(mean.acc[half=='half1'],mean.acc[half=='half2'])$p.value)
   
 
-#### does accuracy matter interms of which model fit participants in half 2. 
-acc.half.model %>% 
-  filter(comp==F, condition=='set3_test' | condition=='set6_test') %>% 
+#### does accuracy matter interms of which model fit participants in half for TEST
+accPLTDIFFTEST <- 
+  acc.half.model %>% 
+  filter( condition=='set3_test' | condition=='set6_test') %>% 
+  pivot_wider(id_cols=c(subjects, condition, comp), names_from = half, values_from = mean.acc) %>% 
+  mutate(acc_diff= half2 - half1, .keep = 'unused') %>% 
+  inner_join(acc.half.model %>% 
+              filter( condition=='set3_test' | condition=='set6_test') %>% 
+               pivot_wider(id_cols=c(subjects, condition), names_from = half, values_from = model), 
+             by = c('subjects', 'condition')) %>% 
+  group_by(comp, condition, half2) %>% 
+  summarize(means = mean(acc_diff),
+            n=n(),
+             se = std(acc_diff)/sqrt(n)
+            ) %>% 
+  ggplot(aes(x=half2, y=means, ymax=means+se, ymin=means-se, fill=comp, group=comp)) +
+  geom_bar(stat = 'identity', position = position_dodge()) +
+  #geom_text(aes(label=n), nudge_y = .1)+
+  geom_errorbar(stat = 'identity', position = position_dodge(width = .9), width=.6)+
+  facet_wrap(vars(condition)) +
+  ylab("Change in accuracy Half-1 to Half-2") +
+  xlab('Best fit model in Half-2') +
+  theme_pubclean(base_size = 24) +
+    scale_fill_brewer(palette = 'Set2')+
+  ylim(c(-0.3, 0.3))
+
+
+### does accuracy matter interms of which model fit participants in half for LEARN
+accPLTDIFFLEARN <- acc.half.model %>% 
+  filter(comp==F, condition=='set3_learn' | condition=='set6_learn') %>% 
   pivot_wider(id_cols=c(subjects, condition), names_from = half, values_from = mean.acc) %>% 
   mutate(acc_diff= half2 - half1, .keep = 'unused') %>% 
   inner_join(acc.half.model %>% 
-              filter(comp==F, condition=='set3_test' | condition=='set6_test') %>% 
+              filter(comp==F, condition=='set3_learn' | condition=='set6_learn') %>% 
                pivot_wider(id_cols=c(subjects, condition), names_from = half, values_from = model), 
              by = c('subjects', 'condition')) %>% 
   group_by(condition, half2) %>% 
@@ -670,13 +833,15 @@ acc.half.model %>%
              se = std(acc_diff)/sqrt(n)
             ) %>% 
   ggplot(aes(x=half2, y=means, ymax=means+se, ymin=means-se)) +
-  geom_bar(stat = 'identity', position = 'dodge', fill='gray') +
-  geom_text(aes(label=n), nudge_y = .1)+
+  geom_bar(stat = 'identity', position = 'dodge', fill='#756bb1') +
+  #geom_text(aes(label=n), nudge_y = .1)+
   geom_errorbar(stat = 'identity', position = 'dodge', width=.7)+
   facet_wrap(vars(condition)) +
   ylab("mean difference in accuracy for the two halves") +
-  xlab('Best fit model in Half 2')
-
+  xlab('Best fit model in Half-2') +
+  theme_pubclean(base_size = 18) +
+    ylim(c(-0.3, 0.3))
+ggarrange(accPLTDIFFLEARN, accPLTDIFFTEST, ncol = 1, labels = 'AUTO')
 
 ## plot of learning outcomes for participants who fit the same models for half 1 and half 2
 mean2.acc.half.model %>% 
@@ -769,16 +934,357 @@ filter(comp==F) %>%
 
 ```
 
+
 # PART II
+In this section we will fit the two set-sizes separately. We aim to see if different strategies/models reliably explain the different tax demands while using the entire task. 
+
+```{r PART II: fit subjects with models}
+##########--------RL fits----------------############
+
+RL.BIC.S3 <-  fit.models.setsize(model = 'RL', setsize = 3, 2)
+RL.BIC.S6 <-  fit.models.setsize(model = 'RL', setsize = 6, 2)
+
+##########---------LTM FITS ----------------############
+
+LTM.BIC.S3 <-  fit.models.setsize(model = 'LTM', setsize = 3, 2)
+LTM.BIC.S6 <-  fit.models.setsize(model = 'LTM', setsize = 6, 2)
+
+
+##########---------RL-LTMstr FITS ----------------############
+
+STR.BIC.S3 <-  fit.models.setsize(model = 'STR', setsize = 3, 2)
+STR.BIC.S6 <-  fit.models.setsize(model = 'STR', setsize = 6, 2)
+
+
+##########---------RL-LTMmeta FITS ----------------############
+META.BIC.S3 <-  fit.models.setsize(model = 'META', setsize = 3, 2)
+META.BIC.S6 <-  fit.models.setsize(model = 'META', setsize = 6, 2)
+
+
+
+```
+
+
+```{r PART II: SELECT BEST FITS}
+
+all.models.ss <- 
+  rbind(
+    RL.BIC.S3 %>% 
+      as_tibble() %>% 
+      mutate(setsize = 'N3', model='RL', model.id=c(1:nrow(RL.sim))),
+    RL.BIC.S6 %>% 
+      as_tibble() %>% 
+      mutate(setsize = 'N6', model='RL', model.id=c(1:nrow(RL.sim))),
+    LTM.BIC.S3 %>% 
+      as_tibble() %>% 
+      mutate(setsize = 'N3', model='LTM',model.id=c(1:nrow(LTM.sim)) ),
+    LTM.BIC.S6 %>% 
+      as_tibble() %>% 
+      mutate(setsize = 'N6', model='LTM',model.id=c(1:nrow(LTM.sim)) ),
+    STR.BIC.S3 %>% 
+      as_tibble() %>%
+      mutate(setsize = 'N3', model='STR', model.id=c(1:nrow(STR.sim)) ),
+    STR.BIC.S6 %>% 
+      as_tibble() %>%
+      mutate(setsize = 'N6', model='STR', model.id=c(1:nrow(STR.sim)) ),
+    META.BIC.S3 %>% as_tibble() %>%
+      mutate(setsize = 'N3', model='META', model.id=c(1:nrow(META.sim)) ),
+    META.BIC.S6 %>% as_tibble() %>%
+      mutate(setsize = 'N6', model='META', model.id=c(1:nrow(META.sim)) )
+)  
+  
+
+best.fits.ss <- 
+    
+  rbind(all.models.ss$model[all.models.ss %>% 
+                       filter(setsize=='N3') %>% 
+                       select(-contains('model'), -setsize) %>% 
+                       apply(., 2, which.min)
+                     ] %>% 
+    as_data_frame() %>% 
+  mutate(model = value,
+         setsize = 'N3',
+    subjects , 
+    .keep='unused'),
+  all.models.ss$model[all.models.ss %>% 
+                       filter(setsize=='N6') %>% 
+                       select(-contains('model'), -setsize) %>% 
+                       apply(., 2, which.min)
+                     ] %>% 
+    as_data_frame() %>% 
+  mutate(model = value,
+         setsize = 'N6',
+    subjects, 
+    .keep='unused'))
+
+
+best.fit.idx.ss <- 
+  rbind(
+    all.models.ss$model.id[all.models.ss %>%
+                        filter(setsize=='N3') %>%  
+                       select(-contains('model'), -setsize) %>% 
+                       apply(., 2, which.min) 
+                     ] %>% 
+  as_data_frame() %>% 
+  mutate(index = value,
+         setsize='N3',
+         subjects, 
+         .keep = 'unused'),
+
+    all.models.ss$model.id[all.models.ss %>%
+                        filter(setsize=='N6') %>%  
+                       select(-contains('model'), -setsize) %>% 
+                       apply(., 2, which.min) 
+                     ] %>% 
+  as_data_frame() %>% 
+  mutate(index = value,
+         setsize='N6',
+         subjects, 
+         .keep = 'unused')
+  )
+
+```
+
+```{r differences in setsize model fits}
+best.fit.counts.ss <- best.fits.ss %>%
+  
+  pivot_wider(id_cols = subjects,
+              names_from = setsize,
+              values_from = model) %>% 
+  group_by(N6,N3) %>% 
+  
+ summarize(counts=n()) %>% 
+  inner_join(best.fits.ss %>%
+  pivot_wider(id_cols = subjects,
+              names_from = setsize,
+              values_from = model) %>% 
+  group_by(N3) %>% 
+count(), by='N3') %>% 
+  mutate(percent = (counts/n)*100)
+
+best.fit.counts.ss %>% 
+
+  ggplot(aes(x=N3, y=N6, fill=percent, label=round(percent,2))) +
+  geom_tile() +
+  geom_text(color='black')+
+  scale_fill_gradient(limits=c(0,100),
+                          low='white',
+                           high = '#d9191c',
+                           #'#377eb8',
+    
+                          guide='colorbar',
+                          aesthetics = 'fill' 
+                       )+
+  theme_pubclean(base_size = 18) 
+  
+
+
+
+
+```
+
+### Fit counts
+ Firstly, 56% of participants who fit LTM for set-size 3 also fit LTM for set-size 3, the remaining minority fit the Biased model. For those who fit the Biased model best for set-size 3, nearly 60% of them also fit the Biased model for set-size 6. The remainder fit the LTM model. For the 8 participants who fit the RL model for set-size 3, all but one fit the LTM model best for the set-size 6 condition. This pattern is slightly different from what we have seen before -  LTM is not the clear winner as before, as close to 20% of participants fit the Biased model for both set-sizes. Additionally, there seems to be a close to 40-60% split in between the two set-sizes. This suggests that changing task conditions influence strategy choice. ***** How does this compare to what we have learned before?****
+ 
+## Do changes in strategy between set-sizes result in better performance? 
+
+
+```{r PART II: join behavioral and model data}
+
+
+all_sims.ss =list(list(RL.sim, LTM.sim, STR.sim, META.sim), #, STR.sim, META.sim remvoed the two combined models
+     list("RL", "LTM",  "STR", "META")) %>%  #, Removed the two combined models
+  pmap(get_data) %>%  
+  reduce(bind_rows) %>% 
+  mutate(iteration = str_remove_all(iteration, "[:alpha:]") %>%  
+           as.numeric(), 
+         type ='model' )
+
+  
+# separate out parameters and set them into their own long form column
+all_sims.ss %<>% 
+  unite(col = 'mod.id', c('data_source','model_index'), sep = '_', remove = F ) 
+# join all sims with index for best fitting model - index search
+
+index_search.ss = inner_join(
+  best.fits.ss
+  ,best.fit.idx.ss
+  ,by = c('subjects', 'setsize')
+) 
+
+# This subset contains the best fit model data for all participants conditions
+#all.p.model.dat = 
+#trial 1-column multi index
+index_search.ss %<>%
+  mutate(condition = case_when(str_detect(setsize,'N3') ~ 'set3_learn',
+                               TRUE ~ 'set6_learn' )
+         ) %>% 
+  rbind(index_search.ss %>%
+          mutate(condition = case_when(str_detect(setsize,'N3') ~ 'set3_test',
+                               TRUE ~ 'set6_test' )
+                 )
+        ) %>% 
+  unite(col = 'mod.id', c('model','index'), sep = '_', remove = F ) 
+
+
+
+ p.model.dat.ss <- 
+   all_sims.ss %>% 
+ inner_join(index_search.ss,  
+    by = c('condition','mod.id')
+    ) 
+  
+ 
+
+######### use subject.dat from above
+  
+# last bit -  add model identity must join by half subject and condition
+  mod.id.temp.ss <-
+     all_sims.ss %>%
+ inner_join(index_search.ss,
+    by = c('condition','mod.id')
+    ) %>%
+     select(c(subjects, condition, model))
+  
+  melted.p.behav.model.ss <- 
+  rbind(subject.dat.full,
+        p.model.dat.ss %>% 
+          select(-c(index, data_source,
+                    model_index, mod.id, 
+                    model, setsize))) %>% 
+  inner_join(mod.id.temp.ss,
+ by=c('subjects', 'condition')
+ ) %>% 
+    separate(col = condition, 
+             into = c('condition', 'phase'),
+             remove = T )
+
+```
+
+```{r plot model and behavioral data}
+plot.temp <- melted.p.behav.model.ss %>% 
+  unique() %>% 
+  select(-accuracy) %>% 
+pivot_wider(id_cols = c(subjects,phase, type, iteration), names_from = condition, values_from = model) %>% 
+  inner_join(melted.p.behav.model.ss %>% 
+               unique() %>% 
+               select(subjects,phase, type, iteration, accuracy), 
+             by = c('subjects','phase', 'type', 'iteration')
+             )  %>% drop_na() 
+
+ temp.model.identity <- 
+   melted.p.behav.model.ss %>% 
+  unique() %>% 
+  filter(iteration==12, type=='behavioral') %>% 
+  select(-iteration, -type) %>% 
+  pivot_wider(id_cols = c(subjects, phase), names_from = condition, values_from = model) 
+  
+ 
+temp.condition.acc <-  
+  melted.p.behav.model.ss %>% 
+  unique() %>% 
+  filter(iteration==12, type=='behavioral') %>% 
+  select(-iteration, -type) %>% 
+   pivot_wider(id_cols = c(subjects, phase), names_from = condition, values_from = accuracy) %>% 
+   mutate(acc.diff= set3-set6) %>% 
+  select(-set3, -set6)
+ 
+ 
+diff.data <- 
+  inner_join(temp.model.identity, temp.condition.acc, by=c('subjects', 'phase')) %>% 
+  mutate(stable=set3==set6)
+
+
+diff.data %>% 
+  group_by(stable, phase) %>% 
+  summarise(mean.diff.accuracy = mean(acc.diff), 
+            n=n(), 
+            se = sd(acc.diff)/sqrt(n)
+            ) %>% 
+  ggplot(aes(x=stable, y=mean.diff.accuracy,
+             ymax=mean.diff.accuracy+se, 
+             ymin =mean.diff.accuracy-se, 
+             group=stable, fill=stable)
+         ) +
+  geom_bar(stat = 'identity', position = position_dodge()) +
+  geom_errorbar( stat='identity', position = position_dodge())+
+  theme_pubclean(base_size = 18) +
+  facet_wrap(vars(phase))
+
+diff.data %>% 
+  group_by(stable, phase, set3, set6) %>% 
+summarise(mean.diff.accuracy = mean(acc.diff), 
+            n=n(), 
+            se = sd(acc.diff)/sqrt(n)) %>% 
+  ggplot(aes(x=set3, y=mean.diff.accuracy,
+             ymax=mean.diff.accuracy+se, 
+             ymin =mean.diff.accuracy-se, 
+             group=stable, fill=stable)
+         ) +
+  geom_bar(stat = 'identity', position = position_dodge()) +
+  geom_errorbar( stat='identity', position = position_dodge())+
+  theme_pubclean(base_size = 18)+
+  facet_wrap(vars(phase)) +
+  ggtitle('Split up by set3 models')
+
+
+
+
+plot.temp %>% 
+  group_by(set3, set6,iteration, phase, type ) %>% 
+  summarise(mean.accuracy = mean(accuracy), 
+            n=n(), 
+            se = sd(accuracy)/sqrt(n)) %>% 
+  mutate(stable= set3==set6) 
+  pivot_longer(cols = c(set3,set6), names_to = 'condition', values_to = 'model' ) %>% 
+  filter(iteration==12, type=='behavioral') %>% 
+ggplot(aes(y=mean.accuracy,x=condition, 
+           ymax = mean.accuracy + se, 
+           ymin = mean.accuracy - se, 
+           group=stable, fill=stable)
+       ) +
+ # geom_jitter(width = .2, alpha=.5, size=3)+
+ geom_bar(stat = 'identity', position = position_dodge()) +
+  geom_errorbar( stat='identity', position = position_dodge())+
+  theme_pubclean(base_size = 18)+
+  facet_wrap(vars(phase, model))
+  
+  
+  
+  
+  
+```
+
+```{r subtract switchers from non switchers}
+temp.switch.identity <- 
+  temp.model.identity %>% 
+   mutate(stable=set3==set6) %>% 
+  select(-set3, -set6)
+
+
+temp.acc.ss <- 
+   melted.p.behav.model.ss %>% 
+  unique() %>% 
+  filter(iteration==12, type=='behavioral') %>% 
+  select(-iteration, -type)
+
+
+switchersvsnon <-  inner_join(temp.switch.identity,temp.acc.ss, by=c('subjects', 'phase') ) %>% 
+  pivot_wider(id_cols = -subjects, names_from = stable, values_from = accuracy)
+
+```
+
+# PART III
 
 As described above, learning data for all participants were split into the first 6 stimulus iterations and the last 6 before model fitting. Additionally, the two conditions, set-size 3 and set-size 6 were also fit separately.
 
-```{r PART II: fit subjects with models}
+```{r PART III: fit subjects with models}
+
 
   
 ##########--------RL fits----------------############
 
-RL.BIC.half1.N3 <-  fit.models(model = 'RL',half = 1, setsize = 3, 2)
+RL.BIC.half1.N3 <-  fit.models(model = 'RL', half = 1, setsize = 3, 2)
 RL.BIC.half1.N6 <- fit.models('RL',1,6,2)
 RL.BIC.half2.N3 <-  fit.models('RL',2,3,2)
 RL.BIC.half2.N6 <-  fit.models('RL',2,6,2)
@@ -810,7 +1316,7 @@ META.BIC.half2.N6 <- fit.models('META',2,6,5)
 }
 ```
 
-```{r PART II: aggregate model fits}
+```{r PART III: aggregate model fits}
 # generate model id and parameter set ids and concat all sets
 
 half1.N3 <- rbind(
@@ -886,46 +1392,10 @@ best.fit.idx <- tibble('half1_N3' = half1.N3$model.id[half1.N3 %>% select(-conta
 
 ```
 
-```{r part A join model-behavioral data}
+```{r part IIIA join model-behavioral data}
 #subjects model model_id half type setsize iteration accuracy parameter parameter value 
 
 # Function reduces the lists of simulations to long-form dataframes.
-get_data = function(data, data_name){
-  bind_rows(
-    c('set3_learn','set6_learn') %>% 
-      map(~
-            #column is measurement at T, record is simulation
-            data %>% 
-            .[[.x]] %>% 
-            reduce(rbind) %>% 
-            data.frame() %>% 
-            mutate(condition = .x, 
-                   model_index= c(1:nrow(data))
-            )
-      ) %>% 
-      reduce(bind_rows) %>% 
-      pivot_longer(cols = starts_with('x')
-                   ,values_to = 'accuracy', names_to = 'iteration'),
-    
-    c('set3_test', 'set6_test') %>% #, 'bias' 'alpha','egs', 'bll', 'imag','ans'
-      map (~
-             {
-               temp = data %>% 
-                 .[[.x]]
-               
-               data.frame(
-                  model_index= c(1:nrow(data)),
-                 condition=.x, 
-                 iteration=paste0('X', rep(c(1:12), nrow(data))), 
-                 accuracy=rep(temp, 12)
-               )
-               
-             }
-      )
-  
-  ) %>%  
-    mutate(data_source = data_name)
-}
 
 getParam <- function(data, data_name){
    c('alpha','egs', 'bll', 'imag','ans') %>% #, 'bias' 
@@ -948,7 +1418,7 @@ getParam <- function(data, data_name){
 
 ```
 
-```{r part B join model-behavioral data}
+```{r part IIIB join model-behavioral data}
 
 
 all_sims =list(list(RL.sim, LTM.sim), #, STR.sim, META.sim remvoed the two combined models
@@ -1267,11 +1737,33 @@ temp.count %>%
   pivot_longer(cols = c(set3, set6), names_to = 'set_size', values_to = 'half2_models') %>% 
   
   group_by(set_size, half1, half2_models) %>% 
-  count() %>% 
-   ggplot(aes(x=half1,y=n, group=half2_models,  fill=half2_models, label=n)) +
-  # geom_tile()+
+
+  summarize(n=n()) %>% 
+   ungroup() %>% 
   
-  geom_bar(stat = 'identity', position = 'dodge') +
+  inner_join( temp.count %>% 
+  select(half, subjects, set3, set6) %>% 
+  filter(half=='half2') %>% 
+  inner_join( temp.count %>% 
+                select(subjects,half1) %>% 
+                drop_na(), 
+              by = 'subjects') %>% 
+  pivot_longer(cols = c(set3, set6), names_to = 'set_size', values_to = 'half2_models') %>% 
+  
+  group_by(set_size, half1, half2_models) %>% 
+
+  summarize(n=n()) %>% 
+   ungroup() %>% 
+                group_by(set_size, half1) %>% 
+  summarise(total=sum(n)),
+  by=c('set_size', 'half1')) %>% 
+  mutate(percent = n/total) %>% 
+
+
+   ggplot(aes(x=half1, y=half2_models, fill=percent)) +
+   geom_tile()+
+  
+ # geom_bar(stat = 'identity', position = 'dodge') +
  #  geom_text() +
   facet_wrap (vars(set_size)) +
   ylab('Half 2 model counts')+

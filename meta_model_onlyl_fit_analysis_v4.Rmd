@@ -1,0 +1,535 @@
+---
+title: "RLWM ACT-R Fitting meta-learning model only"
+author: "Theodros H."
+date: "03/2023"
+output:
+  html_document:
+    code_folding: hide
+    toc: no
+  word_document:
+    toc: no
+editor_options:
+  chunk_output_type: console
+---
+
+```{css, echo=FALSE} 
+
+ p{ 
+
+   font-size: 18px;
+
+ }
+
+``` 
+
+```{r set up, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
+rm(list = ls())
+library(MASS)
+library(ggpubr)
+library(matlab)
+library(MLmetrics)
+library(jsonlite)
+library(knitr)
+library(Rmisc)
+library(magrittr)
+library(data.table)
+library(skimr)
+library(tidyverse)
+knitr::opts_chunk$set(
+  comment = "#>", echo = FALSE, warning = FALSE, 
+  message = FALSE, dpi = 300
+ 
+)
+theme_set(theme_pubclean(base_size = 12)) 
+
+```
+
+# Results
+
+```{r SUBJECTS: import  data}
+# sdat contains data fro 83 participants (columns), 
+# rows 1:12 learn accuracy set 3; 
+# rows 13:24 learn accuracy set 6;
+# row 25 test set 3 accuracy;
+# row 26 test set 6 accuracy;
+splitDat=FALSE
+
+subjects = read.csv("./RLWM_data/wmo_subjects_across_studies_031820.csv", header = F)
+colnames(subjects)='subjects'
+sdat.temp = fread('./RLWM_data/all_subject_n83_learn_test_data.csv', header = T) %>% t()
+
+sdat <- cbind(
+  sdat.temp[ ,1:12],
+                   matrix(sdat.temp[ ,25],
+                          nrow = numel(sdat.temp[ ,25]), ncol = 12),
+                   sdat.temp[ ,13:24],
+                  matrix(sdat.temp[ ,26],nrow = numel(sdat.temp[ ,25]), ncol = 12) )
+
+colnames(sdat) = c(paste0('set3_learn.', c(1:12)),
+                          paste0('set3_test.', c(1:12)),
+                          paste0('set6_learn.', c(1:12)),
+                          paste0('set6_test.', c(1:12)))
+
+
+
+if(splitDat){
+
+sdat.h1 = read.csv('./RLWM_data/Half1_all_subject_n83_learn_test_data.csv',header = T) 
+h1.subjects <-  sdat.h1$V1
+sdat.h1 <- sdat.h1[, 2:27] # exclude the subjects column
+#modify sdat to balance learn and test data points by replicating test datapoint into 12
+sdat.repl.h1 <- cbind(
+  sdat.h1[ ,1:12],
+                   matrix(sdat.h1[ ,25],
+                          nrow = numel(sdat.h1[ ,25]), ncol = 12),
+                   sdat.h1[ ,13:24],
+                  matrix(sdat.h1[ ,26],nrow = numel(sdat.h1[ ,25]), ncol = 12) )
+
+colnames(sdat.repl.h1) = c(paste0('set3_learn.', c(1:12)),
+                          paste0('set3_test.', c(1:12)),
+                          paste0('set6_learn.', c(1:12)),
+                          paste0('set6_test.', c(1:12)))
+
+sdat.h2 = read.csv('./RLWM_data/Half2_all_subject_n83_learn_test_data.csv', header = T) 
+
+h2.subjects <-  sdat.h2$V1
+sdat.h2 <- sdat.h2[, 2:27] # exclude the subjects column
+#modify sdat to balance learn and test data points by replicating test datapoint into 12
+sdat.repl.h2 <- cbind(sdat.h2[ ,1:12],
+                   matrix(sdat.h2[ ,25],
+                          nrow = numel(sdat.h2[ ,25]), ncol = 12),
+                   sdat.h2[ ,13:24],
+                  matrix(sdat.h2[ ,26],
+                         nrow = numel(sdat.h2[ ,25]), ncol = 12) )
+
+colnames(sdat.repl.h2) = c(paste0('set3_learn.', c(1:12)),
+                          paste0('set3_test.', c(1:12)),
+                          paste0('set6_learn.', c(1:12)),
+                          paste0('set6_test.', c(1:12))
+                          )
+
+
+
+#  "model"     "index"     "subjects"  "name"      "condition" "iteration" "accuracy"  "type"     
+subject.dat <- 
+  sdat.repl.h1 %>% 
+  dplyr::mutate(half ='half1', 
+                subjects = h1.subjects) %>% 
+  rbind(sdat.repl.h2 %>% 
+          mutate(half='half2', 
+                 subjects= h1.subjects))
+  
+  subject.dat %<>%   
+  dplyr::mutate(
+         'type' = 'behavioral' 
+        # ,'parameter' = NA, 
+      #   'param_vals'= NA
+        ) %>% 
+  pivot_longer(cols = -c(half,type, subjects), names_to = 'temp_condition', values_to = 'accuracy') %>% #, parameter, param_vals
+  separate(temp_condition, into = c('condition','iteration'), sep = '[/.]')
+  }
+```
+
+```{r MODELS: import  data}
+
+if(splitDat){
+RL.sim <- fromJSON('./simulated_data/RL_model/RL_sim_data_07_12_2022.JSON')$data %>% 
+  dplyr::mutate(bias = 0)
+
+# RL.sim$set3_test <- matrix(
+#               RL.sim$set3_test,
+#               nrow = numel( RL.sim$set3_test),
+#               ncol = 12 )
+# RL.sim$set6_test <- matrix(
+#               RL.sim$set6_test,
+#               nrow = numel( RL.sim$set6_test),
+#               ncol = 12 )
+LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$data %>% 
+  dplyr::mutate(bias = 0 )
+# LTM.sim$set3_test <- matrix(
+#               LTM.sim$set3_test,
+#               nrow = numel( LTM.sim$set3_test),
+#               ncol = 12 )
+
+
+
+STR.sim <- fromJSON('./simulated_data/strategy_model/STR_sim_data_032021.JSON')$data %>% 
+  dplyr::mutate(bias = str_remove_all(strtg, "[:alpha:]") %>% as.numeric()/100, .keep=c('unused'))
+}
+META.sim <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_032021.JSON')$data %>% 
+   dplyr::mutate(bias = strtg,
+          bias3 = strtg3,
+          bias6 = strtg6, .keep='unused')
+
+```
+
+```{r functions}
+
+#(1) Transform RMSE into residual sum of squares by doing RSS = RMSE^2 * n
+#11:34
+#(2) Calculate BIC as: BIC = n + n log (2*pi) + n log (RSS/n) + log(n) * (k + 1)
+#11:36
+#In RL, k = 2; in LTM, k = 3; and Integrated, k = 5 or k = 6
+
+#MAP 
+Andys_BIC <- function(rmse, k, n) {
+  # RSS first
+  #n = 48 #lean3 + learn 6 + (test3)*12 + (test6)*12
+  RSS <- ((rmse)^2) * n
+  # BIC next
+  bic <- n + (n * log(2*pi)) + (n * log(RSS/n)) + (log(n) * (k + 1))
+  
+  return(bic)
+}
+
+
+fit.subject <- function(behav.dat, model.dat){
+
+apply(model.dat, 1, function(x,y) MSE(x, behav.dat)) %>% sqrt()
+   
+}
+
+fit.models.unsplit <- function(model,dat, params, BIC.only) {
+  
+  #select model
+  if (model == 'RL') {
+    sim.mod = RL.sim
+  }
+  if (model == 'LTM') {
+    sim.mod = LTM.sim
+  }
+  if (model == 'STR') {
+    sim.mod = STR.sim
+  }
+  if (model == 'META') {
+    sim.mod = META.sim
+  }
+  #select half
+  # if (half == 1) {
+  #   sdat = sdat.repl.h1
+  # } 
+  # if(half == 2) {
+  #   sdat = sdat.repl.h2
+  # }
+
+  sdat = dat
+  
+sim.learn = sim.mod$set3_learn %>% 
+    reduce(rbind) %>%  
+  cbind(sim.mod$set6_learn %>% reduce(rbind)) 
+                      
+  
+  sim.test =  matrix(
+                sim.mod$set3_test,
+              nrow = numel(sim.mod$set3_test),
+              ncol = 12) %>% 
+    cbind(matrix(
+                sim.mod$set6_test,
+              nrow = numel(sim.mod$set6_test),
+              ncol = 12))
+ 
+  if(BIC.only){ 
+  apply( sdat, 1,
+        function(x, y)
+          fit.subject(x, 
+                      (cbind(sim.learn, sim.test)
+                       )
+                      )) %>%
+    Andys_BIC(k = params, n = 48)
+  }
+  else{
+    apply( sdat, 1,
+        function(x, y)
+          fit.subject(x, 
+                      (cbind(sim.learn, sim.test)
+                       )
+                      ))
+    
+  }
+}
+
+fit.models <- function(model, half, setsize, params) {
+  #select model
+  # if (model == 'RL') {
+  #   model = RL.sim
+  # }
+  # if (model == 'LTM') {
+  #   model = LTM.sim
+  # }
+  # if (model == 'STR') {
+  #   model = STR.sim
+  # }
+  # if (model == 'META') {
+  #   model = META.sim
+  # }
+  # 
+  # select subject data
+  if (half == 1) {
+    sdat = sdat.repl.h1
+  } 
+  if(half ==2) {
+    sdat = sdat.repl.h2
+  }
+ 
+  # select setsize
+  
+  if (setsize == 3) {
+    ns = 1:24
+    n_size = 'set3_'
+  } 
+  
+  if(setsize == 6){
+    ns = 25:48
+  
+    n_size='set6_'
+  }
+ 
+  
+  sim.learn = eval(
+      parse(text=paste0(model,'.sim$',n_size, 'learn')
+                                 )
+                           ) %>% 
+    reduce(rbind)
+                      
+  
+  sim.test =  matrix(
+              eval(
+                parse(text=paste0(model,'.sim$',n_size, 'test'))),
+              nrow = numel(eval(parse(text=paste0(model,'.sim$',n_size, 'test')))),
+              ncol = 12)
+ 
+  
+  apply( sdat[, ns], 1,
+        function(x, y)
+          fit.subject(x, 
+                      (cbind(sim.learn, sim.test)
+                       )
+                      )) %>%
+    Andys_BIC(k = params, n = 24)
+  
+}
+
+
+get_data = function(data, data_name){
+  bind_rows(
+    c('set3_learn','set6_learn') %>% 
+      map(~
+            #column is measurement at T, record is simulation
+            data %>% 
+            .[[.x]] %>% 
+            reduce(rbind) %>% 
+            data.frame() %>% 
+            mutate(condition = .x, 
+                   model_index= c(1:nrow(data))
+            )
+      ) %>% 
+      reduce(bind_rows) %>% 
+      pivot_longer(cols = starts_with('x')
+                   ,values_to = 'accuracy', names_to = 'iteration'),
+    
+    c('set3_test', 'set6_test') %>% #, 'bias' 'alpha','egs', 'bll', 'imag','ans'
+      map (~
+             {
+               temp = data %>% 
+                 .[[.x]]
+               
+               data.frame(
+                  model_index= c(1:nrow(data)),
+                 condition=.x, 
+                 iteration=paste0('X', rep(c(1:12), nrow(data))), 
+                 accuracy=rep(temp, 12)
+               )
+               
+             }
+      )
+  
+  ) %>%  
+    mutate(data_source = data_name)
+}
+
+```
+
+# PART I
+
+In this section, learning data were split into first half and second half and fit separately. The two set-sizes were fit together. Are learning outcomes for the 2 halves correlated?
+
+
+
+```{r PART I: fit subjects with models}
+if (splitDat){
+  ##########--------RL fits----------------############
+
+RL.BIC.H1 <-  fit.models.unsplit(model = 'RL', half = 1, 2)
+RL.BIC.H2 <-  fit.models.unsplit(model = 'RL', half = 2, 2)
+
+##########---------LTM FITS ----------------############
+
+LTM.BIC.H1 <- fit.models.unsplit('LTM', half = 1, 3)
+LTM.BIC.H2 <- fit.models.unsplit('LTM', half = 2, 3)
+
+##########---------RL-LTMstr FITS ----------------############
+
+STR.BIC.H1 <- fit.models.unsplit('STR', half = 1, 6)
+STR.BIC.H2 <- fit.models.unsplit('STR', half = 2, 6)
+}
+##########---------RL-LTMmeta FITS ----------------############
+
+META.BIC <- fit.models.unsplit('META', sdat, 5, TRUE) %>%
+  as_tibble() %>%
+  mutate(model='META', model.id=c(1:nrow(META.sim)) ) 
+  
+META.rmse <- fit.models.unsplit('META', sdat, 5, FALSE) %>%
+  as_tibble() %>%
+  mutate( model.id=c(1:nrow(META.sim)) ) 
+  
+
+```
+
+```{r PART1 select best fits}
+
+
+best.fits <- 
+   META.BIC %>% 
+  select(-contains('model')) %>% 
+                       apply(., 2, which.min) %>% 
+   as_tibble() %>% 
+  mutate(model = value, 
+         subjects, 
+         .keep='unused')
+    
+ 
+    
+  best.fits.META <-  META.BIC %>% 
+  select(-contains('model')) %>% 
+                       apply(., 2, which.min) %>% 
+   as_tibble() %>% 
+  mutate(model = value, 
+         subjects, 
+         .keep='unused')
+  
+ best.fits.META.rmse <-  META.rmse %>% 
+  
+  rename(model=model.id) %>% 
+  pivot_longer(cols = -model, names_to = 'subid', values_to = 'RMSE') %>% 
+  inner_join(best.fits.META %>% 
+               mutate(sub.order = paste0('V', 1:83)), by='model') %>% 
+  mutate(Picks = subid==sub.order) %>% 
+  filter(Picks) %>% 
+  select(-subid, -sub.order, -Picks, -model) %>% 
+   rename(RMSE.META = RMSE)
+    
+ write_csv(best.fits.META.rmse, 'META_only_Fit_RMSE_stag_2023.csv')
+
+```
+
+
+
+```{r part B join model-behavioral data}
+
+
+all_sims = list(list( META.sim), #, STR.sim, META.sim remvoed the two combined models
+     list("META")) %>%  #, "STR", "META" Removed the two combined models
+  pmap(get_data) %>%  
+  reduce(bind_rows) %>% 
+  mutate(iteration = str_remove_all(iteration, "[:alpha:]") %>%  
+           as.numeric(), 
+         type ='model' )
+
+  best.fits.temp <- best.fits %>% rename(model_index = model)
+
+index_search <- all_sims %>% 
+  inner_join(best.fits.temp, by='model_index')
+
+
+######### make subject.dat 
+subject.dat <- 
+  sdat %>% 
+  cbind(subjects) %>% 
+  pivot_longer(cols = -subjects, 
+               names_to = 'condition', values_to = 'accuracy') %>% 
+  separate('condition', into = c('condition', 'iteration'), sep = "[/.]") %>% 
+    mutate(type='behavioral') %>% 
+  inner_join(best.fits, by='subjects') %>% 
+  rename(model_index = model)
+
+  
+  
+melted.p.behav.model <-
+  rbind(subject.dat, index_search %>% select(-data_source))
+
+
+
+
+parameter.dat <- 
+  META.sim %>% 
+  select(index, 'alpha','egs', 'bll', 'imag','ans', 'bias') %>%
+  rename(model_index=index) %>% 
+  inner_join(best.fits %>% rename(model_index=model))
+
+
+ 
+  
+  
+  
+  
+```
+
+
+```{r comparison for Ex1 and Ex2}
+ex1.fits = read_csv('RMSE_fit_model_dat_07_2022.csv') %>% 
+  select(subjects, model)
+
+ex1.ex2.comp <- 
+  best.fits %>% 
+  rename(model_index=model) %>% 
+  inner_join(ex1.fits, by = 'subjects') %>% 
+  inner_join(parameter.dat, by=c('subjects', 'model_index')) %>% 
+  pivot_longer(cols = c(alpha:bias), names_to = 'parameter', values_to = 'value') %>% 
+  rename('META_index'= model_index)
+
+
+ex1.ex2.comp %>% 
+  group_by(model, parameter) %>%
+  
+  summarise(m = mean(value),
+            n=n(),
+            se = std(value)/sqrt(n)) %>% 
+  filter(parameter=='bias') %>% 
+  ggplot(aes(y=m, ymax=m+se, ymin=m-se, x=model, color=parameter))+
+  geom_point() +
+  geom_errorbar(width=.3)
+
+
+
+```
+
+## Best fitting META parameter sets
+
+```{r plot group data, fig.height=14,fig.width=16}
+tmp.color = c('#ca0020','#0571b0','#fd8d3c' ,'#006d2c')
+
+melted.p.behav.model %>% 
+  group_by(type, model_index, condition, iteration) %>% 
+  summarize(mean_acc = mean(accuracy), 
+            n=n(), 
+            se = std(accuracy)/sqrt(n)) %>% 
+  separate(condition, into = c('setsize', 'condition')) %>% 
+  
+  unite(col = 'data_type',c(setsize, type) ) %>% 
+  filter(condition=='learn') %>% 
+  
+  ggplot(aes(x=as.numeric(iteration), y= mean_acc, 
+            ymax=mean_acc+se, ymin=mean_acc - se, 
+            group=data_type, color=data_type
+            )
+        ) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar() +
+  facet_wrap(vars(model_index)) +
+  scale_color_manual(values = tmp.color) +
+  theme_pubclean(base_size = 18)
+  
+
+```
+
