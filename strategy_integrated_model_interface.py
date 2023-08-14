@@ -45,7 +45,7 @@ from matplotlib import pyplot
 import itertools
 
 
-show_output = False
+show_output = True
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -71,7 +71,7 @@ def present_stim():
     
         chunks = actr.define_chunks(['isa', 'stimulus', 
             'picture', stims[i],
-            'do-strategy', np.str(current_strategy[i])]  )
+            'do-strategy', str(current_strategy[i])]  )
 
         actr.set_buffer_chunk('visual', chunks[0])
         if(show_output):
@@ -176,7 +176,7 @@ def model_loop():
     
     #waits for a key press?
    
-    actr.run(2000)
+    actr.run(2) #2000
     
     #print(accuracy)
 
@@ -344,7 +344,7 @@ def simulation(bll, alpha, egs, imag, ans,strtg, nSims):
         if n == 99:
             print("sim ", n)
         actr.reset()
-        actr.hide_output()
+        #actr.hide_output()
 
         actr.set_parameter_value(":bll", bll)
         actr.set_parameter_value(":alpha", alpha)

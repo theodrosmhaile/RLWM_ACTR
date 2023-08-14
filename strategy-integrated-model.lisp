@@ -49,7 +49,7 @@
      :er t
      :ul t
      :esc t
-     :v nil
+     :v t
      :model-warnings nil
           ) 
 
@@ -1017,10 +1017,10 @@
    
 ;;-------------------------------------    
 ;;outcome is yes: make response based on memory 
-;; How do I select, conditionally, the right key to press if we have only one production?
 ;;-------------------------------------
 
 (p outcome-yes
+  
   =retrieval> 
     outcome yes 
     associated-key =k
@@ -1040,7 +1040,7 @@
     execution free
 
 ==>
-
+!eval! (erase-buffer 'retrieval )
   +manual>
     cmd press-key
     key =k

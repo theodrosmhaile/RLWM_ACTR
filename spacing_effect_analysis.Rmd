@@ -5,6 +5,8 @@ date: "07/2023"
 output: 
   html_document:
     code_folding: hide
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -31,17 +33,18 @@ get_data = function(data, data_name){
       reduce(bind_rows) %>% 
       pivot_longer(cols = starts_with('x')
                    ,values_to = 'accuracy', names_to = 'iteration'),
+   ####### implemented fix to out of sync model_id and iteration numbers TMH 07/31/2023
     
     c('set3_test', 'set6_test') %>% #, 'bias' 'alpha','egs', 'bll', 'imag','ans'
       map (~
              {
                temp = data %>% 
-                 .[[.x]]
+                 .[[.x]] 
                
                data.frame(
                   model_index= c(1:nrow(data)),
                  condition=.x, 
-                 iteration=paste0('X', rep(c(1:12), nrow(data))), 
+                 iteration= paste0('X',matrix(1:12,12, nrow(data)) %>% t() %>% c()), 
                  accuracy=rep(temp, 12)
                )
                
@@ -56,24 +59,92 @@ get_data = function(data, data_name){
 
 
 ```{r}
-LTM.se.sim1 <-  fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_frac_1_1_to_65.JSON')$data %>% 
+
+plot_curves_lt <- function(dat, decay, break_length) {
+ 
+
+   
+sim_dat <- get_data(dat, 'ltm') %>% 
+   mutate(iteration = str_remove_all(iteration, "[:alpha:]"))  
+  
+
+
+  
+ pl1 <- 
+   sim_dat %>%
+  filter(iteration=='12') %>% 
+  select(-data_source, -iteration) %>% 
+  pivot_wider(id_cols = c(model_index), names_from = condition, values_from = accuracy) %>% 
+  cbind( dat %>% select(bll, imag, ans)) %>%  
+  pivot_longer(cols =-c(bll, imag, ans, model_index), names_to = 'condition', values_to = 'acc' ) %>% 
+#filter(imag==0.2) %>% 
+  group_by(bll, condition, ans) %>% 
+  summarise(m=mean(acc), 
+            n=n(), 
+            err = sd(acc)/sqrt(n)) %>% 
+  ggplot(aes(x=bll,y=m, ymax=m+err, ymin=m-err, 
+             group=as_factor(condition), color=as_factor(condition ))) +
+  geom_point() +
+  geom_line(size=1) +
+ 
+  geom_errorbar( width=.002, size=1) +
+  ggpubr::theme_pubclean(base_size = 16) +
+  #ylim(c(0.85,1))+
+  facet_wrap(vars(ans)) +
+    ggtitle(paste0("learn/Test_", decay,'_', break_length ))
+
+
+pl2=
+  sim_dat %>% 
+  inner_join(dat %>% 
+               select(bll, imag, ans) %>% 
+               mutate(model_index = c(1:nrow(dat))), by = 'model_index') %>% 
+  
+ # filter(model_index %in% c(1:15)) %>% 
+#  filter(imag==0.1) %>% 
+
+  ggplot(aes(x=as.numeric(iteration), y=accuracy, group=condition, color=condition)) +
+  geom_point()+
+  geom_line()+
+  facet_wrap(vars(model_index)) +
+  geom_text(aes(x=5, y=0.48, label=paste0('ans: ', ans, '\n', 'd: ', bll)), inherit.aes = F) +
+   ggtitle( paste0("curves", decay,'_', break_length ))
+  
+#ggpubr::ggarrange(pl1, pl2)  
+pl2
+}
+
+```
+
+
+```{r plots}
+ltm_lb_dc <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_delete_chunk_230808_0_to_125.JSON')$data %>% 
   mutate(bias=NA)
 
-LTM.se.sim2 <-  fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_frac_2_66_to_150.JSON')$data %>% 
+ltm_imag0_sb <- fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_imag0_short_break_12_trace.JSON')$data %>% 
+  mutate(bias=NA) %>% 
+  rename(bll=se)
+
+ltm_imag0_sb_bll <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_frac_short_break_imag_0_12_trace_0_to_25.JSON')$data %>% 
   mutate(bias=NA)
 
-LTM.missing_1 <- fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_missing_frac1.JSON')$data %>% 
-  mutate(bias=NA)
+ltm_imag0_std_ans_se_sb <-fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_frac_short_break_imag_0_12_trace_reg_ans_0_to_25.JSON')$data %>% 
+  mutate(bias=NA) %>% 
+  rename(bll=se) 
+
+plot_curves_lt(ltm_imag0_sb_bll,'bll', 'ltm_imag0')
 
 
-LTM.missing_2 <- fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_missing_frac2.JSON')$data %>% 
-  mutate(bias=NA)
 
-LTM.se.sim <- rbind(LTM.missing_1,LTM.se.sim1, LTM.missing_2,LTM.se.sim2  )
 
-#LTM_old 
+```
 
-LTM.se.sim=fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_spacing_effect_1_to_125_0629.JSON')$data %>% 
+
+
+
+
+```{r short break spacing effect}
+LTM.se.sim = fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_frac_230808_short_break_delete_chunk_0_to_125.JSON')$data %>% 
   mutate(bias=NA)
 
 
@@ -86,7 +157,159 @@ LTM.se %>%
   filter(iteration=='12') %>% 
   select(-data_source, -iteration) %>% 
   pivot_wider(id_cols = c(model_index), names_from = condition, values_from = accuracy) %>% 
-  cbind(LTM.se.sim %>% select(se, imag, ans)) %>% 
+  cbind(LTM.se.sim %>% select(se, imag, ans)) %>%  #LTM.se.sim
+  pivot_longer(cols =-c(se, imag, ans, model_index), names_to = 'condition', values_to = 'acc' ) %>% 
+filter(imag==0.5) %>% 
+  group_by(se, condition, ans) %>% 
+  summarise(m=mean(acc), 
+            n=n(), 
+            err = sd(acc)/sqrt(n)) %>% 
+  ggplot(aes(x=se,y=m, ymax=m+err, ymin=m-err, 
+             group=as_factor(condition), color=as_factor(condition ))) +
+  geom_point() +
+  geom_line(size=1) +
+ 
+  geom_errorbar( width=.002, size=1) +
+  ggpubr::theme_pubclean(base_size = 16) +
+  ylim(c(0.5,1))+
+  facet_wrap(vars(ans))
+
+
+LTM.se %>% 
+  inner_join(LTM.se.sim %>% 
+               select(se, imag, ans) %>% 
+               mutate(model_index = c(1:125)), by = 'model_index') %>% 
+  
+ # filter(model_index %in% c(1:15)) %>% 
+  filter(imag==0.2) %>% 
+
+  ggplot(aes(x=as.numeric(iteration), y=accuracy, group=condition, color=condition)) +
+  geom_point()+
+  geom_line()+
+  facet_wrap(vars(model_index)) +
+  geom_text(aes(x=5, y=0.4, label=paste0('ans: ', ans, '\n', 'd: ', se)), inherit.aes = F)
+  
+
+```
+
+```{r short break BLL version}
+
+ltm_bll <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_frac_230808_short_break_delete_chunk.JSON')$data %>% 
+  mutate(bias=NA)
+
+
+
+LTM.bll <- get_data(ltm_bll, 'ltm') %>% 
+   mutate(iteration = str_remove_all(iteration, "[:alpha:]")) 
+
+
+
+LTM.bll %>%
+  filter(iteration=='12') %>% 
+  select(-data_source, -iteration) %>% 
+  pivot_wider(id_cols = c(model_index), names_from = condition, values_from = accuracy) %>% 
+  cbind(ltm_bll %>% select(bll, imag, ans)) %>%  #LTM.se.sim
+  pivot_longer(cols =-c(bll, imag, ans, model_index), names_to = 'condition', values_to = 'acc' ) %>% 
+filter(imag==0.2) %>% 
+  group_by(bll, condition, ans) %>% 
+  summarise(m=mean(acc), 
+            n=n(), 
+            err = sd(acc)/sqrt(n)) %>% 
+  ggplot(aes(x=bll,y=m, ymax=m+err, ymin=m-err, 
+             group=as_factor(condition), color=as_factor(condition ))) +
+  geom_point() +
+  geom_line(size=1) +
+ 
+  geom_errorbar( width=.002, size=1) +
+  ggpubr::theme_pubclean(base_size = 16) +
+  ylim(c(0.4,1))+
+  facet_wrap(vars(ans))
+
+
+LTM.bll %>% 
+  inner_join(ltm_bll %>% 
+               select(bll, imag, ans) %>% 
+               mutate(model_index = c(1:125)), by = 'model_index') %>% 
+  
+ # filter(model_index %in% c(1:15)) %>% 
+  filter(imag==0.1) %>% 
+
+  ggplot(aes(x=as.numeric(iteration), y=accuracy, group=condition, color=condition)) +
+  geom_point()+
+  geom_line()+
+  facet_wrap(vars(model_index)) +
+  geom_text(aes(x=5, y=0.4, label=paste0('ans: ', ans, '\n', 'bll: ', bll)), inherit.aes = F)
+  
+
+```
+
+
+```{r LTM long break, original parameters and values}
+
+ltm_long_break_orig <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_delete_chunk_230808_0_to_125.JSON')$data %>% 
+  mutate(bias=NA)
+
+
+
+LTM.lb <- get_data(ltm_long_break_orig, 'ltm') %>% 
+   mutate(iteration = str_remove_all(iteration, "[:alpha:]")) 
+
+
+
+LTM.lb %>%
+  filter(iteration=='12') %>% 
+  select(-data_source, -iteration) %>% 
+  pivot_wider(id_cols = c(model_index), names_from = condition, values_from = accuracy) %>% 
+  cbind(ltm_long_break_orig %>% select(bll, imag, ans)) %>%
+  pivot_longer(cols =-c(bll, imag, ans, model_index), names_to = 'condition', values_to = 'acc' ) %>% 
+filter(imag==0.1) %>% 
+  group_by(bll, condition, ans) %>% 
+  summarise(m=mean(acc), 
+            n=n(), 
+            err = sd(acc)/sqrt(n)) %>% 
+  ggplot(aes(x=bll,y=m, ymax=m+err, ymin=m-err, 
+             group=as_factor(condition), color=as_factor(condition ))) +
+  geom_point() +
+  geom_line(size=1) +
+ 
+  geom_errorbar( width=.002, size=1) +
+  ggpubr::theme_pubclean(base_size = 16) +
+  ylim(c(0.5,1))+
+  facet_wrap(vars(ans))
+
+
+LTM.lb %>% 
+  inner_join(ltm_long_break_orig %>% 
+               select(bll, imag, ans) %>% 
+               mutate(model_index = c(1:125)), by = 'model_index') %>% 
+  
+ # filter(model_index %in% c(1:15)) %>% 
+  filter(imag==0.1) %>% 
+
+  ggplot(aes(x=as.numeric(iteration), y=accuracy, group=condition, color=condition)) +
+  geom_point()+
+  geom_line()+
+  facet_wrap(vars(model_index)) +
+  geom_text(aes(x=5, y=0.4, label=paste0('ans: ', ans, '\n', 'bll: ', bll)), inherit.aes = F)
+  
+
+```
+
+```{r long break delete chunk spacing effect}
+LTM.se.lb = fromJSON('./spacing_effect_models/model_sims/LTM_sim_data_delete_chunk_long_break_20230808.JSON')$data %>% 
+  mutate(bias=NA)
+
+
+LTM.lb <- get_data(LTM.se.lb, 'ltm') %>% 
+   mutate(iteration = str_remove_all(iteration, "[:alpha:]")) 
+ 
+
+
+LTM.lb %>%
+  filter(iteration=='12') %>% 
+  select(-data_source, -iteration) %>% 
+  pivot_wider(id_cols = c(model_index), names_from = condition, values_from = accuracy) %>% 
+  cbind(LTM.se.lb %>% select(se, imag, ans)) %>%  #LTM.se.sim
   pivot_longer(cols =-c(se, imag, ans, model_index), names_to = 'condition', values_to = 'acc' ) %>% 
 filter(imag==0.2) %>% 
   group_by(se, condition, ans) %>% 
@@ -100,22 +323,66 @@ filter(imag==0.2) %>%
  
   geom_errorbar( width=.002, size=1) +
   ggpubr::theme_pubclean(base_size = 16) +
+  ylim(c(0.5,1))+
   facet_wrap(vars(ans))
 
 
-LTM.se %>% 
+LTM.lb %>% 
   inner_join(LTM.se.sim %>% 
                select(se, imag, ans) %>% 
                mutate(model_index = c(1:125)), by = 'model_index') %>% 
+  
  # filter(model_index %in% c(1:15)) %>% 
-  filter(imag==0.5) %>% 
+  filter(imag==0.2) %>% 
 
   ggplot(aes(x=as.numeric(iteration), y=accuracy, group=condition, color=condition)) +
   geom_point()+
   geom_line()+
-  facet_wrap(vars(model_index))
-  
+  facet_wrap(vars(model_index)) +
+  geom_text(aes(x=5, y=0.4, label=paste0('ans: ', ans, '\n', 'd: ', se)), inherit.aes = F)
+```
 
+
+```{r}
+hlp_sdat = sdat[,c(13,37)] %>% 
+  as_tibble() %>% 
+  rename(set3_test = set3_test.1, set6_test= set6_test.1) %>%
+  pivot_longer(cols =c(set3_test,set6_test), names_to = 'condition', values_to = 'accuracy')
+
+hlp_sdat %>%
+  ggplot(aes(x=condition, y=accuracy, color=condition)) + geom_boxplot() + geom_jitter(width = .2)
+
+
+hlp_sdat %>% mutate(decay = accuracy <0.8) %>% 
+  group_by(condition) %>% 
+  summarise(m.acc = mean(accuracy), 
+            n=n(), 
+            error= sd(accuracy)/sqrt(n), 
+            m.below80 = mean(decay))
+
+
+hlp_sdat_lt = sdat[,c(12,13,36,37)] %>% 
+  as_tibble() %>% 
+  rename(set3_test = set3_test.1, set6_test= set6_test.1) %>% 
+  mutate(loss_s3 =  set3_test - set3_learn.12, 
+         loss_s6 = set6_test - set6_learn.12) %>% 
+  select(contains('loss')) %>% 
+   pivot_longer(cols =c(loss_s3,loss_s6), names_to = 'condition', values_to = 'diff') 
+  
+mns = hlp_sdat_lt %>% 
+  group_by(condition) %>% 
+  summarise(m = mean(diff)) %>% 
+  pivot_wider(names_from = condition, values_from = m)
+
+hlp_sdat_lt %>% 
+  
+  ggplot(aes(x= diff, group=condition, fill=condition, color=condition)) +
+  #geom_histogram(alpha=.6) +
+  geom_density(alpha=.1) +
+  geom_vline(aes(xintercept = mns$loss_s3), color='red') +
+  geom_vline(aes(xintercept = mns$loss_s6), color='turquoise')
+
+  
 ```
  
 

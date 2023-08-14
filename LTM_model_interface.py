@@ -2,7 +2,8 @@
 # coding: utf-8
 
 # ### Python interface for integrated model
-
+########## Change log 
+# ### 07/31/2023 current version includes a 28 minute break instead of the standard break
 
 import random as rnd
 import numpy as np
@@ -16,7 +17,7 @@ from matplotlib import pyplot
 import itertools
 
 
-show_output = True
+show_output = False
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -68,7 +69,7 @@ def present_feedback():
         chunks = actr.define_chunks(['isa', 'feedback', 'feedback',feedback])
         actr.set_buffer_chunk('visual', chunks[0])
 
-        actr.schedule_event_relative(1, 'present_stim')
+        actr.schedule_event_relative(2, 'present_stim')#formerly 1
 
         if (show_output):
             print("Feedback given: X, test phase" )
@@ -94,9 +95,9 @@ def present_feedback():
 
         if i == lastLearnTrial:
             #rint("BREAK HERE")
-            actr.schedule_event_relative(600, 'present_stim')
+            actr.schedule_event_relative(600, 'present_stim') #Testing out a 28 minute break instead of the 10-minute break
         else:
-            actr.schedule_event_relative(1, 'present_stim')
+            actr.schedule_event_relative(2, 'present_stim') #formerly 1
 #increase index for next stimulus
     i = i + 1
 
@@ -206,19 +207,19 @@ current_response  = np.repeat('x', nTrials * 2).tolist() #multiply by 2 for numb
 lastLearnTrial = np.size(stims3 + stims6) -1
 
 #parameter ranges for simulation
-#bll_param   = [0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,range around .5 actr rec val
+bll_param   = [0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,range around .5 actr rec val
 #alpha_param = [0.05, 0.1, 0.15, 0.2, 0.25] # learning rate of the RL utility selection 0.2 rec val
 #egs_param   = [0.1, 0.2, 0.3, 0.4, 0.5] # amount of noise added to the RL utility selection
-#imag_param  = [0.1, 0.2, 0.3 , 0.4, 0.5] #simulates working memory as attentional focus
-#ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual.
+imag_param  = [0.1, 0.2, 0.3 , 0.4, 0.5] #simulates working memory as attentional focus
+ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual.
 
 ###########################################
 #----EXPANDED GRANULAR PARAMETER SPACE----
 
-bll_param   = [ 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75]   # halved the distance between values and extended beyound the previous upper limit since most subjects had accumulated there.
+#bll_param   = [ 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75]   # halved the distance between values and extended beyound the previous upper limit since most subjects had accumulated there.
 
-imag_param  = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50] #halved and expanded lower range as per data
-ans_param   = [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55] #halved and expanded upper range as per data
+#imag_param  = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50] #halved and expanded lower range as per data
+#ans_param   = [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55] #halved and expanded upper range as per data
 
 ###########################################
 
@@ -238,8 +239,11 @@ ans_param   = [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55] #halv
 #param_combs = list(itertools.product(*params))
 
 # LTM model params
-params = [bll_param, imag_param, ans_param]
+params = [bll_param, ans_param] #imag 0.1 imag_param,
 param_combs = list(itertools.product(*params))
+
+
+
 
  ###########initialize variables to concat all outputs from simulations
 
@@ -276,7 +280,7 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
         actr.set_parameter_value(":bll", bll)
        # actr.set_parameter_value(":alpha", alpha)
         #actr.set_parameter_value(":egs", egs)
-        actr.set_parameter_value(":visual-activation", imag)#formerly imaginal activation
+        actr.set_parameter_value(":visual-activation", 0.1)#testing imag at 0
         actr.set_parameter_value(":ans", ans)
 
         i = 0
@@ -366,7 +370,7 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
         #sim_data.append([temp3, temp6, np.mean(test_3), np.mean(test_6), bll, alpha, egs, imag, ans ])
         #del temp3, temp6
     #changelog: saving all instances of the simulation by moving the sim_data insidr the simulator loop
-    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(np.mean(temp_test3,1)), np.mean(np.mean(temp_test6, 1)), bll, alpha, egs, imag, ans ])
+    sim_data.append([np.mean(temp3,0), np.mean(temp6,0), np.mean(np.mean(temp_test3,1)), np.mean(np.mean(temp_test6, 1)), bll, alpha, egs, 0.1, ans ]) #testing imag at 0
 
     sim_std.append([np.std(temp3,0), np.std(temp6,0), np.std(np.mean(temp_test3,1)), np.std(np.mean(temp_test6, 1))])
 
@@ -380,9 +384,9 @@ def execute_sim(n,fromI,toI, frac):
 
     for i in range(fromI, toI):
 
-        simulation(param_combs[i][0], 0,0, param_combs[i][1], param_combs[i][2], n)
+        simulation(param_combs[i][0], 0,0, param_combs[i][1], param_combs[i][1], n) # set last item back to 2, testing imag at 0
 
     sim = pd.DataFrame(sim_data, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test','bll', 'alpha', 'egs', 'imag', 'ans' ])
     sim_st = pd.DataFrame(sim_std, columns=['set3_learn','set6_learn', 'set3_test', 'set6_test'])
-    sim_st.to_json('./expanded_sims/LTM_model/LTM_sim_std_date.JSON',orient='table')
-    sim.to_json('./expanded_sims/LTM_model/LTM_sim_data_' + 'frac_' +np.str(frac) +'_'+ np.str(fromI) + '_to_' + np.str(toI) + '.JSON', orient='table')
+    sim_st.to_json('./simulated_data/LTM_model/LTM_sim_std_date.JSON',orient='table')
+    sim.to_json('./simulated_data/LTM_model/LTM_sim_data_' + 'frac_' +str(frac) +'_'+ str(fromI) + '_to_' + str(toI) + '.JSON', orient='table')

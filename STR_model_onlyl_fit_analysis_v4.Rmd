@@ -11,6 +11,7 @@ output:
 editor_options:
   chunk_output_type: console
 ---
+
 ```{css, echo=FALSE} 
 
  p{ 
@@ -315,16 +316,18 @@ get_data = function(data, data_name){
       pivot_longer(cols = starts_with('x')
                    ,values_to = 'accuracy', names_to = 'iteration'),
     
+      ####### implemented fix to out of sync model_id and iteration numbers TMH 07/31/2023
+    
     c('set3_test', 'set6_test') %>% #, 'bias' 'alpha','egs', 'bll', 'imag','ans'
       map (~
              {
                temp = data %>% 
-                 .[[.x]]
+                 .[[.x]] 
                
                data.frame(
                   model_index= c(1:nrow(data)),
                  condition=.x, 
-                 iteration=paste0('X', rep(c(1:12), nrow(data))), 
+                 iteration= paste0('X',matrix(1:12,12, nrow(data)) %>% t() %>% c()), 
                  accuracy=rep(temp, 12)
                )
                
@@ -334,6 +337,11 @@ get_data = function(data, data_name){
   ) %>%  
     mutate(data_source = data_name)
 }
+
+
+
+
+
 
 ```
 
@@ -517,7 +525,7 @@ melted.p.behav.model %>%
 
 
 melted.p.behav.model %>% 
-  filter(subjects==c( 28306) )%>% # 15014, 28306, 28328)6217, 15014,
+  #filter(subjects %in% c( 28306, 15014, 28328, 6217) )%>% # 15014, 28306, 28328)6217, 15014,
    separate(condition, into = c('setsize', 'condition')) %>% 
 #  filter(condition=='learn') %>% 
   #arrange(as.numeric(iteration)) %>% 
@@ -528,7 +536,7 @@ melted.p.behav.model %>%
 
   
   unite(col = 'data_type',c(type, setsize) ) %>% 
-  filter(condition=='learn') %>% 
+  filter(condition=='test') %>% 
   
   ggplot(aes(x=as.numeric(iteration), y= accuracy, 
             group=data_type, color=data_type
