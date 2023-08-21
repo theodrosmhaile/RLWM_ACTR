@@ -49,7 +49,7 @@
      :er t
      :ul t
      :esc t
-     :v t
+     :v nil
      :model-warnings nil
           ) 
 

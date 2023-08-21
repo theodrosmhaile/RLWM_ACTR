@@ -16,7 +16,7 @@ import seaborn as sns
 from matplotlib import pyplot
 import itertools
 
-debug = True
+
 show_output = True
 
 #Load model
@@ -31,15 +31,15 @@ def present_stim():
     global i
     global show_output
 
-    if i < nTrials:
+   # if i < nTrials:
+    chunks = actr.define_chunks(['isa', 'stimulus', 'picture', stims[i]])
+    actr.set_buffer_chunk('visual', chunks[0])
+
+    if(show_output):
+        print('Presented: ', stims[i])
+        print('correct response: ', cor_resps[i])
 
 
-        chunks = actr.define_chunks(['isa', 'stimulus', 'picture', stims[i]])
-        actr.set_buffer_chunk('visual', chunks[0])
-
-        if(show_output):
-            print('Presented: ', stims[i])
-            print('correct response: ', cor_resps[i])
 
 
 def get_response(model, key):
@@ -69,13 +69,11 @@ def present_feedback():
         chunks = actr.define_chunks(['isa', 'feedback', 'feedback',feedback])
         actr.set_buffer_chunk('visual', chunks[0])
 
-        actr.schedule_event_relative(1, 'present_stim')#formerly 1
+       # actr.schedule_event_relative(2, 'present_stim')#formerly 1
 
         if (show_output):
             print("Feedback given: X, test phase" )
             #print(accuracy)
-
-
 
     else:
     # This runs for learning phase. This portion presents feedback
@@ -93,11 +91,9 @@ def present_feedback():
             print("Feedback given: ", feedback )
             print(accuracy)
 
-        if i == lastLearnTrial:
-            #rint("BREAK HERE")
-            actr.schedule_event_relative(600, 'present_stim') #Testing out a 28 minute break instead of the 10-minute break
-        else:
-            actr.schedule_event_relative(1, 'present_stim') #formerly 1
+         #Testing out a 28 minute break instead of the 10-minute break
+        #else:
+         #   actr.schedule_event_relative(2, 'present_stim') #formerly 1
 #increase index for next stimulus
     i = i + 1
 
@@ -112,41 +108,46 @@ def model_loop():
     global nTrials
     global strategy_used
     global i
+    global stim_time
+    global chunks
+    global t
 
     accuracy = np.repeat(0, nTrials).tolist()
 
-
-    if debug:
-        i = 0
-
-
     #initial goal dm
     actr.define_chunks(['make-response','isa', 'goal', 'fproc','yes'])
-  #  actr.add_dm(['test-feedback', 'isa', 'feedback', 'feedback', 'yes'])
-
-  #  actr.add_dm('yes'); actr.add_dm('no')
-
-   # actr.add_dm('declarative'); actr.add_dm('procedural')
-
-   # actr.add_dm('j'); actr.add_dm('k'); actr.add_dm('l')
-
-    #actr.add_dm('jeans'); actr.add_dm('cup'); actr.add_dm('hat');
-    #actr.add_dm('shirt'); actr.add_dm('plate'); actr.add_dm('gloves')
-    #actr.add_dm('shoes'); actr.add_dm('bowl'); actr.add_dm('jacket')
+  
 
     actr.goal_focus('make-response')
 
     #open window for interaction
     win = actr.open_exp_window("test", visible = False)
     actr.install_device(win)
-    actr.schedule_event_relative(0, 'present_stim' )
 
-    #waits for a key press?
+   # actr.schedule_event_relative(0, 'present_stim' )
 
-    actr.run(1000)
+    ########## This is the new absolute time for stimulus presentaitons!
+    
+    for t in range(132):
+        
+        
+        #if i == lastLearnTrial:i
+           
+         #   actr.schedule_event((stim_time + 600), 'present_stim')
+
+        actr.schedule_event(2 * t, 'present_stim')
+    
+        #stim_time += 2
+        #t += 1
+        #i += 1  
+        
+
+    actr.run(6)
 
     #print(accuracy)
-
+stim_time = 0
+t = 0
+i = 0
 actr.add_command('present_stim', present_stim, 'presents stimulus')
 actr.add_command('present_feedback', present_feedback, 'presents feedback')
 actr.add_command('get_response', get_response, 'gets response')
@@ -215,30 +216,6 @@ bll_param   = [0.3, 0.4, 0.5, 0.6, 0.7]   # decay rate of declarative memory,ran
 imag_param  = [0.1, 0.2, 0.3 , 0.4, 0.5] #simulates working memory as attentional focus
 ans_param   = [0.1, 0.2, 0.3, 0.4, 0.5] #parameter for noise in dec. memory activation. Range recommended by ACTR manual.
 
-###########################################
-#----EXPANDED GRANULAR PARAMETER SPACE----
-
-#bll_param   = [ 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75]   # halved the distance between values and extended beyound the previous upper limit since most subjects had accumulated there.
-
-#imag_param  = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50] #halved and expanded lower range as per data
-#ans_param   = [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55] #halved and expanded upper range as per data
-
-###########################################
-
-# [0.4, 0.5, 0.6]#
-# [0.1, 0.15, 0.2]#
-# [0.2, 0.3, 0.4]#
-# [0.2, 0.3, 0.4]#
-
-#Integrated model params
-
-#combine all params for a loop
-#params = [bll_param, alpha_param, egs_param, imag_param, ans_param]
-#param_combs = list(itertools.product(*params))
-
-#RL model params
-#params = [alpha_param, egs_param]
-#param_combs = list(itertools.product(*params))
 
 # LTM model params
 params = [bll_param, ans_param] #imag 0.1 imag_param,
@@ -280,12 +257,10 @@ def simulation(bll, alpha, egs, imag, ans, nSims):
         #actr.hide_output()
 
         actr.set_parameter_value(":bll", bll)
-       # actr.set_parameter_value(":alpha", alpha)
-        #actr.set_parameter_value(":egs", egs)
         actr.set_parameter_value(":visual-activation", 0.1)#testing imag at 0
         actr.set_parameter_value(":ans", ans)
 
-        i = 0
+      #  i = 0
         win = None
         print(i)
         model_loop()

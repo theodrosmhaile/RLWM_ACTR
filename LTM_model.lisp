@@ -24,17 +24,21 @@
 
 
 (clear-all)
+ 
 
 (define-model LTM_model
 
-(sgp ;;:bll 0.
-     ;;:ans nil
+
+
+(sgp :bll 0.5
+     :ans 0.2
      ;; :rt  0.5  ;; Not needed
      :er  t
-     :v nil
+     :act t
+     :v t
      :esc t
-     :mas 8.0
-     ;:visual-activation 5.0
+     :mas 5;8.0
+     :visual-activation 1
      )
 
 ;;---------------------------------------

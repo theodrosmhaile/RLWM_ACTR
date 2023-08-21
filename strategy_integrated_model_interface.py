@@ -45,7 +45,7 @@ from matplotlib import pyplot
 import itertools
 
 
-show_output = True
+show_output = False
 
 #Load model
 curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -176,7 +176,7 @@ def model_loop():
     
     #waits for a key press?
    
-    actr.run(2) #2000
+    actr.run(2000) #2000
     
     #print(accuracy)
 
